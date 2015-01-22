@@ -1,0 +1,12 @@
+
+    <span ng-show="quests.length == 0">Loading...</span>
+
+    <div ng-show="quests.length > 0">
+        <ul>
+            <li ng-repeat="quest in quests">{{quest.title}}</li>
+        </ul>
+
+        First: {{first.title}}
+    </div>
+
+

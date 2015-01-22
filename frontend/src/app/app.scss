@@ -1,0 +1,63 @@
+@font-face {
+  font-family: 'Klavika light';
+  src: url('../fonts/KlavikaWebBasicLight.eot?') format('eot'), url('../fonts/KlavikaWebBasicLight.woff') format('woff');
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background: #EAECF0;
+  font-family: 'Klavika light', 'Exo', sans-serif;
+  font-size: 15px;
+  height: 100%;
+}
+
+.technoport-logo {
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  background: url("../images/favicon-16x16.png") center center no-repeat;
+}
+
+.content {
+  box-shadow: 0 0 72px 0 #C7C7C7;
+  padding: 2em 1em;
+  height: 100%;
+  background: #fff;
+}
+
+
+.navbar {
+  background-color: #aaaa97;
+  border-color: #ccc;
+  margin-bottom: 0;
+
+  .navbar-brand {
+    color: #fff;
+  }
+
+  .navbar-nav {
+
+    > li > a {
+      color: #fff;
+    }
+
+    > li > a:hover {
+      color: #000;
+      background-color: #3dc1ba;
+    }
+
+    > .active {
+      a, a:active, a:focus {
+        color: #000;
+        background-color: #97d8de;
+      }
+      a:hover {
+        color: #000;
+        background-color: #3dc1ba;
+      }
+    }
+  }
+}
