@@ -27,7 +27,7 @@ object HikariConnectionPoolTransactor {
 }
 
 
-object connx {
+object db {
   val config = new HikariConfig()
   config.setUsername("sa")
   config.setPassword("")

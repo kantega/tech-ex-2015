@@ -11,7 +11,7 @@ import org.http4s.server._
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits.{Text, WebSocketFrame}
 import techex.WebHandler
-import techex.cases.signup
+import techex.cases.playerSignup
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,9 +27,9 @@ object test {
   implicit def defaultSecheduler =
     DefaultTimeoutScheduler
 
-  val testApi:WebHandler = {
+  val testApi: WebHandler = {
     // Wire your data into your service
-    case req @ GET -> Root / "streaming" =>
+    case req@GET -> Root / "streaming" =>
       Ok(dataStream(10))
 
     // You can use helpers to send any type of data with an available EntityEncoder[T]
@@ -49,7 +49,7 @@ object test {
       // Its also easy to stream responses to clients
       Ok(dataStream(100)).withHeaders(`Transfer-Encoding`(TransferCoding.chunked))
 
-    case req @ GET -> Root / "ip" =>
+    case req@GET -> Root / "ip" =>
       // Its possible to define an EntityEncoder anywhere so you're not limited to built in types
       val json = jSingleObject("origin", jString(req.remoteAddr.getOrElse("unknown")))
       Ok(json)
@@ -61,7 +61,7 @@ object test {
     case GET -> Root / "content-change" =>
       // EntityEncoder typically deals with appropriate headers, but they can be overridden
       Ok("<h2>This will have an html content type!</h2>")
-        .withHeaders(`Content-Type`(`text/html`))
+      .withHeaders(`Content-Type`(`text/html`))
   }
 
 
@@ -70,8 +70,8 @@ object test {
 
     val interval = 100.millis
     val stream: Process[Task, String] = Process.awakeEvery(interval)
-      .map(_ => s"Current system time: ${System.currentTimeMillis()} ms\n")
-      .take(n)
+                                        .map(_ => s"Current system time: ${System.currentTimeMillis()} ms\n")
+                                        .take(n)
 
     val start: Process[Task, String] = Process.emit(s"Starting $interval stream intervals, taking $n results\n\n")
 
@@ -87,20 +87,22 @@ object websockets {
 
   implicit def defaultSecheduler = DefaultTimeoutScheduler
 
+  val sink = io.stdOutLines.onComplete(Process.eval_(Task(println("END"))))
+
   val route = HttpService {
     case req@GET -> Root / "ws" =>
       // Send a Text message with payload 'Ping!' every second
       val src = Process.awakeEvery(1.seconds).map { d => Text(s"Ping! $d")}
-
-      // Print received Text frames, and, on completion, notify the console
       val sink: Sink[Task, WebSocketFrame] = Process.constant {
-        case Text(t,x) => Task.delay(println(t))
-        case f       => Task.delay(println(s"Unknown type: $f"))
-      }//.onComplete(Process.eval_(Task{println("Terminated!")}))
+        case Text(t, x) => Task.delay(println(t))
+        case f => Task.delay(println(s"Unknown type: $f"))
+      }
+
+      val sinkWithComplete:Sink[Task, WebSocketFrame] = sink.onComplete(Process.eval_(Task {println("Terminated!")}))
 
       // Use the WS helper to make the Task[Response] carrying the info
       // needed for the backend to upgrade to a WebSocket connection
-      WS(src, sink)
+      WS(src, sinkWithComplete)
     /*
         case req @ GET -> Root / "wsecho" =>
           // a scalaz topic acts as a hub to publish and subscribe to messages safely
