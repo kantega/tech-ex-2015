@@ -1,12 +1,18 @@
 
-    <span ng-show="quests.length == 0">Loading...</span>
+    <div ng-show="quests.length == 0">Loading...</div>
 
     <div ng-show="quests.length > 0">
-        <ul>
-            <li ng-repeat="quest in quests">{{quest.title}}</li>
-        </ul>
 
-        First: {{first.title}}
+        <div class="panel panel-default" ng-repeat="quest in quests">
+            <div class="panel-heading">
+                <h3 class="panel-title">{{quest.title}}</h3>
+            </div>
+            <div class="panel-body">
+                {{quest.desc}}
+            </div>
+        </div>
+
+        
     </div>
 
 
