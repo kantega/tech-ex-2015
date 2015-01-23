@@ -1,8 +1,12 @@
+
+
 name := "backend"
 
 version := "1.0"
 
 scalaVersion := "2.11.5"
+
+jetty()
 
 scalacOptions ++= Seq("-language:higherKinds","-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -25,7 +29,6 @@ libraryDependencies ++= {
     "org.slf4j" % "slf4j-api" % "1.7.6",
     "ch.qos.logback" % "logback-core" % "1.1.1",
     "ch.qos.logback" % "logback-classic" % "1.1.1",
-    "joda-time" % "joda-time" % "2.3",
     "org.joda" % "joda-convert" % "1.4",
     "org.specs2" %% "specs2-core" % "2.4.15" % "test",
     "org.typelevel" %% "scalaz-specs2" % "0.3.0" % "test",
@@ -38,10 +41,11 @@ libraryDependencies ++= {
     "org.http4s" % "http4s-jetty_2.11" % http4sVersion % "test" withSources() withJavadoc() ,
     "com.websudos" % "phantom-dsl_2.10" % phantomVersion,
     "org.tpolecat" % "doobie-core_2.11" % "0.2-SNAPSHOT",
-    "javax.servlet" % "javax.servlet-api" % "3.0.1",
-    "com.h2database" % "h2" % "1.4.182" % "test",
+    "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided",
+    "com.h2database" % "h2" % "1.4.182",
     "com.zaxxer" % "HikariCP" % "2.2.5",
     "io.argonaut" %% "argonaut" % "6.1-M4" //json
   )
 }
+
     

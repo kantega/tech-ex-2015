@@ -9,12 +9,12 @@ package object techex {
 
   type WebHandler = PartialFunction[Request, Task[Response]]
 
-  type Val[A] = Validation[String,A]
+  type Val[A] = Validation[String, A]
 
-  def succ[A](a:A):Task[A] =
+  def succ[A](a: A): Task[A] =
     Task.now(a)
 
-  def fail[A](failMsg:String):Task[A] =
+  def fail[A](failMsg: String): Task[A] =
     Task.fail(new Exception(failMsg))
 
   def asTask[T](fut: Future[T])(implicit ec: ExecutionContext): Task[T] = {
@@ -26,4 +26,14 @@ package object techex {
         }
     }
   }
+
+  def toJsonQuotes(str: String) =
+    str.replace("'", "\"")
+
+  def nonEmpty(str: String): Option[String] =
+    if (str == null || str.length == 0)
+      None
+    else
+      Some(str)
+
 }
