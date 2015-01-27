@@ -25,3 +25,7 @@ frontend/dist/
 
 #iOS
 ios/.DS_Store
+
+#mockbackend
+mockbackend/.idea
+mockbackend/node_modules
