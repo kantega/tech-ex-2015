@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <scenes>
+        <!--Login And Registration View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="LoginAndRegistrationViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="URP-FC-ywu" userLabel="WelcomeView">
+                                <rect key="frame" x="150" y="150" width="300" height="300"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OME-CQ-7BK">
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="centerY" secondItem="OME-CQ-7BK" secondAttribute="centerY" id="3of-UM-lLd"/>
+                                    <constraint firstAttribute="height" constant="300" id="DXi-Y0-Uii"/>
+                                    <constraint firstAttribute="trailing" secondItem="OME-CQ-7BK" secondAttribute="trailing" id="Kaa-fH-tj5"/>
+                                    <constraint firstAttribute="width" constant="300" id="WFX-mD-7up"/>
+                                    <constraint firstItem="OME-CQ-7BK" firstAttribute="leading" secondItem="URP-FC-ywu" secondAttribute="leading" id="hSs-CW-ETU"/>
+                                </constraints>
+                            </view>
+                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pfO-mM-ngK" userLabel="RegistrationDetails">
+                                <rect key="frame" x="150" y="150" width="300" height="300"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Or7-jU-Krx">
+                                        <rect key="frame" x="0.0" y="70" width="300" height="80"/>
+                                        <state key="normal" title="Register" backgroundImage="Button background">
+                                            <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="titleShadowColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="registerUser" destination="BYZ-38-t0r" eventType="touchUpInside" id="1dn-vx-y3M"/>
+                                        </connections>
+                                    </button>
+                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Nick" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="d3O-cI-t02">
+                                        <rect key="frame" x="0.0" y="0.0" width="300" height="30"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="Or7-jU-Krx" secondAttribute="trailing" id="64e-hu-W12"/>
+                                    <constraint firstItem="Or7-jU-Krx" firstAttribute="top" secondItem="d3O-cI-t02" secondAttribute="bottom" constant="40" id="6Cf-uZ-k3e"/>
+                                    <constraint firstAttribute="height" constant="300" id="CyM-NK-cGW"/>
+                                    <constraint firstAttribute="trailing" secondItem="d3O-cI-t02" secondAttribute="trailing" id="RsH-P0-nAg"/>
+                                    <constraint firstItem="d3O-cI-t02" firstAttribute="leading" secondItem="pfO-mM-ngK" secondAttribute="leading" id="TEq-Rh-dVI"/>
+                                    <constraint firstAttribute="width" constant="300" id="i50-AW-bQ8"/>
+                                    <constraint firstItem="Or7-jU-Krx" firstAttribute="leading" secondItem="pfO-mM-ngK" secondAttribute="leading" id="me7-bA-3dR"/>
+                                    <constraint firstItem="d3O-cI-t02" firstAttribute="top" secondItem="pfO-mM-ngK" secondAttribute="top" id="zHD-s1-ce5"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="centerY" secondItem="URP-FC-ywu" secondAttribute="centerY" id="2Sb-vF-1M3"/>
+                            <constraint firstAttribute="centerX" secondItem="URP-FC-ywu" secondAttribute="centerX" id="ikS-2e-Fv3"/>
+                            <constraint firstAttribute="centerY" secondItem="pfO-mM-ngK" secondAttribute="centerY" id="tzV-xb-2Of"/>
+                            <constraint firstAttribute="centerX" secondItem="pfO-mM-ngK" secondAttribute="centerX" id="ubZ-62-qbw"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="nickTextField" destination="d3O-cI-t02" id="trg-rE-gei"/>
+                        <outlet property="registrationView" destination="pfO-mM-ngK" id="xur-EX-fx0"/>
+                        <outlet property="welcomeLabel" destination="OME-CQ-7BK" id="vhi-bb-roF"/>
+                        <outlet property="welcomeView" destination="URP-FC-ywu" id="MG9-Sd-miU"/>
+                        <segue destination="mou-1W-loH" kind="show" identifier="ShowQuests" id="qBw-YL-RY5"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-495" y="177"/>
+        </scene>
+        <!--Badges-->
+        <scene sceneID="WYv-k7-ieA">
+            <objects>
+                <viewController id="AGX-1t-vQk" userLabel="Badges" customClass="BadgesViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="seV-aQ-8dm"/>
+                        <viewControllerLayoutGuide type="bottom" id="xcK-D9-a8i"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="AxW-0S-efi">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Badges" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dga-xL-fl6">
+                                <rect key="frame" x="16" y="97" width="568" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Badges" id="yLU-lA-jec"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="tk4-Qm-lnt" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1058" y="508"/>
+        </scene>
+        <!--Quests-->
+        <scene sceneID="wit-Be-opm">
+            <objects>
+                <viewController id="Psi-Vp-26t" userLabel="Quests" customClass="QuestsViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="9X5-QV-z2e"/>
+                        <viewControllerLayoutGuide type="bottom" id="U60-jh-pAu"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="5CA-ll-8ed">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="f1z-l2-IUW">
+                                <rect key="frame" x="16" y="110" width="568" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="f1z-l2-IUW" firstAttribute="leading" secondItem="5CA-ll-8ed" secondAttribute="leadingMargin" id="Ss5-eG-eBU"/>
+                            <constraint firstItem="f1z-l2-IUW" firstAttribute="trailing" secondItem="5CA-ll-8ed" secondAttribute="trailingMargin" id="weR-km-f96"/>
+                            <constraint firstItem="f1z-l2-IUW" firstAttribute="top" secondItem="9X5-QV-z2e" secondAttribute="bottom" constant="90" id="zez-nq-MF7"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Quests" id="KWA-7D-0cV"/>
+                    <connections>
+                        <outlet property="usernameLabel" destination="f1z-l2-IUW" id="B1L-lJ-NmY"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="9p3-Us-POS" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1058" y="-154"/>
+        </scene>
+        <!--Main-->
+        <scene sceneID="KXY-Re-QH8">
+            <objects>
+                <tabBarController id="mou-1W-loH" userLabel="Main" sceneMemberID="viewController">
+                    <nil key="simulatedBottomBarMetrics"/>
+                    <tabBar key="tabBar" contentMode="scaleToFill" id="CsE-jI-tUW">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="Psi-Vp-26t" kind="relationship" relationship="viewControllers" id="Azy-Mj-TzP"/>
+                        <segue destination="AGX-1t-vQk" kind="relationship" relationship="viewControllers" id="QZs-0V-fLm"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ya9-wl-4xC" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="238" y="177"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="Button background" width="600" height="80"/>
+    </resources>
+</document>

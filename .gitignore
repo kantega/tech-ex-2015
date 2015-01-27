@@ -22,3 +22,6 @@ frontend/.tmp/
 frontend/bower_components/
 frontend/node_modules/
 frontend/dist/
+
+#iOS
+ios/.DS_Store
