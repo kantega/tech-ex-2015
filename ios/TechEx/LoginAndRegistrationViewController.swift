@@ -22,18 +22,32 @@ class LoginAndRegistrationViewController: UIViewController {
 
     
     @IBAction func registerUser() {
-        // TODO: Validate inputs
+        if (!nickTextField.hasText()) {
+            Alert.shared.showAlert("Nick cannot be empty", title: nil, buttonText: "OK", parent: self);
+            return
+        }
+        
         self.nick = nickTextField.text;
-        //TODO: Show spinner.
+        
+        LoadingOverlay.shared.showOverlay(self.view);
+        
         request(.PUT, "\(baseApiUrl)/player/\(nick)")
             .responseJSON { (req, resp, JSON, error) in
-                let d = JSON as NSDictionary;
-                let idToken = d.objectForKey("id") as String
-                let nick = d.objectForKey("nick") as String
-                NSLog("Token: \(idToken), nick: \(nick)")
-                KeychainService.save(.Username, value: nick)
-                KeychainService.save(.Token, value: idToken);
-                self.showQuests();
+                if error != nil {
+                    Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
+                    NSLog("Error when registering user: \(error)");
+                } else {
+                    let d = JSON as NSDictionary;
+                    let idToken = d.objectForKey("id") as String
+                    let nick = d.objectForKey("nick") as String
+                    NSLog("Token: \(idToken), nick: \(nick)")
+                
+                    KeychainService.save(.Username, value: nick)
+                    KeychainService.save(.Token, value: idToken);
+                
+                    self.showQuests();
+                }
+                LoadingOverlay.shared.hideOverlayView();
         }
 
     }

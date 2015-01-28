@@ -34,7 +34,9 @@
             };
             players[nick] = playerData;
             res.status(201)
-                .send(playerData);
+            setTimeout(function(){
+                res.send(playerData);
+            }, 2000);
         }
     });
 

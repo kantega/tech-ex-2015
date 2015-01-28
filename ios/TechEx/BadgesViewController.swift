@@ -1,5 +1,5 @@
 //
-//  QuestsViewController.swift
+//  BadgesViewController.swift
 //  TechEx
 //
 //  Created by Kristian Lier Selnæs on 27/01/15.
@@ -8,24 +8,15 @@
 
 import UIKit
 
-class QuestsViewController: UIViewController {
+class BadgesViewController: UIViewController {
 
-    @IBOutlet weak var usernameLabel: UILabel!
-    
-    var overlay : UIView?
-    
     override func viewDidLoad() {
-        var nick = KeychainService.load(.Username)
-        usernameLabel.text = "Du er logget inn som \(nick!)"
-        
         super.viewDidLoad()
-
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
 
-    
 
 }

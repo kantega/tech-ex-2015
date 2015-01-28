@@ -16,6 +16,9 @@
 		57324D021A7680440059F18C /* Almofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57324D011A7680440059F18C /* Almofire.swift */; };
 		57324D041A777B770059F18C /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57324D031A777B770059F18C /* KeychainService.swift */; };
 		57324D0E1A77A03E0059F18C /* QuestsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57324D0D1A77A03E0059F18C /* QuestsViewController.swift */; };
+		57324D101A77D2400059F18C /* BadgesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57324D0F1A77D2400059F18C /* BadgesViewController.swift */; };
+		5799AEB61A78C86700645859 /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5799AEB51A78C86700645859 /* LoadingOverlay.swift */; };
+		5799AEB81A78E65300645859 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5799AEB71A78E65300645859 /* Alert.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +45,9 @@
 		57324D011A7680440059F18C /* Almofire.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Almofire.swift; sourceTree = "<group>"; };
 		57324D031A777B770059F18C /* KeychainService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = KeychainService.swift; path = services/KeychainService.swift; sourceTree = "<group>"; };
 		57324D0D1A77A03E0059F18C /* QuestsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuestsViewController.swift; sourceTree = "<group>"; };
+		57324D0F1A77D2400059F18C /* BadgesViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BadgesViewController.swift; sourceTree = "<group>"; };
+		5799AEB51A78C86700645859 /* LoadingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingOverlay.swift; sourceTree = "<group>"; };
+		5799AEB71A78E65300645859 /* Alert.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +98,9 @@
 				572B53231A7135CA0030E7D9 /* Supporting Files */,
 				57324D011A7680440059F18C /* Almofire.swift */,
 				57324D031A777B770059F18C /* KeychainService.swift */,
+				57324D0F1A77D2400059F18C /* BadgesViewController.swift */,
+				5799AEB51A78C86700645859 /* LoadingOverlay.swift */,
+				5799AEB71A78E65300645859 /* Alert.swift */,
 			);
 			path = TechEx;
 			sourceTree = "<group>";
@@ -225,6 +234,9 @@
 				572B53261A7135CA0030E7D9 /* AppDelegate.swift in Sources */,
 				57324D021A7680440059F18C /* Almofire.swift in Sources */,
 				57324D041A777B770059F18C /* KeychainService.swift in Sources */,
+				5799AEB61A78C86700645859 /* LoadingOverlay.swift in Sources */,
+				57324D101A77D2400059F18C /* BadgesViewController.swift in Sources */,
+				5799AEB81A78E65300645859 /* Alert.swift in Sources */,
 				57324D0E1A77A03E0059F18C /* QuestsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
