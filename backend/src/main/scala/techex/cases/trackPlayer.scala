@@ -7,58 +7,109 @@ import techex.data._
 import techex.domain._
 
 import scalaz._, Scalaz._
-import scalaz.stream._
-import scalaz.concurrent.Task
 
 object trackPlayer {
 
   import tracking._
 
-  val toMovement: Process1[(Observation, List[Location]), (Option[Location], List[Location])] = process1.lift {
-    case (observation, history) =>{
+
+
+  def calcActivity: (PlayerContext, StreamEvent) => (PlayerContext, List[Activity]) =
+    (ctx, event) => {
+
+      event match {
+        case observation: Observation     => {
+null
+        }
+        case scheduleEvent: ScheduleEvent => {
+null
+        }
+        case _                            => (ctx, Nil)
+
+      }
+
+    }
+
+
+  def nextLocation: (Observation, List[LocationUpdate]) => Option[LocationUpdate] = {
+    case (observation, history) =>
 
       val maybeArea =
         observation.beacon.flatMap(areas.beaconPlacement.get)
 
       (maybeArea, history) match {
-        case (None, Nil)                       => (None, Nil)
-        case (None, hist)                      => (None, hist)
-        case (Some(area), Nil)               => (Some(Location(UUID.randomUUID(), observation.playerId, area, Instant.now())), Nil)
-        case (Some(area), list@last :: rest) =>
-          if (area === last.area) (None, list)
-          else (Some(Location(UUID.randomUUID(), observation.playerId, area, Instant.now())), list)
-      }}
+        case (None, Nil)                => None
+        case (None, hist)               => None
+        case (Some(area), Nil)          => Some(LocationUpdate(UUID.randomUUID(), observation.playerId, area, Instant.now()))
+        case (Some(area), last :: rest) =>
+          if (area === last.area) None
+          else Some(LocationUpdate(UUID.randomUUID(), observation.playerId, area, Instant.now()))
+      }
   }
 
-  val loadHistory: Channel[Task, Observation, (Observation, List[Location])] =
-    Process.constant {
-      observation =>
-        db.ds.transact(LocationDao.loadLocationsForPlayer(observation.playerId, 20)).map(list => (observation, list))
+
+  def obs2Location(observation: Observation): State[PlayerContext, Option[LocationUpdate]] = State {
+    ctx => {
+
+      val playerId =
+        observation.playerId
+
+      val maybeUpdated =
+        for {
+          player <- ctx.playerData.get(playerId)
+          nextLocation <- nextLocation(observation, player.movements.toList)
+        } yield (ctx.putPlayerData(playerId, player.addMovement(nextLocation)), Some(nextLocation))
+
+      maybeUpdated.getOrElse((ctx, None))
+    }
+  }
+
+  def location2ScheduleActivity(incomingLocation: LocationUpdate): State[PlayerContext, List[Activity]] = State {
+    ctx => {
+      val joinActivities =
+        for {
+          event <- schedule.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.space.area contains incomingLocation.area)
+        } yield JoinedScheduledActivity(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant.toDateTime, event)
+
+      val leaveActivities =
+        for {
+          outgoingLocation <- ctx.playerData(incomingLocation.playerId).movements.tail.headOption.toList
+          event <- schedule.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.space.area contains outgoingLocation.area)
+        } yield LeftScheduledActivity(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant.toDateTime, event)
+
+      val activities = joinActivities ++ leaveActivities
+
+      (ctx.addActivities(activities), activities)
+    }
+  }
+
+  def location2VisitActivities: (PlayerContext, LocationUpdate) => (PlayerContext, List[Activity]) =
+    (ctx, locationUpdate) => {
+      val as = List(Entered(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant.toDateTime, locationUpdate.area))
+      (ctx.addActivities(as), as)
     }
 
-  val saveHistory: Channel[Task, (Option[Location], List[Location]), (Option[Location], List[Location])] = {
-    Process.constant {
-      case (None, history)           => Task.now((None, history))
-      case (Some(location), history) => db.ds.transact(LocationDao.storeLocation(location)).map(int => (Some(location), history))
+  def scheduleEvent2Activity: (PlayerContext, ScheduleEvent) => List[Activity] =
+    (ctx, event) => {
+      val area =
+        event.entry.space.area
+
+      val presentPlayers =
+        ctx.playerData.toList
+          .map(_._2)
+          .filter(_.movements.head.area === area)
+
+      event.msg match {
+        case Start => {
+          presentPlayers
+            .map(playerData => JoinedScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+        }
+        case End   => {
+          presentPlayers
+            .map(playerData => LeftScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+        }
+      }
+
     }
-  }
-
-  val prepend: Process1[(Option[Location], List[Location]), List[Location]] = process1.lift({
-    case (None, list)           => list
-    case (Some(location), list) => location :: list
-  })
-
-
-  def loadPlayer(playerId: PlayerId): Task[Option[Player]] = {
-    db.ds.transact(PlayerDAO.getPlayerById(playerId))
-  }
-
-
-  lazy val trackPlayerPipeline: Process[Task, List[Location]] =
-    eventstreams.observations.subscribe through
-      loadHistory pipe
-      toMovement through
-      saveHistory pipe
-      prepend
 
 }

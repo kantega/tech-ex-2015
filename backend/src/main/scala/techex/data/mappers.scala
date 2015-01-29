@@ -35,6 +35,17 @@ object mappers {
   implicit val locationAtom: Atom[Area] =
     Atom.fromScalaType[String].xmap(Area.apply, _.id)
 
+  implicit val proximityAtom: Atom[Proximity] =
+    Atom.fromScalaType[String].xmap(str => str.toLowerCase match {
+      case "near"      => Near
+      case "far"       => Far
+      case "immediate" => Immediate
+    }, prox => prox match {
+      case Near      => "near"
+      case Far       => "far"
+      case Immediate => "immediate"
+    })
+
 }
 
 object PlayerDAO {
@@ -131,13 +142,13 @@ object LocationDao {
     """.update.run
   }
 
-  def loadLocationsForPlayer(playerId: PlayerId,max:Int): ConnectionIO[List[Location]] = {
+  def loadLocationsForPlayer(playerId: PlayerId, max: Int): ConnectionIO[List[LocationUpdate]] = {
     sql"""
           SELECT * FROM movement WHERE playerId = $playerId ORDER BY instant LIMIT $max
-    """.query[Location].list
+    """.query[LocationUpdate].list
   }
 
-  def storeLocation(movement: Location) : ConnectionIO[Int]= {
+  def storeLocation(movement: LocationUpdate): ConnectionIO[Int] = {
     sql"""
           INSERT INTO movement
           VALUES (${movement.id},${movement.playerId},${movement.area},${movement.instant});

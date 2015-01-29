@@ -5,6 +5,7 @@ import java.util.concurrent.{TimeUnit, Executors}
 import org.http4s.server.jetty.JettyBuilder
 import org.specs2.mutable._
 import dispatch._, Defaults._
+import techex.cases.startup
 
 import scala.concurrent.ExecutionContext
 
@@ -20,7 +21,7 @@ class RestSpec extends Specification {
 
   val server = JettyBuilder
     .bindHttp(8080)
-    .mountService(Bootstrap.setup.run, "")
+    .mountService(startup.setup.run, "")
     .run
 
   val h = host("localhost",8080)

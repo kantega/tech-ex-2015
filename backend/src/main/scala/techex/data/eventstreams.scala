@@ -1,16 +1,16 @@
 package techex.data
 
-import techex.domain.Observation
+import techex.domain.{ScheduleEvent, Observation}
 
 import scalaz.stream.async.mutable.Topic
 
 object eventstreams {
 
 
-  lazy val observations:Topic[Observation] =
+  lazy val events: Topic[StreamEvent] =
     scalaz.stream.async.topic()
 
 
-
-
 }
+
+trait StreamEvent

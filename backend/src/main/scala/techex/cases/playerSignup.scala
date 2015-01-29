@@ -13,7 +13,7 @@ import techex.domain._
 import scalaz._, Scalaz._
 
 import scalaz.concurrent.Task
-
+import org.http4s.argonaut.ArgonautSupport._
 
 object playerSignup {
 
@@ -52,11 +52,10 @@ object playerSignup {
     jsonString =>
       Parse.parseWith(
         jsonString,
-        _
-        .field("nick")
-        .flatMap(_.string)
-        .map(n => succ(Nick(n)))
-        .getOrElse(fail("No field named 'nick' present in JSON")),
+        _.field("nick")
+          .flatMap(_.string)
+          .map(n => succ(Nick(n)))
+          .getOrElse(fail("No field named 'nick' present in JSON")),
         fail
       )
 
@@ -64,9 +63,16 @@ object playerSignup {
     nick =>
       PlayerDAO.getPlayerByNick(nick).map(_.nonEmpty)
 
-  val createPlayer: (Nick, PlayerPreference) => ConnectionIO[Player] =
-    (nick, playerPreference) => {
-      val player = Player(PlayerId.randomId(), nick, playerPreference, Nil)
+  val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Task[Player] =
+    (nick, playerPreference, personalQuests) => {
+      Task(Player(PlayerId.randomId(), nick, playerPreference, personalQuests))
+    }
+
+  val selectPersonalQuests: Task[List[QuestId]] =
+    Task(quests.quests.map(q => QuestId(q.id.value)))
+
+  val storePlayer: (Player) => ConnectionIO[Player] =
+    (player) => {
       PlayerDAO.insertPlayer(player).map(any => player)
     }
 
@@ -74,18 +80,17 @@ object playerSignup {
     (nick, playerPreference) =>
       for {
         taken <- db.ds.transact(checkNickTaken(nick))
+        randomPersonQuests <- selectPersonalQuests
+        player <- createPlayer(nick, playerPreference, randomPersonQuests)
         rsult <-
         if (taken) Task.delay(NickTaken(nick))
-        else db
-             .ds
-             .transact(createPlayer(nick, playerPreference))
-             .map(SignupOk)
+        else db.ds.transact(storePlayer(player)).map(SignupOk)
       } yield rsult
 
 
   val toResponse: Signupresult => Task[Response] = {
-    case SignupOk(player) => Created(player.id.value)
-    case NickTaken(nick) => Conflict(s"The nick ${nick.value} is taken, submit different nick")
+    case SignupOk(player) => Created(player.asJson)
+    case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
   val restApi: WebHandler = {
@@ -95,7 +100,7 @@ object playerSignup {
           toJsonQuotes(body).decodeValidation[PlayerPreference]
 
         maybePlayerPref
-        .fold(
+          .fold(
             str => BadRequest(s"Failed to parse the preferences: $str, expected something like  {'drink':'wine','eat':'meat'}"),
             preference =>
               for {
@@ -105,7 +110,5 @@ object playerSignup {
           )
       })
   }
-
-
 
 }

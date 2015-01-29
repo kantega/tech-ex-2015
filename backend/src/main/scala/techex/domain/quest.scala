@@ -4,8 +4,9 @@ import scalaz._, Scalaz._
 
 object quests {
 
+
   val seeAllTalks = Quest(Qid("seealltalks"), "See all the Talks", "Maximize your smart, see them all")
-  val networking  = Quest(Qid("networkingchanp"), "Networking champion", "Connect, its good for you (and your stats)")
+  val networking  = Quest(Qid("networkingchamp"), "Networking champion", "Connect, its good for you (and your stats)")
 
   val seetalksbronze   = Badge(Bid("seetalksbronze"), "Two talks down", "Attending two talks", Public, seeAllTalks.some)
   val seetalkssilver   = Badge(Bid("seetalkssilver"), "Three is silver", "Attending three talks", Public, seeAllTalks.some)
@@ -25,8 +26,14 @@ object quests {
 
   val quests =
     List(
-      seeAllTalks
-    ).map(q => (q.id, q)).toMap
+      seeAllTalks,
+      networking
+    )
+
+  val questMap =
+    quests
+      .map(q => (q.id, q))
+      .toMap
 
   val badges =
     List(
@@ -43,22 +50,37 @@ object quests {
       earlybird,
       ontime,
       intlnetworker,
-      ambassador
-    ).map(badge => (badge.id, badge)).toMap
+      ambassador)
+
+  val badgesMap =
+    badges
+      .map(badge => (badge.id, badge))
+      .toMap
 }
 case class Qid(value: String)
 case class Bid(value: String)
 case class Quest(id: Qid, name: String, desc: String)
+object Quest{
+  implicit val questEqual:Equal[Quest] =
+  Equal.equalA[String].contramap(_.id.value)
+}
 case class Badge(id: Bid, name: String, desc: String, visibility: Visibility, quest: Option[Quest])
 
 object Badge {
+  implicit val badgeEq: Equal[Badge] =
+    Equal.equalA[String].contramap(_.id.value)
+
   def byId(id: Bid) =
-    quests.badges(id)
+    quests.badgesMap(id)
 }
 
 trait Visibility
 case object Personal extends Visibility
 case object Public extends Visibility
 case object Secret extends Visibility
+object Visibility{
+  implicit val visibilityEqual:Equal[Visibility]=
+    Equal.equalRef[Visibility]
+}
 case class QuestProgress(quest: Quest, achievements: List[Achievement])
-case class Achievement(quest: Quest, achieved: Boolean, acheivedBy: List[Nick])
+case class Achievement(badge: Badge, achieved: Boolean, achievedBy: List[Nick])

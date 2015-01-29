@@ -1,4 +1,5 @@
 import org.http4s.{Request, Response}
+import org.joda.time.{Interval, ReadableInstant}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -35,5 +36,9 @@ package object techex {
       None
     else
       Some(str)
+
+  def durationBetween(from:ReadableInstant,to:ReadableInstant) =
+    new Interval(from,to).toDuration
+
 
 }
