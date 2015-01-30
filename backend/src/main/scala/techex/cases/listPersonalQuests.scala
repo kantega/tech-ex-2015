@@ -41,7 +41,7 @@ object listPersonalQuests {
         ("id" := b.id.value) ->:
           ("name" := b.name) ->:
           ("desc" := b.desc) ->:
-          ("visibility":= b.visibility.toString) ->:
+          ("visibility" := b.visibility.toString) ->:
           jEmptyObject
     )
 
@@ -62,12 +62,12 @@ object listPersonalQuests {
           jEmptyObject
     )
 
-
-  val restApi: WebHandler = {
-    case req@GET -> Root / "quests" / "user" / playerId => {
-      streamContext.getPlayerContext.flatMap { playerContext =>
+  def read(playerId:String): State[PlayerContext, Task[Response]] =
+    streamContext.read[Task[Response]](
+      playerContext => {
         val maybePlayerData =
           playerContext.playerData.get(PlayerId(playerId))
+
         maybePlayerData.fold(NotFound()) { playerData =>
           val player =
             playerData.player
@@ -83,10 +83,14 @@ object listPersonalQuests {
               QuestProgress(quest, achievementsInQuest)
             })
           Ok(progress.asJson)
+
         }
-
       }
+    )
 
-    }
+  val restApi: WebHandler = {
+    case req@GET -> Root / "quests" / "user" / playerId =>
+     streamContext.run(read(playerId)).flatMap(i=>i)
+
   }
 }

@@ -8,6 +8,10 @@ object PlayerId {
   def randomId() = PlayerId(Random.alphanumeric.take(6).mkString)
 }
 case class Nick(value: String)
+object Nick {
+  implicit val nickEqual: Equal[Nick] =
+    Equal.equalA[String].contramap(_.value)
+}
 case class Email(value: String)
 case class Player(id: PlayerId, nick: Nick, preference: PlayerPreference, privateQuests: List[QuestId])
 case class QuestId(value: String)
@@ -32,7 +36,7 @@ object Drink {
   def apply(drinkS: String): Drink = drinkS.toLowerCase match {
     case "wine" => Wine()
     case "beer" => Beer()
-    case _ => Coke()
+    case _      => Coke()
   }
 }
 
@@ -44,7 +48,7 @@ object Eat {
   def apply(eatS: String): Eat = eatS.toLowerCase match {
     case "meat" => Meat()
     case "fish" => Fish()
-    case _ => Salad()
+    case _      => Salad()
   }
 }
 case class PlayerPreference(drink: Drink, eat: Eat)

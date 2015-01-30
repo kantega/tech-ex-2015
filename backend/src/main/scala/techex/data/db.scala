@@ -42,13 +42,3 @@ object db {
 
 }
 
-object TestDb extends SafeApp {
-
-
-  override def runc: IO[Unit] = {
-    IO.putStrLn("Start")
-  }
-
-
-
-}

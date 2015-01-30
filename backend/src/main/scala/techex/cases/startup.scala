@@ -75,7 +75,12 @@ object startup {
       _ <- db.ds.transact(ObservationDAO.createObservationtable)
       _ <- Task.delay(println("Created observation table"))
       _ <- setupScheduleEvents(eventstreams.events)
-    } yield HttpService(playerSignup.restApi orElse test.testApi)
+    } yield HttpService(
+      playerSignup.restApi orElse
+        test.testApi orElse
+        listPersonalBadges.restApi orElse
+        listPersonalQuests.restApi orElse
+        listTotalProgress.restApi)
 
   }
 }

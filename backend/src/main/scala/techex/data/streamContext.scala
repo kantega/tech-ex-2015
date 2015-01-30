@@ -1,35 +1,59 @@
 package techex.data
 
+import java.util.concurrent.Executors
+
 import techex.domain._
 
+import scalaz.State
 import scalaz.concurrent.Task
 
 object streamContext {
+
+
   val historySize = 100
 
-  private var playerContext:PlayerContext =
+  implicit val executor =
+    Executors.newSingleThreadExecutor()
+
+  private var playerContext: PlayerContext =
     PlayerContext(Map())
 
-  def getPlayerContext:Task[PlayerContext] = {
-    Task(playerContext)
+
+  def update(f: PlayerContext => PlayerContext): State[PlayerContext, PlayerContext] = State(
+    ctx => {
+      val newCtx = f(ctx)
+      (newCtx, newCtx)
+    }
+  )
+
+  def read[A](f: PlayerContext => A): State[PlayerContext, A] = State(
+    ctx => {
+      val a = f(ctx)
+      (ctx, a)
+    }
+  )
+
+  def run[A](state: State[PlayerContext, A]): Task[A] = {
+    Task {
+      val (ctx, a) = state(playerContext)
+      playerContext = ctx
+      a
+    }
   }
 
-  def updatePlayerContext:PlayerContext => Task[PlayerContext] =
-  newContext => Task{
-    playerContext = newContext
-    newContext
-  }
+
+
 
 }
 
 case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
   def players =
-  playerData.toList.map(_._2)
+    playerData.toList.map(_._2)
 
   def putPlayerData(id: PlayerId, data: PlayerData): PlayerContext =
     copy(playerData = playerData + (id -> data))
 
-  def updatePlayerData(id: PlayerId, f: PlayerData => PlayerData) =
+  def updatePlayerData(id: PlayerId, f: PlayerData => PlayerData): PlayerContext =
     copy(playerData = playerData.updated(id, f(playerData(id))))
 
   def addActivities(activities: List[Activity]): PlayerContext =
@@ -37,6 +61,13 @@ case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
       case Nil          => this
       case head :: tail => updatePlayerData(head.playerId, _.addActivity(head)).addActivities(tail)
     }
+}
+
+object PlayerContext {
+
+
+
+
 }
 
 case class PlayerData(player: Player, achievements: Set[Badge], movements: Vector[LocationUpdate], activities: Vector[Activity]) {

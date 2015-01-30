@@ -1,5 +1,7 @@
 package techex.cases
 
+import org.http4s.Response
+
 import scalaz._, Scalaz._
 import org.http4s.dsl._
 
@@ -10,6 +12,8 @@ import techex._
 import techex.data.{PlayerContext, streamContext}
 import techex.domain._
 
+import scalaz.concurrent.Task
+
 object listPersonalBadges {
 
   implicit val badgeEncodeJson: EncodeJson[Badge] =
@@ -18,7 +22,7 @@ object listPersonalBadges {
         ("id" := b.id.value) ->:
           ("name" := b.name) ->:
           ("desc" := b.desc) ->:
-          ("visibility":= b.visibility.toString) ->:
+          ("visibility" := b.visibility.toString) ->:
           jEmptyObject
     )
 
@@ -39,31 +43,31 @@ object listPersonalBadges {
 
   val restApi: WebHandler = {
     case req@GET -> Root / "achievements" / "user" / playerId => {
-      streamContext.getPlayerContext.flatMap { playerContext =>
-        val maybePlayerData =
-          playerContext.playerData.get(PlayerId(playerId))
-        maybePlayerData.fold(NotFound()) { playerData =>
-          val player =
-            playerData.player
+      val achievemnts:Task[Task[Response]] =
+        streamContext.run[Task[Response]](State {
+          playerContext: PlayerContext =>
+            val maybePlayerData =
+              playerContext.playerData.get(PlayerId(playerId))
 
+            maybePlayerData.fold((playerContext,NotFound())) { playerData =>
+              val player =
+                playerData.player
 
-          val visibleForUser =
-            quests.badges
-              .filter(_.visibility === Public) ++
-              player.privateQuests
-                .map(id => quests.questMap(Qid(id.value)))
-                .flatMap(badges)
+              val visibleForUser =
+                quests.badges
+                  .filter(_.visibility === Public) ++
+                  player.privateQuests
+                    .map(id => quests.questMap(Qid(id.value)))
+                    .flatMap(badges)
 
+              val progress =
+                visibleForUser
+                  .map(badge => Achievement(badge, playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
 
-          val progress =
-            visibleForUser
-              .map(badge => Achievement(badge, playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
-          Ok(progress.asJson)
-        }
-
-      }
-
-
+              (playerContext, Ok(progress.asJson))
+            }
+        })
+      achievemnts.flatMap(i=>i)
     }
   }
 }

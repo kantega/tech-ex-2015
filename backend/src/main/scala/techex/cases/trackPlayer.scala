@@ -14,20 +14,26 @@ object trackPlayer {
 
 
 
-  def calcActivity: (PlayerContext, StreamEvent) => (PlayerContext, List[Activity]) =
-    (ctx, event) => {
-
+  def calcActivity: StreamEvent => State[PlayerContext, List[Activity]] =
+    event => {
       event match {
-        case observation: Observation     => {
-null
-        }
-        case scheduleEvent: ScheduleEvent => {
-null
-        }
-        case _                            => (ctx, Nil)
+        case observation: Observation =>
+          obs2Location(observation)
+            .flatMap({
+            case None         => State.state(nil[Activity])
+            case Some(update) => for {
+              a <- location2ScheduleActivity(update)
+              b <- location2VisitActivities(update)
+            } yield a ++ b
+          })
+
+        case scheduleEvent: ScheduleEvent =>
+          scheduleEvent2Activity(scheduleEvent)
+
+        case _                            =>
+          State(ctx => (ctx, Nil))
 
       }
-
     }
 
 
@@ -83,33 +89,35 @@ null
     }
   }
 
-  def location2VisitActivities: (PlayerContext, LocationUpdate) => (PlayerContext, List[Activity]) =
-    (ctx, locationUpdate) => {
-      val as = List(Entered(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant.toDateTime, locationUpdate.area))
-      (ctx.addActivities(as), as)
+  def location2VisitActivities: (LocationUpdate) => State[PlayerContext, List[Activity]] =
+    locationUpdate => State {
+      ctx => {
+        val as = List(Entered(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant.toDateTime, locationUpdate.area))
+        (ctx.addActivities(as), as)
+      }
     }
 
-  def scheduleEvent2Activity: (PlayerContext, ScheduleEvent) => List[Activity] =
-    (ctx, event) => {
-      val area =
-        event.entry.space.area
+  def scheduleEvent2Activity: ScheduleEvent => State[PlayerContext, List[Activity]] =
+    event =>
+      State.gets { ctx =>
+        val area =
+          event.entry.space.area
 
-      val presentPlayers =
-        ctx.playerData.toList
-          .map(_._2)
-          .filter(_.movements.head.area === area)
+        val presentPlayers =
+          ctx.playerData.toList
+            .map(_._2)
+            .filter(_.movements.head.area === area)
 
-      event.msg match {
-        case Start => {
-          presentPlayers
-            .map(playerData => JoinedScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
-        }
-        case End   => {
-          presentPlayers
-            .map(playerData => LeftScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+        event.msg match {
+          case Start => {
+            presentPlayers
+              .map(playerData => JoinedScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+          }
+          case End   => {
+            presentPlayers
+              .map(playerData => LeftScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+          }
         }
       }
-
-    }
 
 }

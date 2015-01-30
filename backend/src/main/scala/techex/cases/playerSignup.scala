@@ -7,7 +7,7 @@ import org.http4s.dsl._
 
 import _root_.argonaut._
 import Argonaut._
-import techex.data.{db, PlayerDAO}
+import techex.data._
 import techex.domain._
 
 import scalaz._, Scalaz._
@@ -59,34 +59,50 @@ object playerSignup {
         fail
       )
 
-  val checkNickTaken: Nick => ConnectionIO[Boolean] =
-    nick =>
-      PlayerDAO.getPlayerByNick(nick).map(_.nonEmpty)
+  val checkNickTaken: Nick => State[PlayerContext, Boolean] =
+    nick => streamContext.read(_.playerData.exists(entry => entry._2.player.nick === nick))
 
-  val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Task[Player] =
+
+  val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Player =
     (nick, playerPreference, personalQuests) => {
-      Task(Player(PlayerId.randomId(), nick, playerPreference, personalQuests))
+      Player(PlayerId.randomId(), nick, playerPreference, personalQuests)
     }
 
-  val selectPersonalQuests: Task[List[QuestId]] =
-    Task(quests.quests.map(q => QuestId(q.id.value)))
+  val selectPersonalQuests: List[QuestId] =
+    quests.quests.map(q => QuestId(q.id.value))
 
-  val storePlayer: (Player) => ConnectionIO[Player] =
+  val storePlayer: Player => ConnectionIO[Player] =
     (player) => {
       PlayerDAO.insertPlayer(player).map(any => player)
     }
 
-  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => Task[Signupresult] =
+  val updateContext: Player => State[PlayerContext, Player] =
+    player =>
+      State[PlayerContext, Player](ctx =>
+        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector())), player))
+
+
+  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerContext, Signupresult] =
     (nick, playerPreference) =>
       for {
-        taken <- db.ds.transact(checkNickTaken(nick))
-        randomPersonQuests <- selectPersonalQuests
-        player <- createPlayer(nick, playerPreference, randomPersonQuests)
-        rsult <-
-        if (taken) Task.delay(NickTaken(nick))
-        else db.ds.transact(storePlayer(player)).map(SignupOk)
+        taken <- checkNickTaken(nick)
+        randomPersonQuests <- State.state(selectPersonalQuests)
+        player <- State.state(createPlayer(nick, playerPreference, randomPersonQuests))
+        rsult <- State.state(
+          if (taken) NickTaken(nick)
+          else SignupOk(player))
       } yield rsult
 
+
+  val storeIfSuccess: Signupresult => Task[Signupresult] = {
+    case ok@SignupOk(player) =>
+      for {
+        _ <- streamContext.run(updateContext(player))
+        _ <- db.ds.transact(storePlayer(player))
+      } yield ok
+    case taken@NickTaken(_)  =>
+      Task.now(taken)
+  }
 
   val toResponse: Signupresult => Task[Response] = {
     case SignupOk(player) => Created(player.asJson)
@@ -104,7 +120,8 @@ object playerSignup {
             str => BadRequest(s"Failed to parse the preferences: $str, expected something like  {'drink':'wine','eat':'meat'}"),
             preference =>
               for {
-                result <- createPlayerIfNickAvailable(Nick(nick), preference)
+                result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
+                _ <- storeIfSuccess(result)
                 response <- toResponse(result)
               } yield response
           )
