@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
-        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Login And Registration View Controller-->
@@ -116,39 +115,32 @@
             <point key="canvasLocation" x="1058" y="508"/>
         </scene>
         <!--Quests-->
-        <scene sceneID="wit-Be-opm">
+        <scene sceneID="34G-Eu-LDn">
             <objects>
-                <viewController id="Psi-Vp-26t" userLabel="Quests" customClass="QuestsViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="9X5-QV-z2e"/>
-                        <viewControllerLayoutGuide type="bottom" id="U60-jh-pAu"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="5CA-ll-8ed">
+                <tableViewController id="kyq-em-Gy3" customClass="QuestsTableViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="Wxc-lp-lWV">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="f1z-l2-IUW">
-                                <rect key="frame" x="16" y="110" width="568" height="21"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="f1z-l2-IUW" firstAttribute="leading" secondItem="5CA-ll-8ed" secondAttribute="leadingMargin" id="Ss5-eG-eBU"/>
-                            <constraint firstItem="f1z-l2-IUW" firstAttribute="trailing" secondItem="5CA-ll-8ed" secondAttribute="trailingMargin" id="weR-km-f96"/>
-                            <constraint firstItem="f1z-l2-IUW" firstAttribute="top" secondItem="9X5-QV-z2e" secondAttribute="bottom" constant="90" id="zez-nq-MF7"/>
-                        </constraints>
-                    </view>
-                    <tabBarItem key="tabBarItem" title="Quests" id="KWA-7D-0cV"/>
-                    <connections>
-                        <outlet property="usernameLabel" destination="f1z-l2-IUW" id="B1L-lJ-NmY"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="9p3-Us-POS" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                        <prototypes>
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="QuestPrototypeCell" id="KXa-we-SKB">
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KXa-we-SKB" id="IG7-h6-E2b">
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </tableViewCellContentView>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="kyq-em-Gy3" id="jiV-B4-TdG"/>
+                            <outlet property="delegate" destination="kyq-em-Gy3" id="40j-43-B4U"/>
+                        </connections>
+                    </tableView>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <tabBarItem key="tabBarItem" title="Quests" id="M5e-vF-In3"/>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="eB7-es-dME" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1058" y="-154"/>
+            <point key="canvasLocation" x="1058" y="-175"/>
         </scene>
         <!--Main-->
         <scene sceneID="KXY-Re-QH8">
@@ -161,7 +153,7 @@
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </tabBar>
                     <connections>
-                        <segue destination="Psi-Vp-26t" kind="relationship" relationship="viewControllers" id="Azy-Mj-TzP"/>
+                        <segue destination="kyq-em-Gy3" kind="relationship" relationship="viewControllers" id="bwp-Bc-6au"/>
                         <segue destination="AGX-1t-vQk" kind="relationship" relationship="viewControllers" id="QZs-0V-fLm"/>
                     </connections>
                 </tabBarController>

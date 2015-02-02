@@ -32,20 +32,20 @@ class LoginAndRegistrationViewController: UIViewController {
         LoadingOverlay.shared.showOverlay(self.view);
         
         request(.PUT, "\(baseApiUrl)/player/\(nick)")
-            .responseJSON { (req, resp, JSON, error) in
+            .responseJSON { (req, resp, j, error) in
                 if error != nil {
                     Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
                     NSLog("Error when registering user: \(error)");
                 } else {
-                    let d = JSON as NSDictionary;
-                    let idToken = d.objectForKey("id") as String
-                    let nick = d.objectForKey("nick") as String
+                    let d = JSON(j!);
+                    let idToken = d["id"].string!
+                    let nick = d["nick"].string!
                     NSLog("Token: \(idToken), nick: \(nick)")
                 
                     KeychainService.save(.Username, value: nick)
-                    KeychainService.save(.Token, value: idToken);
+                    KeychainService.save(.Token, value: idToken)
                 
-                    self.showQuests();
+                    self.showQuests()
                 }
                 LoadingOverlay.shared.hideOverlayView();
         }
