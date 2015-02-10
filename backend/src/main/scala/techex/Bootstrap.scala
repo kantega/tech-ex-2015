@@ -1,15 +1,10 @@
 package techex
 
-import javax.servlet.{ServletContextEvent, ServletContextListener}
 import javax.servlet.annotation.WebListener
+import javax.servlet.{ServletContextEvent, ServletContextListener}
 
-import org.http4s.server.HttpService
 import org.http4s.servlet.Http4sServlet
-import techex.cases.playerSignup
-import techex.data.{ObservationDAO, PlayerDAO, db}
-import techex.web.test
-
-import scalaz.concurrent.Task
+import techex.cases.startup
 
 @WebListener
 class Bootstrap extends ServletContextListener {
@@ -17,7 +12,7 @@ class Bootstrap extends ServletContextListener {
 
   override def contextInitialized(sce: ServletContextEvent): Unit = {
     val service =
-      Bootstrap.setup.run
+      startup.setup.run
 
     val ctx =
       sce.getServletContext
@@ -31,14 +26,4 @@ class Bootstrap extends ServletContextListener {
   override def contextDestroyed(sce: ServletContextEvent): Unit = {}
 }
 
-object Bootstrap {
-  def setup: Task[HttpService] = {
-    for {
-      _ <- db.ds.transact(PlayerDAO.create)
-      _ <- Task.delay(println("Created player table"))
-      _ <- db.ds.transact(ObservationDAO.createObservationtable)
-      _ <- Task.delay(println("Created observation table"))
-    } yield HttpService(playerSignup.restApi orElse test.testApi)
 
-  }
-}
