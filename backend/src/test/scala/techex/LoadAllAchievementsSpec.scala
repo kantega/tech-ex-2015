@@ -1,25 +1,16 @@
 package techex
 
-import com.ning.http.client.Response
-import dispatch.as
-import org.http4s.dsl./
-import techex.TestServer._
+import dispatch._
 import org.specs2.mutable._
-import dispatch._, Defaults._
-import scalaz._, Scalaz._
-import _root_.argonaut._, Argonaut._
+import techex.TestServer._
 
-import scalaz.concurrent.Task
-
-class LoadTotalProgressSpec extends Specification {
+class LoadAllAchievementsSpec extends Specification {
   try {
     val runningserver =
       server.start.run
 
-
-
     "The webserwer" should {
-      "yield a list of quests for one player" in {
+      "yield a list of achievemnts" in {
         val questsF = Http(h / "quests")
           .map(_.getResponseBody)
 

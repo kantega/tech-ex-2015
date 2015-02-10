@@ -2,16 +2,16 @@ package techex.domain
 
 import java.util.UUID
 
-import org.joda.time.{DateTime, Instant}
+import org.joda.time.{Duration, DateTime, Instant}
 import techex.data.StreamEvent
 import scalaz._, Scalaz._
 import scalaz.Tree
 
 object tracking {
 
-
-
 }
+
+
 object areas {
 
   val foyer           = Area("foyer")
@@ -77,7 +77,7 @@ case class Area(id: String) {
     areas.contains(this, other)
 
 }
-object Area{
+object Area {
   implicit val areaEqual: Equal[Area] =
     Equal[String].contramap(_.id)
 }
@@ -94,11 +94,21 @@ case class Timed[A](timestamp: Instant, value: A)
 
 case class LocationUpdate(id: UUID, playerId: PlayerId, area: Area, instant: Instant)
 
-sealed trait Activity{
-  def id:UUID
-  def playerId:PlayerId
-  def instant:DateTime
-}
-case class JoinedScheduledActivity(id: UUID, playerId: PlayerId,instant: DateTime, event: ScheduleEntry) extends Activity
-case class LeftScheduledActivity(id: UUID, playerId: PlayerId,instant: DateTime, event: ScheduleEntry) extends Activity
-case class Entered(id: UUID, playerId: PlayerId,instant:DateTime, area:Area) extends Activity
+case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant)
+case class FactUpdate(info:UpdateMeta, fact: Fact)
+
+trait Fact
+case class JoinedActivity(event: ScheduleEntry) extends Fact
+case class LeftActivity(event: ScheduleEntry) extends Fact
+case class JoinedOnTime(event:ScheduleEntry) extends Fact
+case class LeftOnTime(event:ScheduleEntry) extends Fact
+case class Entered(area: Area) extends Fact
+case class LeftArea(area:Area) extends Fact
+trait AggregatedFact extends Fact
+case class Attended(event:ScheduleEntry) extends AggregatedFact
+case class CameEarly(event:ScheduleEntry,duration:Duration) extends AggregatedFact
+case class CameLate(event:ScheduleEntry,duration:Duration) extends AggregatedFact
+case class LeftFor(event:ScheduleEntry, activity:String,duration:Duration) extends AggregatedFact
+case class Connected(playerId:PlayerId) extends AggregatedFact
+
+

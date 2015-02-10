@@ -19,9 +19,6 @@ import org.http4s.argonaut.ArgonautSupport._
 object listPersonalQuests {
 
 
-  def badges(quest: Quest) =
-    quests.badges.filter(badge => badge.quest.exists(_ === quest))
-
   def acheivedBy(badge: Badge, ctx: PlayerContext) =
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
 
@@ -78,7 +75,7 @@ object listPersonalQuests {
           val progress =
             personalQuests.map(quest => {
               val achievementsInQuest =
-                badges(quest)
+                Quest.badges(quest)
                   .map(badge => Achievement(badge, playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
               QuestProgress(quest, achievementsInQuest)
             })

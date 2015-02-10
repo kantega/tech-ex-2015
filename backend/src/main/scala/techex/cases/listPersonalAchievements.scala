@@ -14,7 +14,7 @@ import techex.domain._
 
 import scalaz.concurrent.Task
 
-object listPersonalBadges {
+object listPersonalAchievements {
 
   implicit val badgeEncodeJson: EncodeJson[Badge] =
     EncodeJson(
@@ -34,9 +34,6 @@ object listPersonalBadges {
           ("achievedBy" := a.achievedBy.map(_.value)) ->:
           jEmptyObject
     )
-
-  def badges(quest: Quest) =
-    quests.badges.filter(badge => badge.quest.exists(_ === quest))
 
   def acheivedBy(badge: Badge, ctx: PlayerContext) =
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
@@ -58,7 +55,7 @@ object listPersonalBadges {
                   .filter(_.visibility === Public) ++
                   player.privateQuests
                     .map(id => quests.questMap(Qid(id.value)))
-                    .flatMap(badges)
+                    .flatMap(Quest.badges)
 
               val progress =
                 visibleForUser

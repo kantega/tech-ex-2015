@@ -78,9 +78,10 @@ object startup {
     } yield HttpService(
       playerSignup.restApi orElse
         test.testApi orElse
-        listPersonalBadges.restApi orElse
+        listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse
-        listTotalProgress.restApi)
+        listTotalProgress.restApi orElse
+        listTotalAchievements.restApi)
 
   }
 }

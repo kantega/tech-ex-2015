@@ -20,7 +20,7 @@ object quests {
   val smalljavabladder = Badge(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time", Secret, none)
   val earlybird        = Badge(Bid("earlybird"), "Early bird", "Arrived 20 mins early", Public, none)
   val ontime           = Badge(Bid("ontime"), "If you are there on time, you are late", "Do not be late", Personal, none)
-  val intlnetworker    = Badge(Bid("intlnetworker"), "International networker", "You have many international connections", Public, networking.some)
+  val intlnetworker    = Badge(Bid("intlnetworker"), "International networker", "You have many international connections", Personal, networking.some)
   val ambassador       = Badge(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game", Personal, networking.some)
 
 
@@ -60,9 +60,13 @@ object quests {
 case class Qid(value: String)
 case class Bid(value: String)
 case class Quest(id: Qid, name: String, desc: String)
+
 object Quest{
   implicit val questEqual:Equal[Quest] =
   Equal.equalA[String].contramap(_.id.value)
+
+  def badges(quest: Quest): List[Badge] =
+    quests.badges.filter(badge => badge.quest.exists(_ === quest))
 }
 case class Badge(id: Bid, name: String, desc: String, visibility: Visibility, quest: Option[Quest])
 

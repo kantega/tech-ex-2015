@@ -11,30 +11,70 @@ import scalaz._, Scalaz._
 object trackPlayer {
 
   import tracking._
+  import matching._
+  import predicates._
+
+  val leftActivity =
+    fact({ case LeftActivity(entry) => true})
+
+  val joinedActivity =
+    fact({ case JoinedActivity(entry) => true})
+
+  val joinedSameActivity =
+    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({case LeftActivity(e) => entry === e})) => true})
+
+  val joinedActivityAtSameArea =
+    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({case Entered(e) => entry.space.area === e})) => true})
+
+  val leftSameActivity =
+    ctx({ case (FactUpdate(_, LeftActivity(entry)), matches) if matches.exists(matched({case JoinedActivity(e) => entry === e})) => true})
+
+  val coffee =
+    visited(areas.coffeeStand)
+
+  val toilet =
+    visited(areas.toiletAtSamf) or visited(areas.toiletAtSeminar)
+
+  val attendedSession =
+    joinedActivity ~> leftSameActivity
 
 
+  val enteredArea =
+    fact({ case entered: Entered => true})
 
-  def calcActivity: StreamEvent => State[PlayerContext, List[Activity]] =
-    event => {
-      event match {
-        case observation: Observation =>
-          obs2Location(observation)
-            .flatMap({
-            case None         => State.state(nil[Activity])
-            case Some(update) => for {
-              a <- location2ScheduleActivity(update)
-              b <- location2VisitActivities(update)
-            } yield a ++ b
-          })
+  val leftArea =
+    fact({ case entered: LeftArea => true})
 
-        case scheduleEvent: ScheduleEvent =>
-          scheduleEvent2Activity(scheduleEvent)
+  val arrivedEarly =
+    enteredArea ~> joinedActivityAtSameArea
 
-        case _                            =>
-          State(ctx => (ctx, Nil))
 
-      }
+  def calcActivity: StreamEvent => State[PlayerContext, List[FactUpdate]] = {
+    case observation: Observation =>
+      obs2Location(observation)
+        .flatMap({
+        case None         => State.state(nil[FactUpdate])
+        case Some(update) => for {
+          a <- location2ScheduleActivity(update)
+          b <- location2VisitActivities(update)
+        } yield a ++ b
+      })
+
+    case scheduleEvent: ScheduleEvent =>
+      scheduleEvent2Activity(scheduleEvent)
+
+    case _ =>
+      State(ctx => (ctx, Nil))
+
+  }
+
+  def calcAggregateFacts(id: PlayerId): State[PlayerContext, List[FactUpdate]] = State {
+    ctx => {
+      val activities = ctx.playerData(id).activities.toList
+      null
+
     }
+  }
 
 
   def nextLocation: (Observation, List[LocationUpdate]) => Option[LocationUpdate] = {
@@ -70,18 +110,18 @@ object trackPlayer {
     }
   }
 
-  def location2ScheduleActivity(incomingLocation: LocationUpdate): State[PlayerContext, List[Activity]] = State {
+  def location2ScheduleActivity(incomingLocation: LocationUpdate): State[PlayerContext, List[FactUpdate]] = State {
     ctx => {
       val joinActivities =
         for {
           event <- schedule.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.space.area contains incomingLocation.area)
-        } yield JoinedScheduledActivity(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant.toDateTime, event)
+        } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant), JoinedActivity(event))
 
       val leaveActivities =
         for {
           outgoingLocation <- ctx.playerData(incomingLocation.playerId).movements.tail.headOption.toList
           event <- schedule.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.space.area contains outgoingLocation.area)
-        } yield LeftScheduledActivity(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant.toDateTime, event)
+        } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant), LeftActivity(event))
 
       val activities = joinActivities ++ leaveActivities
 
@@ -89,15 +129,23 @@ object trackPlayer {
     }
   }
 
-  def location2VisitActivities: (LocationUpdate) => State[PlayerContext, List[Activity]] =
+  def location2VisitActivities: (LocationUpdate) => State[PlayerContext, List[FactUpdate]] =
     locationUpdate => State {
       ctx => {
-        val as = List(Entered(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant.toDateTime, locationUpdate.area))
-        (ctx.addActivities(as), as)
+        val left =
+          if (ctx.playerData(locationUpdate.playerId).movements.nonEmpty)
+            List(FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), LeftArea(ctx.playerData(locationUpdate.playerId).movements.head.area)))
+          else
+            List()
+
+        val arrived =
+          FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), Entered(locationUpdate.area)) :: left
+
+        (ctx.addActivities(arrived), arrived)
       }
     }
 
-  def scheduleEvent2Activity: ScheduleEvent => State[PlayerContext, List[Activity]] =
+  def scheduleEvent2Activity: ScheduleEvent => State[PlayerContext, List[FactUpdate]] =
     event =>
       State.gets { ctx =>
         val area =
@@ -111,11 +159,11 @@ object trackPlayer {
         event.msg match {
           case Start => {
             presentPlayers
-              .map(playerData => JoinedScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+              .map(playerData => FactUpdate(UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant), JoinedActivity(event.entry)))
           }
           case End   => {
             presentPlayers
-              .map(playerData => LeftScheduledActivity(UUID.randomUUID(), playerData.player.id, event.instant, event.entry))
+              .map(playerData => FactUpdate(UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant), LeftActivity(event.entry)))
           }
         }
       }

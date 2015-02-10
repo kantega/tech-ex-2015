@@ -19,6 +19,11 @@ object streamContext {
     PlayerContext(Map())
 
 
+  def updatePlayer: PlayerId => (PlayerData => PlayerData) => State[PlayerContext, Unit] =
+    id => f => State { ctx =>
+      (ctx.updatePlayerData(id, f), Unit)
+    }
+
   def update(f: PlayerContext => PlayerContext): State[PlayerContext, PlayerContext] = State(
     ctx => {
       val newCtx = f(ctx)
@@ -41,9 +46,6 @@ object streamContext {
     }
   }
 
-
-
-
 }
 
 case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
@@ -56,21 +58,23 @@ case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
   def updatePlayerData(id: PlayerId, f: PlayerData => PlayerData): PlayerContext =
     copy(playerData = playerData.updated(id, f(playerData(id))))
 
-  def addActivities(activities: List[Activity]): PlayerContext =
+  def addActivities(activities: List[FactUpdate]): PlayerContext =
     activities match {
       case Nil          => this
-      case head :: tail => updatePlayerData(head.playerId, _.addActivity(head)).addActivities(tail)
+      case head :: tail => updatePlayerData(head.info.playerId, _.addActivity(head)).addActivities(tail)
     }
 }
 
 object PlayerContext {
 
-
-
-
 }
 
-case class PlayerData(player: Player, achievements: Set[Badge], movements: Vector[LocationUpdate], activities: Vector[Activity]) {
+case class PlayerData(
+  player: Player,
+  achievements: Set[Badge],
+  movements: Vector[LocationUpdate],
+  activities: Vector[FactUpdate],
+  progress: EventPattern) {
 
   def addAchievement(achievemnt: Badge): PlayerData =
     copy(achievements = achievements + achievemnt)
@@ -86,10 +90,15 @@ case class PlayerData(player: Player, achievements: Set[Badge], movements: Vecto
         updated
     })
 
-  def addActivities(activities: List[Activity]): PlayerData =
+  def addActivities(activities: List[FactUpdate]): PlayerData =
     activities.foldRight(this) { (activity, data) => data.addActivity(activity)}
 
-  def addActivity(activity: Activity): PlayerData =
+  def addActivity(activity: FactUpdate): PlayerData =
     copy(activities = activity +: activities)
 
+}
+
+object PlayerData {
+  def updateProgess: EventPattern => PlayerData => PlayerData =
+    progress => data => data.copy(progress = progress)
 }

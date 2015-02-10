@@ -23,14 +23,8 @@ object listTotalProgress {
     )
 
   implicit val badgeEncodeJson: EncodeJson[Badge] =
-    EncodeJson(
-      (b: Badge) =>
-        ("id" := b.id.value) ->:
-          ("name" := b.name) ->:
-          ("desc" := b.desc) ->:
-          ("visibility" := b.visibility.toString) ->:
-          jEmptyObject
-    )
+    jencode4L((b:Badge)=>(b.id.value,b.name,b.desc,b.visibility.toString))("id","name","desc","visibility")
+
 
   implicit val achievemntEncodeJson: EncodeJson[Achievement] =
     EncodeJson(
