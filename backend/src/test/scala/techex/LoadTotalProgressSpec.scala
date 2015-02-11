@@ -1,15 +1,9 @@
 package techex
 
-import com.ning.http.client.Response
-import dispatch.as
-import org.http4s.dsl./
-import techex.TestServer._
+import dispatch.Defaults._
+import dispatch._
 import org.specs2.mutable._
-import dispatch._, Defaults._
-import scalaz._, Scalaz._
-import _root_.argonaut._, Argonaut._
-
-import scalaz.concurrent.Task
+import techex.TestServer._
 
 class LoadTotalProgressSpec extends Specification {
   try {

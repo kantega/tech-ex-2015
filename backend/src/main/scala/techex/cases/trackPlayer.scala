@@ -2,19 +2,19 @@ package techex.cases
 
 import java.util.UUID
 
-import org.joda.time.Minutes._
-import org.joda.time.{Interval, ReadablePeriod, Minutes, Instant}
+import org.http4s.dsl._
+import org.joda.time.Instant
+import techex.WebHandler
 import techex.data._
-import techex.domain.Matcher._
 import techex.domain._
 
-import scalaz._, Scalaz._
+import scalaz.Scalaz._
+import scalaz._
+import scalaz.concurrent.Task
 
 object trackPlayer {
 
-  import tracking._
-  import matching._
-  import predicates._
+  import techex.domain.predicates._
 
   val leftActivity =
     fact({ case LeftActivity(entry) => true})
@@ -187,4 +187,10 @@ object trackPlayer {
         }
       }
 
+  def restApi: WebHandler = {
+    case req@POST -> Root / "location" / playerId =>
+      Task({
+        println(s"Locationupdate received from $playerId")
+      }).flatMap(x => Ok("{\"result\":\"ok\"}"))
+  }
 }

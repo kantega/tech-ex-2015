@@ -79,7 +79,7 @@ object playerSignup {
   val updateContext: Player => State[PlayerContext, Player] =
     player =>
       State[PlayerContext, Player](ctx =>
-        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector(),ZeroMatcher())), player))
+        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector(), ZeroMatcher())), player))
 
 
   val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerContext, Signupresult] =
@@ -109,22 +109,21 @@ object playerSignup {
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
-  def restApi(tx:Transactor[Task]): WebHandler = {
+  def restApi(tx: Transactor[Task]): WebHandler = {
     case req@PUT -> Root / "player" / nick =>
       EntityDecoder.text(req)(body => {
         val maybePlayerPref =
           toJsonQuotes(body).decodeValidation[PlayerPreference]
 
-        maybePlayerPref
-          .fold(
-            str => BadRequest(s"Failed to parse the preferences: $str, expected something like  {'drink':'wine','eat':'meat'}"),
-            preference =>
-              for {
-                result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
-                _ <- storeIfSuccess(tx)(result)
-                response <- toResponse(result)
-              } yield response
-          )
+        val preference =
+          maybePlayerPref.getOrElse(PlayerPreference.default)
+
+        for {
+          result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
+          _ <- storeIfSuccess(tx)(result)
+          response <- toResponse(result)
+        } yield response
+
       })
   }
 

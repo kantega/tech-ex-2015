@@ -40,10 +40,11 @@ libraryDependencies ++= {
     "org.http4s" % "http4s-argonaut_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-jetty_2.11" % http4sVersion % "test" withSources() withJavadoc() ,
     "org.tpolecat" % "doobie-core_2.11" % "0.2.0", //database
-    "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
+    "javax.servlet" % "javax.servlet-api" % "3.1.0",
     "com.h2database" % "h2" % "1.4.182",
     "com.zaxxer" % "HikariCP" % "2.2.5",
     "com.github.nscala-time" %% "nscala-time" % "1.8.0",
+    "com.typesafe" % "config" % "1.2.1", //config
     "io.argonaut" %% "argonaut" % "6.1-M4" //json
   )
 }

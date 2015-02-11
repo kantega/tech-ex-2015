@@ -39,7 +39,7 @@ object listPersonalAchievements {
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
 
   val restApi: WebHandler = {
-    case req@GET -> Root / "achievements" / "user" / playerId => {
+    case req@GET -> Root / "achievements" / "player" / playerId => {
       val achievemnts:Task[Task[Response]] =
         streamContext.run[Task[Response]](State {
           playerContext: PlayerContext =>

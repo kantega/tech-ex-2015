@@ -15,6 +15,10 @@ object matching {
     Occurence(pred)
   }
 
+  def notExist(pred: Pred) = {
+    Not(pred)
+  }
+
 }
 
 object predicates {
@@ -23,15 +27,15 @@ object predicates {
     def and(other: Pred) =
       predicates.and(pred, other)
 
-
     def or(other: Pred) =
       predicates.or(pred, other)
 
     def ~>(other: Pred) =
       exists(pred) ~> exists(other)
 
-    def fBy(other: Pred) =
-      ~>(other)
+    def ~>(other: EventPattern) =
+      exists(pred) ~> other
+
   }
 
   implicit def toInfixOps(pred: Pred): PredOps =
@@ -123,9 +127,12 @@ trait EventPattern {
   def ~>(p: => EventPattern)(implicit validDuraion: Duration): EventPattern = {
     (this, p) match {
       case (Exhausted(), _) => Exhausted()
-      case (_, Exhausted()) => Exhausted()
       case _                => FBy(this, p, validDuraion)
     }
+  }
+
+  def ~>(pred: Pred)(implicit validDuraion: Duration): EventPattern = {
+    this.~>(exists(pred))(validDuraion)
   }
 }
 
@@ -144,13 +151,17 @@ case class FBy(one: EventPattern, other: EventPattern, duration: Duration) exten
 
     val expire =
       t.fact.info.instant.plus(duration).toInstant
-    (Expires(waitingCollapsed, expire) ++ oneNext.~>(other)(duration), Nil)
+
+    (Expires(waitingCollapsed, expire) ++ (oneNext.~>(other)(duration)), Nil)
   }
 }
 
 case class AwaitOther(pattern: EventPattern, matches: List[FactUpdate]) extends EventPattern {
   def parse(s: Token) = {
-    val (next, tokens) = pattern.parse(Token(s.fact, matches ::: s.matches))
+
+    val (next, tokens) =
+      pattern.parse(Token(s.fact, matches ::: s.matches))
+
     next match {
       case Exhausted() => (Exhausted(), tokens)
       case _           => (AwaitOther(next, matches), tokens)
@@ -177,7 +188,42 @@ case class Occurence(pred: Pred) extends EventPattern {
       (this, Nil)
 }
 
-case class Single(pred:Pred) extends EventPattern{
+case class Not(pred: Pred) extends EventPattern {
+  def parse(s: Token) =
+    if (pred(s))
+      (Exhausted(), Nil)
+    else
+      (this, List(s))
+}
+
+case class Until(pattern: EventPattern, pred: Pred, earlier:Option[Token],duration:Duration) extends EventPattern {
+  def parse(t: Token) = {
+
+    if(pred(t))
+      (this,earlier.map(e => Token(t.fact,t.matches ::: e.matches)).toList)
+
+    else{
+      val (oneNext, oneOutput) =
+        pattern.parse(t)
+
+      val waiting: List[EventPattern] =
+        oneOutput
+          .map(token => AwaitOther(Until(pattern,pred,token.some,duration), token.matches))
+
+      val waitingCollapsed =
+        waiting.foldLeft1Opt {_ ++ _}.getOrElse(Exhausted())
+
+      val expire =
+        t.fact.info.instant.plus(duration).toInstant
+
+      (Expires(waitingCollapsed, expire) ++Until(oneNext,pred,earlier,duration), Nil)
+    }
+
+  }
+}
+
+/*
+case class Single(pred: Pred) extends EventPattern {
   def parse(s: Token) =
     if (pred(s))
       (Exhausted(), List(s.addToken))
@@ -185,14 +231,32 @@ case class Single(pred:Pred) extends EventPattern{
       (this, Nil)
 }
 
+case class Repeat(pattern: EventPattern) extends EventPattern {
+  def parse(s: Token) = {
+
+    val (next, tokens) =
+      pattern.parse(s)
+
+    next match {
+      case Exhausted() => (this, tokens)
+      case _           => (Repeat(pattern), tokens)
+    }
+  }
+}
+*/
 case class Exhausted() extends EventPattern {
   def parse(s: Token): (EventPattern, List[Token]) = {
     (this, Nil)
   }
 }
 
-case class NoOccurence(pred:Pred) extends EventPattern {
-  override def parse(s: Token): (EventPattern, List[Token]) = ???
+case class NoOccurence(pred: Pred) extends EventPattern {
+  override def parse(s: Token): (EventPattern, List[Token]) = {
+    if (pred(s))
+      (Exhausted(), Nil)
+    else
+      (this, Nil)
+  }
 }
 
 case class And(one: EventPattern, other: EventPattern) extends EventPattern {
@@ -211,7 +275,7 @@ trait Matcher[A] {
 
 object Matcher {
   implicit def matcherMonoid[A]: Monoid[Matcher[A]] =
-    Monoid.instance({case (m1: Matcher[A], m2: Matcher[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
+    Monoid.instance({ case (m1: Matcher[A], m2: Matcher[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
 
   def matcher[A](pattern: EventPattern)(f: Token => Option[A]) =
     SingleMatcher(pattern, f)
@@ -226,7 +290,7 @@ case class SingleMatcher[A](pattern: EventPattern, f: Token => Option[A]) extend
   def apply(t: Token): (Matcher[A], List[A]) = {
     val (next, tokens) = pattern.parse(t)
 
-    (SingleMatcher[A](next, f), tokens.map(f).collect{case Some(x)=>x})
+    (SingleMatcher[A](next, f), tokens.map(f).collect { case Some(x) => x})
   }
 }
 

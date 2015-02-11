@@ -1,12 +1,8 @@
 package techex
 
-import java.util.concurrent.Executors
-
 import dispatch.host
 import org.http4s.server.jetty.JettyBuilder
 import techex.cases.startup
-
-import scala.concurrent.ExecutionContext
 
 object TestServer {
 
@@ -19,7 +15,7 @@ object TestServer {
 
   val server = JettyBuilder
     .bindHttp(8080)
-    .mountService(startup.setup.run, "")
+    .mountService(startup.setup(Map()).run, "")
 
   val h = host("localhost", 8080)
 

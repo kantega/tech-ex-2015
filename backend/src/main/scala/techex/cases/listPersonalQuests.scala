@@ -86,7 +86,7 @@ object listPersonalQuests {
     )
 
   val restApi: WebHandler = {
-    case req@GET -> Root / "quests" / "user" / playerId =>
+    case req@GET -> Root / "quests" / "player" / playerId =>
      streamContext.run(read(playerId)).flatMap(i=>i)
 
   }

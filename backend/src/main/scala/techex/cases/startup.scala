@@ -2,6 +2,7 @@ package techex.cases
 
 import java.util.concurrent.TimeUnit
 
+import com.typesafe.config.Config
 import org.http4s.server._
 import org.joda.time.DateTime
 import techex._
@@ -71,9 +72,16 @@ object startup {
   */
 
 
-  def setup: Task[HttpService] = {
+  def setup(cfg: Map[String,String]): Task[HttpService] = {
+
+    val dbConfig =
+      if (cfg.getOrElse("db","mem") == "mysql")
+        db.mysqlConfig(cfg.getOrElse("db.username",""), cfg.getOrElse("db.password",""))
+      else
+        db.inMemConfig
+
     for {
-      ds <- db.ds(db.inMemConfig)
+      ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))
       _ <- ds.transact(ObservationDAO.createObservationtable)
@@ -85,7 +93,8 @@ object startup {
         listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse
         listTotalProgress.restApi orElse
-        listTotalAchievements.restApi)
+        listTotalAchievements.restApi orElse
+        trackPlayer.restApi)
 
   }
 }
