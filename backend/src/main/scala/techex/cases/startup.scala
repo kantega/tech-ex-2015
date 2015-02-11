@@ -51,32 +51,36 @@ object startup {
     )
   }
 
-  def loadPlayer(playerId: PlayerId): Task[Option[Player]] = {
-    db.ds.transact(PlayerDAO.getPlayerById(playerId))
-  }
-
-  val loadHistory: Channel[Task, Observation, (Observation, List[LocationUpdate])] =
-    Process.constant {
-      observation =>
-        db.ds.transact(LocationDao.loadLocationsForPlayer(observation.playerId, 20)).map(list => (observation, list))
+  /*
+    def loadPlayer(playerId: PlayerId): Task[Option[Player]] = {
+      db.ds.transact(PlayerDAO.getPlayerById(playerId))
     }
 
-  val saveHistory: Channel[Task, (Option[LocationUpdate], List[LocationUpdate]), (Option[LocationUpdate], List[LocationUpdate])] = {
-    Process.constant {
-      case (None, history)           => Task.now((None, history))
-      case (Some(location), history) => db.ds.transact(LocationDao.storeLocation(location)).map(int => (Some(location), history))
+    val loadHistory: Channel[Task, Observation, (Observation, List[LocationUpdate])] =
+      Process.constant {
+        observation =>
+          db.ds.transact(LocationDao.loadLocationsForPlayer(observation.playerId, 20)).map(list => (observation, list))
+      }
+
+    val saveHistory: Channel[Task, (Option[LocationUpdate], List[LocationUpdate]), (Option[LocationUpdate], List[LocationUpdate])] = {
+      Process.constant {
+        case (None, history)           => Task.now((None, history))
+        case (Some(location), history) => db.ds.transact(LocationDao.storeLocation(location)).map(int => (Some(location), history))
+      }
     }
-  }
+  */
+
 
   def setup: Task[HttpService] = {
     for {
-      _ <- db.ds.transact(PlayerDAO.create)
+      ds <- db.ds(db.inMemConfig)
+      _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))
-      _ <- db.ds.transact(ObservationDAO.createObservationtable)
+      _ <- ds.transact(ObservationDAO.createObservationtable)
       _ <- Task.delay(println("Created observation table"))
       _ <- setupScheduleEvents(eventstreams.events)
     } yield HttpService(
-      playerSignup.restApi orElse
+      playerSignup.restApi(ds) orElse
         test.testApi orElse
         listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse

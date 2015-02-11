@@ -94,11 +94,11 @@ object playerSignup {
       } yield rsult
 
 
-  val storeIfSuccess: Signupresult => Task[Signupresult] = {
+  val storeIfSuccess: Transactor[Task] => Signupresult => Task[Signupresult] = tx => {
     case ok@SignupOk(player) =>
       for {
         _ <- streamContext.run(updateContext(player))
-        _ <- db.ds.transact(storePlayer(player))
+        _ <- tx.transact(storePlayer(player))
       } yield ok
     case taken@NickTaken(_)  =>
       Task.now(taken)
@@ -109,7 +109,7 @@ object playerSignup {
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
-  val restApi: WebHandler = {
+  def restApi(tx:Transactor[Task]): WebHandler = {
     case req@PUT -> Root / "player" / nick =>
       EntityDecoder.text(req)(body => {
         val maybePlayerPref =
@@ -121,7 +121,7 @@ object playerSignup {
             preference =>
               for {
                 result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
-                _ <- storeIfSuccess(result)
+                _ <- storeIfSuccess(tx)(result)
                 response <- toResponse(result)
               } yield response
           )

@@ -192,7 +192,7 @@ case class Exhausted() extends EventPattern {
 }
 
 case class NoOccurence(pred:Pred) extends EventPattern {
-
+  override def parse(s: Token): (EventPattern, List[Token]) = ???
 }
 
 case class And(one: EventPattern, other: EventPattern) extends EventPattern {
