@@ -39,7 +39,6 @@ libraryDependencies ++= {
     "org.http4s" % "http4s-dsl_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-argonaut_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-jetty_2.11" % http4sVersion % "test" withSources() withJavadoc() ,
-    "com.websudos" % "phantom-dsl_2.10" % phantomVersion,
     "org.tpolecat" % "doobie-core_2.11" % "0.2.0", //database
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
     "com.h2database" % "h2" % "1.4.182",

@@ -12,7 +12,7 @@ object matching {
     Hours.THREE.toStandardDuration
 
   def exists(pred: Pred): EventPattern = {
-    Single(pred)
+    Occurence(pred)
   }
 
 }
@@ -169,10 +169,18 @@ case class Expires(pattern: EventPattern, expires: Instant) extends EventPattern
     }
   }
 }
-case class Single(pred: Pred) extends EventPattern {
+case class Occurence(pred: Pred) extends EventPattern {
   def parse(s: Token) =
     if (pred(s))
       (this, List(s.addToken))
+    else
+      (this, Nil)
+}
+
+case class Single(pred:Pred) extends EventPattern{
+  def parse(s: Token) =
+    if (pred(s))
+      (Exhausted(), List(s.addToken))
     else
       (this, Nil)
 }
@@ -183,6 +191,9 @@ case class Exhausted() extends EventPattern {
   }
 }
 
+case class NoOccurence(pred:Pred) extends EventPattern {
+
+}
 
 case class And(one: EventPattern, other: EventPattern) extends EventPattern {
   def parse(t: Token) = {
