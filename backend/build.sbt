@@ -8,7 +8,7 @@ scalaVersion := "2.11.5"
 
 jetty()
 
-scalacOptions ++= Seq("-compiler:implicitConversions","-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
+scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
