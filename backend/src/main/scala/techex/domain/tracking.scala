@@ -108,6 +108,7 @@ trait AggregatedFact extends Fact
 case class Attended(event:ScheduleEntry) extends AggregatedFact
 case class CameEarly(event:ScheduleEntry,duration:Duration) extends AggregatedFact
 case class CameLate(event:ScheduleEntry,duration:Duration) extends AggregatedFact
+case class LeftEarly(event:ScheduleEntry,duration:Duration,cause:String) extends AggregatedFact
 case class LeftFor(event:ScheduleEntry, activity:String,duration:Duration) extends AggregatedFact
 case class Connected(playerId:PlayerId) extends AggregatedFact
 

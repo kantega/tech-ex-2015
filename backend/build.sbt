@@ -8,7 +8,7 @@ scalaVersion := "2.11.5"
 
 jetty()
 
-scalacOptions ++= Seq("-language:higherKinds","-language:implicitConversions","-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
+scalacOptions ++= Seq("-implicitConversions","-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
@@ -33,17 +33,18 @@ libraryDependencies ++= {
     "org.joda" % "joda-convert" % "1.4",
     "org.specs2" %% "specs2-core" % "2.4.15" % "test",
     "org.typelevel" %% "scalaz-specs2" % "0.3.0" % "test",
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.1" % "test",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.1" % "test", //httpclient
     "org.http4s" % "http4s-server_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-servlet_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-dsl_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-argonaut_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-jetty_2.11" % http4sVersion % "test" withSources() withJavadoc() ,
     "com.websudos" % "phantom-dsl_2.10" % phantomVersion,
-    "org.tpolecat" % "doobie-core_2.11" % "0.2-SNAPSHOT",
+    "org.tpolecat" % "doobie-core_2.11" % "0.2.0", //database
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
     "com.h2database" % "h2" % "1.4.182",
     "com.zaxxer" % "HikariCP" % "2.2.5",
+    "com.github.nscala-time" %% "nscala-time" % "1.8.0",
     "io.argonaut" %% "argonaut" % "6.1-M4" //json
   )
 }

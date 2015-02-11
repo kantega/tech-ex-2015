@@ -9,7 +9,7 @@ import matching._
 object matching {
   type Pred = Token => Boolean
   implicit val dfaultExpireDutararion =
-    Hours.ONE.toStandardDuration
+    Hours.THREE.toStandardDuration
 
   def exists(pred: Pred): EventPattern = {
     Single(pred)
@@ -144,7 +144,7 @@ case class FBy(one: EventPattern, other: EventPattern, duration: Duration) exten
 
     val expire =
       t.fact.info.instant.plus(duration).toInstant
-    (Expires(waitingCollapsed, expire) ++ (oneNext.~>(other)(duration)), Nil)
+    (Expires(waitingCollapsed, expire) ++ oneNext.~>(other)(duration), Nil)
   }
 }
 
@@ -158,13 +158,13 @@ case class AwaitOther(pattern: EventPattern, matches: List[FactUpdate]) extends 
   }
 }
 
-case class Expires(pattern: EventPattern, expires: Instant)  extends EventPattern {
+case class Expires(pattern: EventPattern, expires: Instant) extends EventPattern {
   def parse(s: Token) = {
     if (s.fact.info.instant.isAfter(expires))
       (Exhausted(), Nil)
     else {
-      val (next,tokens) = pattern.parse(s)
-      (Expires(next,expires),tokens)
+      val (next, tokens) = pattern.parse(s)
+      (Expires(next, expires), tokens)
 
     }
   }
@@ -193,6 +193,40 @@ case class And(one: EventPattern, other: EventPattern) extends EventPattern {
   }
 }
 
+
+trait Matcher[A] {
+  def apply(t: Token): (Matcher[A], List[A])
+}
+
+object Matcher {
+  implicit def matcherMonoid[A]: Monoid[Matcher[A]] =
+    Monoid.instance({case (m1: Matcher[A], m2: Matcher[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
+
+  def matcher[A](pattern: EventPattern)(f: Token => Option[A]) =
+    SingleMatcher(pattern, f)
+
+}
+
+case class ZeroMatcher[A]() extends Matcher[A] {
+  def apply(t: Token) = (this, Nil)
+}
+
+case class SingleMatcher[A](pattern: EventPattern, f: Token => Option[A]) extends Matcher[A] {
+  def apply(t: Token): (Matcher[A], List[A]) = {
+    val (next, tokens) = pattern.parse(t)
+
+    (SingleMatcher[A](next, f), tokens.map(f).collect{case Some(x)=>x})
+  }
+}
+
+case class AndMatcher[A](one: Matcher[A], other: Matcher[A]) extends Matcher[A] {
+  def apply(t: Token) = {
+    val (next1, tokens1) = one(t)
+    val (next2, tokens2) = other(t)
+
+    (AndMatcher(next1, next2), tokens1 ::: tokens2)
+  }
+}
 
 
 

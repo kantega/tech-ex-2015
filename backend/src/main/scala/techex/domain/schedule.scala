@@ -46,6 +46,9 @@ trait TimeBounds {
 case class IntervalBounds(start: DateTime, duration: Dur) extends TimeBounds {
   def abouts(instant: ReadableInstant) =
     new Interval(start, start.plus(duration)).contains(instant)
+
+  def ends =
+    start.plus(duration)
 }
 
 object IntervalBounds {

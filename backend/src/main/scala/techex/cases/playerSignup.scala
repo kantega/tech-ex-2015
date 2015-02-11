@@ -79,7 +79,7 @@ object playerSignup {
   val updateContext: Player => State[PlayerContext, Player] =
     player =>
       State[PlayerContext, Player](ctx =>
-        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector())), player))
+        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector(),ZeroMatcher())), player))
 
 
   val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerContext, Signupresult] =

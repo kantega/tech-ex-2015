@@ -1,5 +1,9 @@
 package techex.domain
 
+import java.util.UUID
+
+import org.joda.time.Instant
+
 import scalaz._, Scalaz._
 
 object quests {
