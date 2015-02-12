@@ -106,7 +106,7 @@ case object Near extends Proximity
 case object Far extends Proximity
 case object Immediate extends Proximity
 
-case class Observation(id: UUID, beacon: Option[Beacon], playerId: PlayerId, instant: Instant, proximity: Proximity) extends StreamEvent
+case class Observation(id: UUID, beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends StreamEvent
 
 case class Timed[A](timestamp: Instant, value: A)
 

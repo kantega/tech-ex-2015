@@ -14,8 +14,8 @@ object mappers {
   implicit val uuidAtom: Atom[UUID] =
     Atom.fromScalaType[String].xmap(UUID.fromString, _.toString)
 
-  implicit val beaconAtom: Atom[Option[Beacon]] =
-    Atom.fromScalaType[String].xmap(nonEmpty(_).map(Beacon), _.getOrElse(Beacon("")).id)
+  implicit val beaconAtom: Atom[Beacon] =
+    Atom.fromScalaType[String].xmap(Beacon, _.id)
 
   implicit val playerIdAtom: Atom[PlayerId] =
     Atom.fromScalaType[String].xmap(PlayerId(_), _.value)

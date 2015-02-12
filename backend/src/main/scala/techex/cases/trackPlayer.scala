@@ -77,7 +77,7 @@ object trackPlayer {
         ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
 
       val maybeArea =
-        observation.beacon.flatMap(areas.beaconPlacement.get)
+        areas.beaconPlacement.get((observation.beacon,observation.proximity))
 
       val maybeUpdate =
         (maybeArea, history) match {

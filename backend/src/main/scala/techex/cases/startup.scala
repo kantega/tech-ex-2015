@@ -40,10 +40,6 @@ object startup {
     }
   }
 
-  def setupStream: Task[Unit] = {
-    null
-
-  }
 
   def eventsForEntry(entry: ScheduleEntry): List[ScheduleEvent] = {
     List(

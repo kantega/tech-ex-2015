@@ -1,10 +1,8 @@
 package techex
 
-import javax.servlet.annotation.WebListener
-import javax.servlet.http.HttpServlet
 import javax.servlet._
+import javax.servlet.annotation.WebListener
 
-import com.typesafe.config.ConfigFactory
 import org.http4s.servlet.Http4sServlet
 import techex.cases.{notifyAdmin, startup}
 
