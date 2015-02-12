@@ -10,7 +10,7 @@ object codecJson {
     jencode1L((id:Qid)=>id.value)("id")
 
   implicit val questEncode: EncodeJson[Quest] =
-    jencode3L((q: Quest) => (q.id, q.name, q.desc))("id", "name", "desc")
+    jencode3L((q: Quest) => (q.id.value, q.name, q.desc))("id", "name", "desc")
 
 
   implicit val badgeEncodeJson: EncodeJson[Badge] =

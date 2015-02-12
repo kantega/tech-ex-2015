@@ -12,7 +12,7 @@ import techex.cases.{notifyAdmin, startup}
 class Bootstrap extends ServletContextListener {
 
   override def contextInitialized(sce: ServletContextEvent): Unit = {
-
+    println("Starting up app")
 
     val ctx =
       sce.getServletContext
@@ -25,7 +25,7 @@ class Bootstrap extends ServletContextListener {
   }
 
   override def contextDestroyed(sce: ServletContextEvent): Unit = {
-
+    println("Shutting down app")
     notifyAdmin.sendMessage("Server shutting down").run
   }
 }
@@ -64,10 +64,10 @@ class InitingServlet extends Servlet {
   }
 
   override def getServletInfo: String = {
-    "Wrapper around "+wrapped.map(_.getServletInfo).getOrElse(" unknown servlet ")
+    "Wrapper around " + wrapped.map(_.getServletInfo).getOrElse(" unknown servlet ")
   }
 
   override def service(req: ServletRequest, res: ServletResponse): Unit = {
-    wrapped.foreach(_.service(req,res))
+    wrapped.foreach(_.service(req, res))
   }
 }
