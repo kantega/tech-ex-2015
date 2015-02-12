@@ -72,11 +72,11 @@ class ParseEventSteamSpec extends Specification {
 
       tokens.length must_== 10
     }
-
+/*
     "create a single match when entering an area without connecting" in {
 
       val pattern =
-        Until(enteredArea ~> notExist(connected),enteredArea,None,Hours.THREE.toStandardDuration)
+        enteredArea ~> enteredArea
 
       val tokens =
         foldEvents(pattern, events)
@@ -85,7 +85,7 @@ class ParseEventSteamSpec extends Specification {
 
       tokens.length must_== 1
     }
-
+*/
   }
 
 
