@@ -11,7 +11,6 @@ import techex.cases.startup
 @WebListener
 class Bootstrap extends ServletContextListener {
 
-
   override def contextInitialized(sce: ServletContextEvent): Unit = {
 
 

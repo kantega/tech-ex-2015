@@ -33,7 +33,7 @@ libraryDependencies ++= {
     "org.joda" % "joda-convert" % "1.4",
     "org.specs2" %% "specs2-core" % "2.4.15" % "test",
     "org.typelevel" %% "scalaz-specs2" % "0.3.0" % "test",
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.1" % "test", //httpclient
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.1", //httpclient
     "org.http4s" % "http4s-server_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-servlet_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-dsl_2.11" % http4sVersion withSources() withJavadoc(),

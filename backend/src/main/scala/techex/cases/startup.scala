@@ -81,12 +81,14 @@ object startup {
         db.inMemConfig
 
     for {
+      _ <- notifyAdmin.sendMessage("Starting up server")
       ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))
       _ <- ds.transact(ObservationDAO.createObservationtable)
       _ <- Task.delay(println("Created observation table"))
       _ <- setupScheduleEvents(eventstreams.events)
+      _ <- notifyAdmin.sendMessage("Server started")
     } yield HttpService(
       playerSignup.restApi(ds) orElse
         test.testApi orElse
