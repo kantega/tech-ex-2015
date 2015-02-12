@@ -115,10 +115,10 @@ case class Token(fact: FactUpdate, matches: List[FactUpdate]) {
 object Token {
 
   def append(last: List[Token], prev: List[Token]): List[Token] = {
-    for (
+    for {
       t1 <- last
-        t2 <- prev
-    ) t1.appendMatchesFrom(t2)
+      t2 <- prev
+    } yield t1.appendMatchesFrom(t2)
   }
 
 }
@@ -247,13 +247,13 @@ case class Until(pattern: EventPattern, until: Waiting) extends WaitFunc {
       until.f(t)
 
     untilNext match {
-      case Halted()              => Halted()
+      case Halted()                   => Halted()
       case Matched(untilTokens, next) => pattern match {
         case Halted()                      => Halted()
         case w@Waiting(g)                  => Halted()
-        case Matched(matched, patternNext) => Matched(Token.append(untilTokens,matched), Waiting(this))
+        case Matched(matched, patternNext) => Matched(Token.append(untilTokens, matched), Waiting(this))
       }
-      case w@Waiting(f)          => pattern match {
+      case w@Waiting(f)               => pattern match {
         case Halted()              => Halted()
         case Waiting(f)            => Waiting(Until(f(t), until))
         case Matched(tokens, next) => Waiting(Until(Waiting(Append(tokens, next)), until))
