@@ -21,14 +21,23 @@ object notifyAdmin {
   lazy val hostname =
     InetAddress.getLocalHost().getHostName()
 
-  def sendMessage(txt: String): Task[Unit] = {
+  def sendMessage(txt: String, color: String = "#439FE0"): Task[Unit] = {
+
+
+    val attachments: Json =
+      Json.array(Json(
+        "fallback" -> jString(txt),
+        "color" -> jString(color),
+        "text" -> jString(txt)
+      ))
+
 
     val json: Json =
       Json(
         "channel" -> jString("#technoport"),
         "username" -> jString("TechEx2015 Server at " + hostname),
-        "text" -> jString(txt),
-        "icon_emoji" -> jString(":metal:")
+        "icon_emoji" -> jString(":metal:"),
+        "attachments" -> attachments
       )
 
     Task.async(register => {
@@ -42,3 +51,4 @@ object notifyAdmin {
   }
 
 }
+

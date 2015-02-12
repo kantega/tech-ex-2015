@@ -58,6 +58,10 @@ case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
   def updatePlayerData(id: PlayerId, f: PlayerData => PlayerData): PlayerContext =
     copy(playerData = playerData.updated(id, f(playerData(id))))
 
+  def removePlayer(id:PlayerId) = {
+    copy(playerData = playerData - id)
+  }
+
   def addActivities(activities: List[FactUpdate]): PlayerContext =
     activities match {
       case Nil          => this

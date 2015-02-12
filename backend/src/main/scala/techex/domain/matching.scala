@@ -15,6 +15,10 @@ object matching {
   def exists(pred: Pred): EventPattern =
     Waiting(AwaitOccurence(pred))
 
+  def notExists(pred: Pred): EventPattern = {
+    Matched(Nil, Waiting(HaltOnOccurence(pred)))
+  }
+
 }
 
 case class Pred(p: Token => Boolean, desc: String) {
@@ -43,9 +47,6 @@ object predicates {
 
   def not(pred: Pred): Pred =
     Pred(ctx => !pred(ctx), "not " + pred.desc)
-
-  def !!(pred: Pred): Pred =
-    not(pred)
 
   def and(one: Pred, other: Pred): Pred =
     Pred(ctx => one(ctx) && other(ctx), one.desc + " and " + other.desc)
@@ -172,6 +173,27 @@ sealed trait EventPattern {
   def ~>(pred: Pred): EventPattern = {
     this.~>(exists(pred))
   }
+
+  def ~><(until: EventPattern): EventPattern = {
+    until match {
+      case Halted()                   => Halted()
+      case Matched(untilTokens, next) => this match {
+        case Halted()                      => Halted()
+        case w@Waiting(g)                  => Halted()
+        case Matched(matched, patternNext) => Matched(Token.append(untilTokens, matched), patternNext ~>< next)
+      }
+      case uw@Waiting(f)              => this match {
+        case Halted()              => Halted()
+        case pw@Waiting(f)         => Waiting(Until(pw, uw))
+        case Matched(tokens, next) => Waiting(Until(Waiting(Append(tokens, next)), uw))
+
+      }
+    }
+  }
+
+  def ~><(pred:Pred): EventPattern ={
+    this.~><(exists(pred))
+  }
 }
 
 case class Matched(tokens: List[Token], next: EventPattern) extends EventPattern {
@@ -241,26 +263,18 @@ case class HaltOnOccurence(pred: Pred) extends WaitFunc {
 }
 
 
-case class Until(pattern: EventPattern, until: Waiting) extends WaitFunc {
+case class Until(pattern: Waiting, until: Waiting) extends WaitFunc {
   def apply(t: Token) = {
-    val untilNext =
+    val wnext =
       until.f(t)
 
-    untilNext match {
-      case Halted()                   => Halted()
-      case Matched(untilTokens, next) => pattern match {
-        case Halted()                      => Halted()
-        case w@Waiting(g)                  => Halted()
-        case Matched(matched, patternNext) => Matched(Token.append(untilTokens, matched), Waiting(this))
-      }
-      case w@Waiting(f)               => pattern match {
-        case Halted()              => Halted()
-        case Waiting(f)            => Waiting(Until(f(t), until))
-        case Matched(tokens, next) => Waiting(Until(Waiting(Append(tokens, next)), until))
-
-      }
-    }
+    val patternNext =
+      pattern.f(t)
+    patternNext ~>< wnext
   }
+
+  override def toString =
+    pattern + " ~>| " + until
 }
 
 case class Append(history: List[Token], next: EventPattern) extends WaitFunc {
@@ -312,12 +326,43 @@ case class SingleMatcher[A](pattern: EventPattern, f: Token => Option[A]) extend
   }
 }
 
+case class EmitValueMatcher[A](pattern: EventPattern, value:A) extends PatternOutput[A] {
+  def apply(t: Token): (PatternOutput[A], List[A]) = {
+    val (next, tokens) = pattern.parse(t)
+
+    (ZeroMatcher[A],List(value))
+  }
+}
+
 case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends PatternOutput[A] {
   def apply(t: Token) = {
     val (next1, tokens1) = one(t)
     val (next2, tokens2) = other(t)
 
     (AndMatcher(next1, next2), tokens1 ::: tokens2)
+  }
+}
+
+case class ProgressTracker[A](current: Int, max: Int, pattern: EventPattern)(f: Int => Option[A]) extends PatternOutput[A] {
+  def apply(t: Token) = {
+    val (next, tokens) =
+      pattern.parse(t)
+
+    val output =
+      tokens.zipWithIndex
+        .map { case (token, n) => if (n + current <= max) f(n + current) else None}
+        .collect { case Some(x) => x}
+
+    if (current == max)
+      (ZeroMatcher(), output)
+    else {
+      next match {
+        case Halted() => (ZeroMatcher(), output)
+        case _        => (ProgressTracker(current + tokens.length, max, next)(f), output)
+      }
+
+    }
+
   }
 }
 

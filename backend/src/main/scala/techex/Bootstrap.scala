@@ -56,7 +56,13 @@ class InitingServlet extends Servlet {
       Map("db" -> dbName, "db.username" -> username, "db.password" -> pw)
 
     val service =
-      startup.setup(Map()).run
+      startup.setup(Map())
+        .onFinish(maybeErr =>
+        if (maybeErr.isDefined)
+          notifyAdmin.sendMessage("Server failed to start", "error")
+        else
+          notifyAdmin.sendMessage("Server started", "good")
+        ).run
 
     wrapped = Some(new Http4sServlet(service))
 

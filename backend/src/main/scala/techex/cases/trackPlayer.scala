@@ -14,39 +14,6 @@ import scalaz.concurrent.Task
 
 object trackPlayer {
 
-  import techex.domain.predicates._
-
-  val leftActivity =
-    fact({ case LeftActivity(entry) => true})
-
-  val joinedActivity =
-    fact({ case JoinedActivity(entry) => true})
-
-  val joinedSameActivity =
-    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case LeftActivity(e) => entry === e})) => true})
-
-  val joinedActivityAtSameArea =
-    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case Entered(e) => entry.space.area === e})) => true})
-
-  val leftSameActivity =
-    ctx({ case (FactUpdate(_, LeftActivity(entry)), matches) if matches.exists(matched({ case JoinedActivity(e) => entry === e})) => true})
-
-  val coffee =
-    visited(areas.coffeeStand)
-
-  val toilet =
-    visited(areas.toiletAtSamf) or visited(areas.toiletAtSeminar)
-
-  val attendedSession =
-    joinedActivity ~> leftSameActivity
-
-  val enteredArea =
-    fact({ case entered: Entered => true})
-
-  val leftArea =
-    fact({ case entered: LeftArea => true})
-
-
   def calcActivity: StreamEvent => State[PlayerContext, List[FactUpdate]] =
     event => {
       val simpleActivities: State[PlayerContext, List[FactUpdate]] =

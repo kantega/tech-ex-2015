@@ -3,12 +3,51 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.Instant
-
+import techex.domain.predicates._
+import matching._
 import scalaz._, Scalaz._
 
 object quests {
 
+  //Patterns
+  val joinedActivityOnTime =
+    fact { case j: JoinedOnTime => true}
 
+  val leftSameOnTime =
+    ctx({ case (FactUpdate(_, LeftOnTime(entry)), matches) if matches.exists(matched({ case LeftActivity(e) => entry === e})) => true})
+
+
+  val leftActivity =
+    fact({ case LeftActivity(entry) => true})
+
+  val joinedActivity =
+    fact({ case JoinedActivity(entry) => true})
+
+  val joinedSameActivity =
+    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case LeftActivity(e) => entry === e})) => true})
+
+  val joinedActivityAtSameArea =
+    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case Entered(e) => entry.space.area === e})) => true})
+
+  val leftSameActivity =
+    ctx({ case (FactUpdate(_, LeftActivity(entry)), matches) if matches.exists(matched({ case JoinedActivity(e) => entry === e})) => true})
+
+  val coffee =
+    visited(areas.coffeeStand)
+
+  val toilet =
+    visited(areas.toiletAtSamf) or visited(areas.toiletAtSeminar)
+
+  val attendedWholeSession =
+    joinedActivityOnTime ~> notExists(leftSameActivity) ~>< leftSameOnTime
+
+  val enteredArea =
+    fact({ case entered: Entered => true})
+
+  val leftArea =
+    fact({ case entered: LeftArea => true})
+
+  //Badges
   val seetalksbronze   = Badge(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
   val seetalkssilver   = Badge(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
   val seetalksgold     = Badge(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
@@ -23,8 +62,10 @@ object quests {
   val ontime           = Badge(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
   val intlnetworker    = Badge(Bid("intlnetworker"), "International networker", "You have many international connections")
   val ambassador       = Badge(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
-
-
+  val seeAllTheStandsBronze = Badge(Bid("seestandsbronze"), "See at least a stand", "Visitng at least one stand")
+  val seeAllTheStandsSilver = Badge(Bid("seestandssilver"), "See many stands", "Visiting half the stands")
+  val seeAllTheStandsGold = Badge(Bid("seestandsgold"), "Ba at alle the stands", "Visiting all the stands")
+  //Quests
   val seeAllTalks =
     Quest(
       Qid("seealltalks"),
@@ -52,6 +93,27 @@ object quests {
       )
     )
 
+  val attendAllSessionsProgressTracker =
+    ProgressTracker(0, 6, attendedWholeSession) {
+      case 2 => seetalksbronze.some
+      case 4 => seetalkssilver.some
+      case 6 => seetalksgold.some
+      case _ => none
+    }
+
+  val visitAllStands =
+    Quest(
+      Qid("visitthestands"),
+      "Visit the stands",
+      "Visit as many stands you can",
+      Public,
+      List(
+        seeAllTheStandsBronze,
+        seeAllTheStandsSilver,
+        seeAllTheStandsGold
+      )
+    )
+
   val eagerNess =
     Quest(
       Qid("beEager"),
@@ -62,6 +124,7 @@ object quests {
         earlybird,
         ontime)
     )
+
 
   val networking =
     Quest(
