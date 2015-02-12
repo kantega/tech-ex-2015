@@ -6,7 +6,7 @@ import javax.servlet._
 
 import com.typesafe.config.ConfigFactory
 import org.http4s.servlet.Http4sServlet
-import techex.cases.startup
+import techex.cases.{notifyAdmin, startup}
 
 @WebListener
 class Bootstrap extends ServletContextListener {
@@ -24,7 +24,10 @@ class Bootstrap extends ServletContextListener {
     registration.setAsyncSupported(true)
   }
 
-  override def contextDestroyed(sce: ServletContextEvent): Unit = {}
+  override def contextDestroyed(sce: ServletContextEvent): Unit = {
+
+    notifyAdmin.sendMessage("Server shutting down").run
+  }
 }
 
 class InitingServlet extends Servlet {
