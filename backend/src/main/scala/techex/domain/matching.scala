@@ -287,32 +287,32 @@ case class WaitingAndEmit(one: Waiting, other: Matched) extends WaitFunc {
 }
 
 
-trait Matcher[A] {
-  def apply(t: Token): (Matcher[A], List[A])
+trait PatternOutput[A] {
+  def apply(t: Token): (PatternOutput[A], List[A])
 }
 
 object Matcher {
-  implicit def matcherMonoid[A]: Monoid[Matcher[A]] =
-    Monoid.instance({ case (m1: Matcher[A], m2: Matcher[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
+  implicit def matcherMonoid[A]: Monoid[PatternOutput[A]] =
+    Monoid.instance({ case (m1: PatternOutput[A], m2: PatternOutput[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
 
   def matcher[A](pattern: EventPattern)(f: Token => Option[A]) =
     SingleMatcher(pattern, f)
 
 }
 
-case class ZeroMatcher[A]() extends Matcher[A] {
+case class ZeroMatcher[A]() extends PatternOutput[A] {
   def apply(t: Token) = (this, Nil)
 }
 
-case class SingleMatcher[A](pattern: EventPattern, f: Token => Option[A]) extends Matcher[A] {
-  def apply(t: Token): (Matcher[A], List[A]) = {
+case class SingleMatcher[A](pattern: EventPattern, f: Token => Option[A]) extends PatternOutput[A] {
+  def apply(t: Token): (PatternOutput[A], List[A]) = {
     val (next, tokens) = pattern.parse(t)
 
     (SingleMatcher[A](next, f), tokens.map(f).collect { case Some(x) => x})
   }
 }
 
-case class AndMatcher[A](one: Matcher[A], other: Matcher[A]) extends Matcher[A] {
+case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends PatternOutput[A] {
   def apply(t: Token) = {
     val (next1, tokens1) = one(t)
     val (next2, tokens2) = other(t)

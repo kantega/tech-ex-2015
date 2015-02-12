@@ -74,7 +74,7 @@ case class PlayerData(
   achievements: Set[Badge],
   movements: Vector[LocationUpdate],
   activities: Vector[FactUpdate],
-  progress: Matcher[FactUpdate]) {
+  progress: PatternOutput[FactUpdate]) {
 
   def addAchievement(achievemnt: Badge): PlayerData =
     copy(achievements = achievements + achievemnt)
@@ -99,6 +99,6 @@ case class PlayerData(
 }
 
 object PlayerData {
-  def updateProgess: Matcher[FactUpdate] => PlayerData => PlayerData =
+  def updateProgess: PatternOutput[FactUpdate] => PlayerData => PlayerData =
     progress => data => data.copy(progress = progress)
 }

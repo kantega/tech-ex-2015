@@ -15,28 +15,7 @@ import scalaz.concurrent.Task
 
 object listTotalAchievements {
 
-  implicit val questEncode: EncodeJson[Quest] =
-    EncodeJson(
-      (q: Quest) =>
-        ("id" := q.id.value) ->:
-          ("name" := q.name) ->:
-          ("desc" := q.desc) ->:
-          jEmptyObject
-    )
-
-  implicit val badgeEncodeJson: EncodeJson[Badge] =
-    jencode4L((b: Badge) => (b.id.value, b.name, b.desc, b.visibility.toString))("id", "name", "desc", "visibility")
-
-
-  implicit val achievemntEncodeJson: EncodeJson[Achievement] =
-    EncodeJson(
-      (a: Achievement) =>
-        ("badge" := a.badge) ->:
-          ("achieved" := a.achieved) ->:
-          ("achievedBy" := a.achievedBy.map(_.value)) ->:
-          jEmptyObject
-    )
-
+  import codecJson._
 
   def acheivedBy(badge: Badge, ctx: PlayerContext) =
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
