@@ -48,23 +48,24 @@ object quests {
     fact({ case entered: LeftArea => true})
 
   //Badges
-  val seetalksbronze   = Badge(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
-  val seetalkssilver   = Badge(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
-  val seetalksgold     = Badge(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
-  val firstsession     = Badge(Bid("firstsession"), "I have seen the light", "Attending a session")
-  val kreatorsession   = Badge(Bid("kreatorsession"), "I have been at Kreator", "Attending Kreator")
-  val fundingsession   = Badge(Bid("fundingsession"), "I know you've got funds", "Attending live crowdfunding")
-  val keepsringing     = Badge(Bid("keepsringing"), "Damned thing keeps ringing", "Left session for a couple of minutes")
-  val placestogo       = Badge(Bid("placestogo"), "Got places to go, people to meet...", "Left a session early")
-  val tinyjavabladder  = Badge(Bid("tinyjavabladder"), "Tiny java bladder", "Left session for toilet multiple times")
-  val smalljavabladder = Badge(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time")
-  val earlybird        = Badge(Bid("earlybird"), "Early bird", "Arrived 20 mins early")
-  val ontime           = Badge(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
-  val intlnetworker    = Badge(Bid("intlnetworker"), "International networker", "You have many international connections")
-  val ambassador       = Badge(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
+  val seetalksbronze        = Badge(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
+  val seetalkssilver        = Badge(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
+  val seetalksgold          = Badge(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
+  val firstsession          = Badge(Bid("firstsession"), "I have seen the light", "Attending a session")
+  val kreatorsession        = Badge(Bid("kreatorsession"), "I have been at Kreator", "Attending Kreator")
+  val fundingsession        = Badge(Bid("fundingsession"), "I know you've got funds", "Attending live crowdfunding")
+  val keepsringing          = Badge(Bid("keepsringing"), "Damned thing keeps ringing", "Left session for a couple of minutes")
+  val placestogo            = Badge(Bid("placestogo"), "Got places to go, people to meet...", "Left a session early")
+  val tinyjavabladder       = Badge(Bid("tinyjavabladder"), "Tiny java bladder", "Left session for toilet multiple times")
+  val smalljavabladder      = Badge(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time")
+  val earlybird             = Badge(Bid("earlybird"), "Early bird", "Arrived 20 mins early")
+  val ontime                = Badge(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
+  val intlnetworker         = Badge(Bid("intlnetworker"), "International networker", "You have many international connections")
+  val ambassador            = Badge(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
   val seeAllTheStandsBronze = Badge(Bid("seestandsbronze"), "See at least a stand", "Visitng at least one stand")
   val seeAllTheStandsSilver = Badge(Bid("seestandssilver"), "See many stands", "Visiting half the stands")
-  val seeAllTheStandsGold = Badge(Bid("seestandsgold"), "Ba at alle the stands", "Visiting all the stands")
+  val seeAllTheStandsGold   = Badge(Bid("seestandsgold"), "Ba at alle the stands", "Visiting all the stands")
+
   //Quests
   val seeAllTalks =
     Quest(
@@ -94,7 +95,7 @@ object quests {
     )
 
   val attendAllSessionsProgressTracker =
-    ProgressTracker(0, 6, attendedWholeSession) {
+    CountingTracker(0, 6, attendedWholeSession) {
       case 2 => seetalksbronze.some
       case 4 => seetalkssilver.some
       case 6 => seetalksgold.some
@@ -113,6 +114,34 @@ object quests {
         seeAllTheStandsGold
       )
     )
+
+  val vistitedStandPred =
+    visited(areas.testArea1) or visited(areas.testArea2) or visited(areas.testArea3)
+
+  val visitAllStandsTracker =
+    StatefulTracker[Set[Area], Badge](exists(vistitedStandPred), Set()) { token => State { set =>
+      val entered =
+        token.fact.fact.asInstanceOf[Entered]
+
+      val newSet =
+        set + entered.area
+
+      val isIncrease =
+        set.size != newSet.size
+
+      val badge =
+        if (isIncrease)
+          newSet.size match {
+            case 1 => seeAllTheStandsBronze.some
+            case 2 => seeAllTheStandsSilver.some
+            case 3 => seeAllTheStandsGold.some
+            case _ => none
+          }
+        else none
+
+      (newSet, badge)
+    }
+    }
 
   val eagerNess =
     Quest(
@@ -152,6 +181,7 @@ object quests {
 
   val quests =
     List(
+      visitAllStands,
       seeAllTalks,
       networking,
       antihero
@@ -183,7 +213,17 @@ object quests {
     badges
       .map(badge => (badge.id, badge))
       .toMap
+
+  val trackerForQuest: Map[Qid, PatternOutput[Badge]] =
+    Map(
+      visitAllStands.id -> visitAllStandsTracker
+    )
+
+  val zeroTracker =
+    ZeroMatcher[Badge]()
 }
+
+
 case class Qid(value: String)
 case class Bid(value: String)
 case class Quest(id: Qid, name: String, desc: String, visibility: Visibility, badges: List[Badge])
@@ -214,3 +254,6 @@ object Visibility {
 }
 case class QuestProgress(quest: Quest, achievements: List[Achievement])
 case class Achievement(badge: Badge, achieved: Boolean, achievedBy: List[Nick])
+
+
+

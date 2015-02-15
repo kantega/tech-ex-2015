@@ -4,7 +4,7 @@ import javax.servlet._
 import javax.servlet.annotation.WebListener
 
 import org.http4s.servlet.Http4sServlet
-import techex.cases.{notifyAdmin, startup}
+import techex.cases.{notifyAboutUpdates, startup}
 
 @WebListener
 class Bootstrap extends ServletContextListener {
@@ -24,7 +24,7 @@ class Bootstrap extends ServletContextListener {
 
   override def contextDestroyed(sce: ServletContextEvent): Unit = {
     println("Shutting down app")
-    notifyAdmin.sendMessage("Server shutting down").run
+    notifyAboutUpdates.print("Server shutting down").run
   }
 }
 
@@ -57,9 +57,9 @@ class InitingServlet extends Servlet {
       startup.setup(Map())
         .onFinish(maybeErr =>
         if (maybeErr.isDefined)
-          notifyAdmin.sendMessage("Server failed to start", "error")
+          notifyAboutUpdates.notifyMessage("Server failed to start: "+maybeErr.get.getMessage, "error")
         else
-          notifyAdmin.sendMessage("Server started", "good")
+          notifyAboutUpdates.notifyMessage("Server started", "good")
         ).run
 
     wrapped = Some(new Http4sServlet(service))

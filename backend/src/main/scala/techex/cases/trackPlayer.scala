@@ -2,17 +2,34 @@ package techex.cases
 
 import java.util.UUID
 
+import org.http4s.EntityDecoder
 import org.http4s.dsl._
 import org.joda.time.Instant
-import techex.WebHandler
+import techex._
+import techex.cases.codecJson._
 import techex.data._
 import techex.domain._
+
+import _root_.argonaut._
+import Argonaut._
+import org.http4s.argonaut.ArgonautSupport._
 
 import scalaz.Scalaz._
 import scalaz._
 import scalaz.concurrent.Task
+import scalaz.stream._
 
 object trackPlayer {
+
+
+  def handleTracking: Process1[StreamEvent, State[PlayerContext, List[FactUpdate]]] =
+    process1.lift(event => {
+      for {
+        updates <- calcActivity(event)
+        badges <- calcBadges(updates)
+      } yield updates ++ badges
+    })
+
 
   def calcActivity: StreamEvent => State[PlayerContext, List[FactUpdate]] =
     event => {
@@ -32,16 +49,10 @@ object trackPlayer {
             State(ctx => (ctx, Nil))
         }
 
-      val aggregatesAndSimple: State[PlayerContext, List[FactUpdate]] =
-        for {
-          updates <- simpleActivities
-          aggregates <- aggregateFacts(updates)
-        } yield updates ++ aggregates
-
-      aggregatesAndSimple
+      simpleActivities
     }
 
-  def aggregateFacts: List[FactUpdate] => State[PlayerContext, List[FactUpdate]] =
+  def calcBadges: List[FactUpdate] => State[PlayerContext, List[FactUpdate]] =
     inFactUpdates => State { inctx =>
 
       inFactUpdates.foldLeft((inctx, nil[FactUpdate])) { (pair, factUpdate) =>
@@ -58,13 +69,13 @@ object trackPlayer {
           ctx.playerData(factUpdate.info.playerId).progress
 
         val (next, updates) =
-          matcher(Token(factUpdate, Nil))
+          matcher(factUpdate)
 
 
         val nextCtx =
           ctx.updatePlayerData(playerId, PlayerData.updateProgess(next))
 
-        (nextCtx, updates ++ outUpdates)
+        (nextCtx, outUpdates ++ updates.map(b => FactUpdate(factUpdate.info, AchievedBadge(b.id.value))))
       }
 
     }
@@ -77,7 +88,7 @@ object trackPlayer {
         ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
 
       val maybeArea =
-        areas.beaconPlacement.get((observation.beacon,observation.proximity))
+        areas.beaconPlacement.get((observation.beacon, observation.proximity))
 
       val maybeUpdate =
         (maybeArea, history) match {
@@ -101,13 +112,13 @@ object trackPlayer {
         val joinActivities =
           for {
             event <- schedule.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.space.area contains incomingLocation.area)
-          } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant), JoinedActivity(event))
+          } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant,getNick(incomingLocation.playerId,ctx)), JoinedActivity(event))
 
         val leaveActivities =
           for {
             outgoingLocation <- ctx.playerData(incomingLocation.playerId).movements.tail.headOption.toList
             event <- schedule.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.space.area contains outgoingLocation.area)
-          } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant), LeftActivity(event))
+          } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant,getNick(incomingLocation.playerId,ctx)), LeftActivity(event))
 
         val activities = joinActivities ++ leaveActivities
 
@@ -118,16 +129,35 @@ object trackPlayer {
   def location2VisitActivities: LocationUpdate => State[PlayerContext, List[FactUpdate]] =
     locationUpdate => State {
       ctx => {
+
+        val lastLocations =
+          ctx
+            .playerData(locationUpdate.playerId)
+            .movements
+            .tail //The update is already prepended to history at this stage
+            .headOption
+            .map(_.area.withParents)
+            .getOrElse(nil[Area])
+            .toSet
+
+        val nextLocations =
+          locationUpdate.area
+            .withParents
+            .toSet
+
+
+
         val left =
-          if (ctx.playerData(locationUpdate.playerId).movements.nonEmpty)
-            List(FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), LeftArea(ctx.playerData(locationUpdate.playerId).movements.head.area)))
-          else
-            List()
+          (lastLocations -- nextLocations)
+            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant,getNick(locationUpdate.playerId,ctx)), LeftArea(area)))
+            .toList
 
         val arrived =
-          FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), Entered(locationUpdate.area)) :: left
+          (nextLocations -- lastLocations)
+            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant,getNick(locationUpdate.playerId,ctx)), Entered(area)))
+            .toList.reverse
 
-        (ctx.addActivities(arrived), arrived)
+        (ctx.addActivities(left ::: arrived), left ::: arrived)
       }
     }
 
@@ -145,19 +175,34 @@ object trackPlayer {
         event.msg match {
           case Start => {
             presentPlayers
-              .map(playerData => FactUpdate(UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant), JoinedOnTime(event.entry)))
+              .map(playerData => FactUpdate(UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant,playerData.player.nick), JoinedOnTime(event.entry)))
           }
           case End   => {
             presentPlayers
-              .map(playerData => FactUpdate(UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant), LeftOnTime(event.entry)))
+              .map(playerData => FactUpdate(UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant,playerData.player.nick), LeftOnTime(event.entry)))
           }
         }
       }
 
   def restApi: WebHandler = {
     case req@POST -> Root / "location" / playerId =>
-      Task({
-        println(s"Locationupdate received from $playerId")
-      }).flatMap(x => Ok("{\"result\":\"ok\"}"))
+      EntityDecoder.text(req)(body => {
+        val maybeObservation =
+          toJsonQuotes(body)
+            .decodeValidation[ObservationData]
+            .map(data => data.toObservation(UUID.randomUUID(), PlayerId(playerId), Instant.now()))
+
+        maybeObservation.fold(
+          failMsg =>
+            BadRequest(failMsg),
+          observation =>
+            for {
+              _ <- eventstreams.events.publishOne(observation)
+              response <- Ok()
+            } yield response)
+      })
   }
+
+  def getNick(playerId: PlayerId, ctx: PlayerContext): Nick =
+    ctx.playerData(playerId).player.nick
 }

@@ -14,3 +14,5 @@ object eventstreams {
 }
 
 trait StreamEvent
+
+case class Notification(activity:String)

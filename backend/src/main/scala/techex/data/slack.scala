@@ -1,17 +1,18 @@
-package techex.cases
+package techex.data
 
 import java.net.InetAddress
 import java.util.concurrent.Executors
 
-import dispatch.{url, Http, host}
+import argonaut.Argonaut._
+import argonaut.Json
+import dispatch.{Http, url}
+import doobie.util.process
 
 import scala.concurrent.ExecutionContext
 import scalaz.\/-
 import scalaz.concurrent.Task
-import argonaut._, Argonaut._
-
-object notifyAdmin {
-
+import scalaz.stream._
+object slack {
   implicit val executor =
     ExecutionContext.fromExecutor(Executors.newFixedThreadPool(1))
 
@@ -20,6 +21,9 @@ object notifyAdmin {
 
   lazy val hostname =
     InetAddress.getLocalHost().getHostName()
+
+  lazy val slack: Sink[Task, String] =
+    process.sink((msg: String) => sendMessage(msg))
 
   def sendMessage(txt: String, color: String = "#439FE0"): Task[Unit] = {
 
@@ -41,7 +45,6 @@ object notifyAdmin {
       )
 
     Task.async(register => {
-      println("Calling slack")
       Http(h.setBody(json.nospaces)).onComplete(resp => {
         println("result from call: " + resp.get.getStatusCode + " " + resp.get.getResponseBody)
         register(\/-(Unit))
@@ -49,6 +52,4 @@ object notifyAdmin {
 
     })
   }
-
 }
-

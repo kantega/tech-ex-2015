@@ -1,6 +1,6 @@
 package techex.cases
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, TimeUnit}
 
 import com.typesafe.config.Config
 import org.http4s.server._
@@ -15,7 +15,8 @@ import scalaz.stream._
 import scalaz.stream.async.mutable.Topic
 
 object startup {
-  val scheduler = DefaultScheduler
+  val scheduler    = Executors.newSingleThreadScheduledExecutor()
+  val streamRunner = Executors.newSingleThreadScheduledExecutor()
 
   def setupScheduleEvents(topic: Topic[StreamEvent]): Task[Unit] = Task {
     // imagine an asynchronous task which eventually produces an `Int`
@@ -32,7 +33,7 @@ object startup {
       scheduler.schedule(new Runnable() {
         override def run(): Unit =
           try {
-            topic.publishOne(task)
+            topic.publishOne(task).run
           } catch {
             case t: Throwable => t.printStackTrace()
           }
@@ -46,6 +47,24 @@ object startup {
       ScheduleEvent(entry.time.start, entry, Start),
       ScheduleEvent(entry.time.start.plus(entry.time.duration), entry, End)
     )
+  }
+
+  def setupStream: Task[Unit] = {
+    val toText =
+      process1
+        .lift((fus: List[FactUpdate]) => fus.map(fu => fu.info.playerId + " : " + fu.fact.toString))
+        .flatMap((list: List[String]) => Process.emitAll(list.toSeq))
+
+    val stream =
+      eventstreams.events.subscribe pipe
+        trackPlayer.handleTracking through
+        streamContext.updates[List[FactUpdate]] pipe
+        toText to notifyAboutUpdates.printSink
+
+
+    Task.fork(stream.run)(streamRunner).runAsync(_.toString)
+    //Task.fork(stream.run.handle({case t:Throwable => t.printStackTrace})).handle({case t:Throwable => t.printStackTrace})
+    Task {"jalla"}
   }
 
   /*
@@ -68,16 +87,19 @@ object startup {
   */
 
 
-  def setup(cfg: Map[String,String]): Task[HttpService] = {
+  def setup(cfg: Map[String, String]): Task[HttpService] = {
 
     val dbConfig =
-      if (cfg.getOrElse("db","mem") == "mysql")
-        db.mysqlConfig(cfg.getOrElse("db.username",""), cfg.getOrElse("db.password",""))
+      if (cfg.getOrElse("db", "mem") == "mysql")
+        db.mysqlConfig(cfg.getOrElse("db.username", ""), cfg.getOrElse("db.password", ""))
       else
         db.inMemConfig
 
     for {
-      _ <- notifyAdmin.sendMessage("Starting up server","warning")
+      _ <- notifyAboutUpdates.notifyMessage("Starting up server", "warning")
+      _ <- Task.delay(println("Setting up stream"))
+      _ <- setupStream
+      _ <- Task.delay(println("Stream set up"))
       ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))
@@ -86,14 +108,15 @@ object startup {
       _ <- setupScheduleEvents(eventstreams.events)
 
     } yield HttpService(
-      playerSignup.restApi(ds) orElse
+      playerSignup.restApi orElse
         test.testApi orElse
         listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse
         listTotalProgress.restApi orElse
         listTotalAchievements.restApi orElse
         trackPlayer.restApi orElse
-    unregisterPlayer.restApi)
+        unregisterPlayer.restApi orElse
+        trackPlayer.restApi)
 
   }
 }

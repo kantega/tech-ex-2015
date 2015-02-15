@@ -33,16 +33,16 @@ class ParseEventSteamSpec extends Specification {
 
   val events =
     List(
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Entered(foyer)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Connected(PlayerId("1235"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Entered(auditorium)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Entered(coffeeStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Connected(PlayerId("1234"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Entered(kantegaStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Connected(PlayerId("1235"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Connected(PlayerId("1236"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time), Entered(technoportStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time.plus(Hours.hours(3).toStandardDuration)), JoinedActivity(keyNote))
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(foyer)),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1235"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(auditorium)),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(coffeeStand)),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1234"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(kantegaStand)),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1235"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1236"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(technoportStand)),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time.plus(Hours.hours(3).toStandardDuration),Nick("AB")), JoinedActivity(keyNote))
     )
 
 

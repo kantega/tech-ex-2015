@@ -7,10 +7,6 @@ import techex.data.StreamEvent
 import scalaz._, Scalaz._
 import scalaz.Tree
 
-object tracking {
-
-}
-
 
 object areas {
 
@@ -34,23 +30,23 @@ object areas {
   val testArea1     = Area("Stand1")
   val testArea2     = Area("Stand2")
   val testArea3     = Area("Stand3")
-  val kantegaCoffee     = Area("kantegaCoffee")
+  val kantegaCoffee = Area("kantegaCoffee")
   val kantegaOffice = Area("KantegaOffice")
 
-  val beaconPlacement: Map[(Beacon,Proximity), Area] =
+  val beaconPlacement: Map[(Beacon, Proximity), Area] =
     Map(
-      (Beacon("a"),Near) -> foyer,
-      (Beacon("b"),Near) -> toiletAtSamf,
-      (Beacon("c"),Near) -> toiletAtSamf,
-      (Beacon("d"),Near) -> stage,
-      (Beacon("e"),Near) -> bar,
-      (Beacon("f"),Near) -> technoportStand,
-      (Beacon("g"),Near) -> kantegaStand,
-      (Beacon("g"),Near) -> testArea1,
-      (Beacon("g"),Near) -> testArea2,
-      (Beacon("g"),Near) -> testArea3,
-      (Beacon("g"),Near) -> kantegaCoffee,
-      (Beacon("h"),Near) -> coffeeStand)
+      (Beacon("a"), Near) -> foyer,
+      (Beacon("b"), Near) -> toiletAtSamf,
+      (Beacon("c"), Near) -> toiletAtSamf,
+      (Beacon("d"), Near) -> stage,
+      (Beacon("e"), Near) -> bar,
+      (Beacon("f"), Near) -> technoportStand,
+      (Beacon("g"), Near) -> kantegaStand,
+      (Beacon("g"), Near) -> testArea1,
+      (Beacon("h"), Near) -> testArea2,
+      (Beacon("i"), Near) -> testArea3,
+      (Beacon("j"), Near) -> kantegaCoffee,
+      (Beacon("k"), Near) -> coffeeStand)
 
   val locationHierarcy: Tree[Area] =
     allAreas.node(
@@ -86,6 +82,25 @@ object areas {
         .find(loc => loc.getLabel === other)
         .isDefined
   }
+
+  def withParentAreas(area: Area): List[Area] = {
+    def getParentMaybe(child: Option[Area]): List[Area] = {
+      child match {
+        case None    => nil[Area]
+        case Some(a) => a :: getParentMaybe(getParentArea(a))
+      }
+    }
+    getParentMaybe(Some(area))
+  }
+
+  def getParentArea(area: Area): Option[Area] = {
+    areas
+      .locationHierarcy
+      .loc
+      .find(loc => loc.getLabel === area)
+      .get.parent.map(_.getLabel)
+  }
+
 }
 
 case class LocationId(value: String)
@@ -94,25 +109,39 @@ case class Area(id: String) {
   def contains(other: Area) =
     areas.contains(this, other)
 
+  def withParents: List[Area] =
+    areas.withParentAreas(this)
 }
+
 object Area {
   implicit val areaEqual: Equal[Area] =
     Equal[String].contramap(_.id)
 }
+
 case class Beacon(id: String)
 
 trait Proximity
+
+object Proximity {
+  def apply(value: String) = value.toLowerCase match {
+    case "immediate" | "1" => Immediate
+    case "near" | "2"      => Near
+    case _                 => Far
+  }
+
+}
 case object Near extends Proximity
 case object Far extends Proximity
 case object Immediate extends Proximity
 
+case class ObservationData(beacon: Beacon, proximity: Proximity) {
+  def toObservation(id: UUID, playerId: PlayerId, instant: Instant) =
+    Observation(id, beacon, playerId, instant, proximity)
+}
 case class Observation(id: UUID, beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends StreamEvent
-
 case class Timed[A](timestamp: Instant, value: A)
-
 case class LocationUpdate(id: UUID, playerId: PlayerId, area: Area, instant: Instant)
-
-case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant)
+case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant, nick: Nick)
 case class FactUpdate(info: UpdateMeta, fact: Fact)
 
 trait Fact
@@ -129,5 +158,4 @@ case class CameLate(event: ScheduleEntry, duration: Duration) extends Aggregated
 case class LeftEarly(event: ScheduleEntry, duration: Duration, cause: String) extends AggregatedFact
 case class LeftFor(event: ScheduleEntry, activity: String, duration: Duration) extends AggregatedFact
 case class Connected(playerId: PlayerId) extends AggregatedFact
-
-
+case class AchievedBadge(name: String) extends AggregatedFact

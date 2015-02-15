@@ -3,9 +3,10 @@ package techex.data
 import java.util.concurrent.Executors
 
 import techex.domain._
-
+import scalaz._, Scalaz._
 import scalaz.State
 import scalaz.concurrent.Task
+import scalaz.stream.{Process, Channel}
 
 object streamContext {
 
@@ -43,8 +44,12 @@ object streamContext {
       val (ctx, a) = state(playerContext)
       playerContext = ctx
       a
-    }
+    }(executor)
   }
+
+  def updates[A]:Channel[Task,State[PlayerContext, A],A] =
+    Process.constant(run)
+
 
 }
 
@@ -58,7 +63,7 @@ case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
   def updatePlayerData(id: PlayerId, f: PlayerData => PlayerData): PlayerContext =
     copy(playerData = playerData.updated(id, f(playerData(id))))
 
-  def removePlayer(id:PlayerId) = {
+  def removePlayer(id: PlayerId) = {
     copy(playerData = playerData - id)
   }
 
@@ -71,6 +76,7 @@ case class PlayerContext(playerData: Map[PlayerId, PlayerData]) {
 
 object PlayerContext {
 
+
 }
 
 case class PlayerData(
@@ -78,7 +84,7 @@ case class PlayerData(
   achievements: Set[Badge],
   movements: Vector[LocationUpdate],
   activities: Vector[FactUpdate],
-  progress: PatternOutput[FactUpdate]) {
+  progress: PatternOutput[Badge]) {
 
   def addAchievement(achievemnt: Badge): PlayerData =
     copy(achievements = achievements + achievemnt)
@@ -103,6 +109,6 @@ case class PlayerData(
 }
 
 object PlayerData {
-  def updateProgess: PatternOutput[FactUpdate] => PlayerData => PlayerData =
+  def updateProgess: PatternOutput[Badge] => PlayerData => PlayerData =
     progress => data => data.copy(progress = progress)
 }

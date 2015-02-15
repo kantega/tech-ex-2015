@@ -139,11 +139,11 @@ sealed trait EventPattern {
         }
       }
     }
-    println("")
-    println(">>>  " + s.fact.fact)
+    //println("")
+    //println(">>>  " + s.fact.fact)
     val result = go(this)
-    println("    " + result._1)
-    println("<<< " + result._2)
+    //println("    " + result._1)
+    //println("<<< " + result._2)
 
     result
   }
@@ -191,7 +191,7 @@ sealed trait EventPattern {
     }
   }
 
-  def ~><(pred:Pred): EventPattern ={
+  def ~><(pred: Pred): EventPattern = {
     this.~><(exists(pred))
   }
 }
@@ -302,40 +302,32 @@ case class WaitingAndEmit(one: Waiting, other: Matched) extends WaitFunc {
 
 
 trait PatternOutput[A] {
-  def apply(t: Token): (PatternOutput[A], List[A])
+  def apply(t: FactUpdate): (PatternOutput[A], List[A])
+
+  def and(other: PatternOutput[A]): PatternOutput[A] =
+    (this, other) match {
+      case (ZeroMatcher(), other) => other
+      case (first, ZeroMatcher()) => first
+      case (first, second)        => AndMatcher(first, other)
+    }
+
 }
 
-object Matcher {
+object PatternOutput {
   implicit def matcherMonoid[A]: Monoid[PatternOutput[A]] =
     Monoid.instance({ case (m1: PatternOutput[A], m2: PatternOutput[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
 
-  def matcher[A](pattern: EventPattern)(f: Token => Option[A]) =
-    SingleMatcher(pattern, f)
-
+  def zero[A]: PatternOutput[A] =
+    ZeroMatcher[A]()
 }
 
 case class ZeroMatcher[A]() extends PatternOutput[A] {
-  def apply(t: Token) = (this, Nil)
+  def apply(t: FactUpdate) = (this, Nil)
 }
 
-case class SingleMatcher[A](pattern: EventPattern, f: Token => Option[A]) extends PatternOutput[A] {
-  def apply(t: Token): (PatternOutput[A], List[A]) = {
-    val (next, tokens) = pattern.parse(t)
-
-    (SingleMatcher[A](next, f), tokens.map(f).collect { case Some(x) => x})
-  }
-}
-
-case class EmitValueMatcher[A](pattern: EventPattern, value:A) extends PatternOutput[A] {
-  def apply(t: Token): (PatternOutput[A], List[A]) = {
-    val (next, tokens) = pattern.parse(t)
-
-    (ZeroMatcher[A],List(value))
-  }
-}
 
 case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends PatternOutput[A] {
-  def apply(t: Token) = {
+  def apply(t: FactUpdate) = {
     val (next1, tokens1) = one(t)
     val (next2, tokens2) = other(t)
 
@@ -343,10 +335,10 @@ case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends
   }
 }
 
-case class ProgressTracker[A](current: Int, max: Int, pattern: EventPattern)(f: Int => Option[A]) extends PatternOutput[A] {
-  def apply(t: Token) = {
+case class CountingTracker[A](current: Int, max: Int, pattern: EventPattern)(f: Int => Option[A]) extends PatternOutput[A] {
+  def apply(t: FactUpdate): (PatternOutput[A], List[A]) = {
     val (next, tokens) =
-      pattern.parse(t)
+      pattern.parse(Token(t, Nil))
 
     val output =
       tokens.zipWithIndex
@@ -358,7 +350,7 @@ case class ProgressTracker[A](current: Int, max: Int, pattern: EventPattern)(f: 
     else {
       next match {
         case Halted() => (ZeroMatcher(), output)
-        case _        => (ProgressTracker(current + tokens.length, max, next)(f), output)
+        case _        => (CountingTracker(current + tokens.length, max, next)(f), output)
       }
 
     }
@@ -366,6 +358,25 @@ case class ProgressTracker[A](current: Int, max: Int, pattern: EventPattern)(f: 
   }
 }
 
+case class StatefulTracker[S, A](pattern: EventPattern, s: S)(f: Token => State[S, Option[A]]) extends PatternOutput[A] {
+
+  type StateS[x] = State[S, x]
+
+  def apply(t: FactUpdate): (PatternOutput[A], List[A]) = {
+    val (next, matches) =
+      pattern.parse(Token(t, Nil))
+
+    val changes =
+      matches
+        .map(f)
+        .sequence[StateS, Option[A]]
+
+    val output =
+      changes.run(s)
+
+    (StatefulTracker(next, output._1)(f), output._2.collect { case Some(x) => x})
+  }
+}
 
 
 

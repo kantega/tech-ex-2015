@@ -7,13 +7,14 @@ import org.http4s.dsl._
 
 import _root_.argonaut._
 import Argonaut._
+import org.http4s.argonaut.ArgonautSupport._
 import techex.data._
 import techex.domain._
 
 import scalaz._, Scalaz._
 
 import scalaz.concurrent.Task
-import org.http4s.argonaut.ArgonautSupport._
+
 
 object playerSignup {
 
@@ -60,7 +61,8 @@ object playerSignup {
       )
 
   val checkNickTaken: Nick => State[PlayerContext, Boolean] =
-    nick => streamContext.read(_.playerData.exists(entry => entry._2.player.nick === nick))
+    nick =>
+      streamContext.read(_.playerData.exists(entry => entry._2.player.nick === nick))
 
 
   val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Player =
@@ -71,15 +73,25 @@ object playerSignup {
   val selectPersonalQuests: List[QuestId] =
     quests.quests.map(q => QuestId(q.id.value))
 
-  val storePlayer: Player => ConnectionIO[Player] =
-    (player) => {
-      PlayerDAO.insertPlayer(player).map(any => player)
-    }
-
   val updateContext: Player => State[PlayerContext, Player] =
     player =>
       State[PlayerContext, Player](ctx =>
-        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector(), ZeroMatcher())), player))
+        (ctx.putPlayerData(
+          player.id,
+          PlayerData(
+            player,
+            Set(),
+            Vector(),
+            Vector(),
+            player.privateQuests
+              .map(id => Qid(id.value))
+              .map(id => quests.trackerForQuest.get(id))
+              .collect{case Some(x)=>x}
+              .foldLeft(PatternOutput.zero[Badge])( _ and _)
+          )),
+          player)
+        )
+
 
 
   val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerContext, Signupresult] =
@@ -94,11 +106,10 @@ object playerSignup {
       } yield rsult
 
 
-  val storeIfSuccess: Transactor[Task] => Signupresult => Task[Signupresult] = tx => {
+  val storeIfSuccess: Signupresult => Task[Signupresult] = {
     case ok@SignupOk(player) =>
       for {
         _ <- streamContext.run(updateContext(player))
-        _ <- tx.transact(storePlayer(player))
       } yield ok
     case taken@NickTaken(_)  =>
       Task.now(taken)
@@ -109,7 +120,7 @@ object playerSignup {
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
-  def restApi(tx: Transactor[Task]): WebHandler = {
+  def restApi: WebHandler = {
     case req@PUT -> Root / "player" / nick =>
       EntityDecoder.text(req)(body => {
         val maybePlayerPref =
@@ -120,7 +131,11 @@ object playerSignup {
 
         for {
           result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
-          _ <- storeIfSuccess(tx)(result)
+          _ <- storeIfSuccess(result)
+          _ <- result match {
+            case ok: SignupOk => notifyAboutUpdates.notifyMessageWithDefaultColor("Created player " + nick)
+            case _            => Task {}
+          }
           response <- toResponse(result)
         } yield response
 

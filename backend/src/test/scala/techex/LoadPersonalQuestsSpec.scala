@@ -3,6 +3,7 @@ package techex
 import techex.TestServer._
 import org.specs2.mutable._
 import dispatch._, Defaults._
+import techex.domain.Nick
 import scalaz._, Scalaz._
 import _root_.argonaut._, Argonaut._
 
@@ -16,27 +17,16 @@ class LoadPersonalQuestsSpec extends Specification {
 
     "The webserwer" should {
       "yield a list of quests" in {
-        val putPlayerTask =
-          Http((h / "player" / "atle") << "{'drink':'wine','eat':'meat'}" PUT)
-
-        val response =
-          putPlayerTask()
-
-        val maybeParsedResponse: String \/ Json =
-          Parse.parse(response.getResponseBody)
-
-        val decodeId =
-          jdecode1L((value: String) => value)("id")
-
         val quests =
-          decodeId
-            .decodeJson(maybeParsedResponse.getOrElse(jEmptyObject))
-            .map(playerId => Http(h / "quests" / "user" / playerId))
-            .fold((str, history) => str, s => s().getResponseBody)
+          for {
+            playerId <- putPlayer(Nick("balle"))
+            response <- Http(h / "quests" / "player" / playerId.value).map(s => s.getResponseBody)
 
-        println(quests)
+          } yield response
 
-        quests must contain("quest")
+
+
+        quests() must contain("desc")
       }
 
     }
