@@ -44,9 +44,6 @@ object trackPlayer {
               c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffee)).getOrElse(State.state[PlayerStore, List[FactUpdate]](nil))
             } yield a ::: b ::: c
 
-          case scheduleEvent: ScheduleEvent =>
-            scheduleEvent2Activity(scheduleEvent)
-
           case _ =>
             State(ctx => (ctx, Nil))
         }
@@ -126,7 +123,7 @@ object trackPlayer {
         (ctx.addFacts(activities), activities)
       }
     }
-
+/*
   def scheduleEvent2Activity: ScheduleEvent => State[PlayerStore, List[FactUpdate]] =
     event =>
       State.gets { ctx =>
@@ -149,6 +146,7 @@ object trackPlayer {
               LeftOnTime(event.entry)))
         }
       }
+*/
 
   def location2VisitActivities: LocationUpdate => State[PlayerStore, List[FactUpdate]] =
     locationUpdate => State {

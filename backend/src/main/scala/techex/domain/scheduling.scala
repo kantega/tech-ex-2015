@@ -74,5 +74,7 @@ case class Started(instant: DateTime, entry: ScheduleEntry) extends StreamEvent
 case class Ended(instant:DateTime,entry:ScheduleEntry) extends StreamEvent
 case class StartEntry(entry: ScheduleEntry) extends Command
 case class EndEntry(entry:ScheduleEntry) extends Command
+case class AddEntry(entry:ScheduleEntry) extends Command
+case class RemoveEntry(entry:ScheduleEntry) extends Command
 
 
