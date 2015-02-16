@@ -9,7 +9,7 @@ import techex.domain._
 
 import scalaz.stream.Process
 
-object mappers {
+object sqlmappers {
 
   implicit val uuidAtom: Atom[UUID] =
     Atom.fromScalaType[String].xmap(UUID.fromString, _.toString)
@@ -40,7 +40,7 @@ object mappers {
       case "near"      => Near
       case "far"       => Far
       case "immediate" => Immediate
-    }, prox => prox match {
+    }, {
       case Near      => "near"
       case Far       => "far"
       case Immediate => "immediate"
@@ -50,7 +50,7 @@ object mappers {
 
 object PlayerDAO {
 
-  import mappers._
+  import sqlmappers._
 
 
 
@@ -97,7 +97,7 @@ object PlayerDAO {
 
 object ObservationDAO {
 
-  import mappers._
+  import sqlmappers._
 
   def createObservationtable: ConnectionIO[Int] = {
     sql"""
@@ -127,7 +127,7 @@ object ObservationDAO {
 
 object LocationDao {
 
-  import mappers._
+  import sqlmappers._
 
   def createLocationTable: ConnectionIO[Int] = {
     sql"""

@@ -15,76 +15,23 @@ import scalaz.stream._
 import scalaz.stream.async.mutable.Topic
 
 object startup {
-  val scheduler    = Executors.newSingleThreadScheduledExecutor()
   val streamRunner = Executors.newSingleThreadScheduledExecutor()
 
-  def setupScheduleEvents(topic: Topic[StreamEvent]): Task[Unit] = Task {
-    // imagine an asynchronous task which eventually produces an `Int`
-    val now =
-      DateTime.now()
-
-    val tasks =
-      for {
-        entry <- schedule.scheduleEntries
-        event <- eventsForEntry(entry)
-      } yield (durationBetween(now, event.instant), event)
-
-    tasks.foreach { case (delay, task) =>
-      scheduler.schedule(new Runnable() {
-        override def run(): Unit =
-          try {
-            topic.publishOne(task).run
-          } catch {
-            case t: Throwable => t.printStackTrace()
-          }
-      }, delay.getMillis, TimeUnit.MILLISECONDS)
-    }
-  }
-
-
-  def eventsForEntry(entry: ScheduleEntry): List[ScheduleEvent] = {
-    List(
-      ScheduleEvent(entry.time.start, entry, Start),
-      ScheduleEvent(entry.time.start.plus(entry.time.duration), entry, End)
-    )
-  }
-
   def setupStream: Task[Unit] = {
-    val toText =
-      process1
-        .lift((fus: List[FactUpdate]) => fus.map(fu => fu.info.playerId + " : " + fu.fact.toString))
-        .flatMap((list: List[String]) => Process.emitAll(list.toSeq))
 
     val stream =
       eventstreams.events.subscribe pipe
         trackPlayer.handleTracking through
-        streamContext.updates[List[FactUpdate]] pipe
-        toText to notifyAboutUpdates.printSink
+        PlayerStore.updates[List[FactUpdate]] pipe
+        process1.id.flatMap((list: List[FactUpdate]) => Process.emitAll(list.toSeq)) to
+        notifyAboutUpdates.notifyUpdateSink
 
 
-    Task.fork(stream.run)(streamRunner).runAsync(_.toString)
-    //Task.fork(stream.run.handle({case t:Throwable => t.printStackTrace})).handle({case t:Throwable => t.printStackTrace})
-    Task {"jalla"}
+    Task{Task.fork(stream.onFailure(t=>{
+      t.printStackTrace()
+      stream
+    }).run)(streamRunner).runAsync(_.toString)}
   }
-
-  /*
-    def loadPlayer(playerId: PlayerId): Task[Option[Player]] = {
-      db.ds.transact(PlayerDAO.getPlayerById(playerId))
-    }
-
-    val loadHistory: Channel[Task, Observation, (Observation, List[LocationUpdate])] =
-      Process.constant {
-        observation =>
-          db.ds.transact(LocationDao.loadLocationsForPlayer(observation.playerId, 20)).map(list => (observation, list))
-      }
-
-    val saveHistory: Channel[Task, (Option[LocationUpdate], List[LocationUpdate]), (Option[LocationUpdate], List[LocationUpdate])] = {
-      Process.constant {
-        case (None, history)           => Task.now((None, history))
-        case (Some(location), history) => db.ds.transact(LocationDao.storeLocation(location)).map(int => (Some(location), history))
-      }
-    }
-  */
 
 
   def setup(cfg: Map[String, String]): Task[HttpService] = {
@@ -97,15 +44,12 @@ object startup {
 
     for {
       _ <- notifyAboutUpdates.notifyMessage("Starting up server", "warning")
-      _ <- Task.delay(println("Setting up stream"))
       _ <- setupStream
-      _ <- Task.delay(println("Stream set up"))
       ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))
       _ <- ds.transact(ObservationDAO.createObservationtable)
       _ <- Task.delay(println("Created observation table"))
-      _ <- setupScheduleEvents(eventstreams.events)
 
     } yield HttpService(
       playerSignup.restApi orElse
@@ -114,9 +58,11 @@ object startup {
         listPersonalQuests.restApi orElse
         listTotalProgress.restApi orElse
         listTotalAchievements.restApi orElse
-        trackPlayer.restApi orElse
+        trackPlayer.restApi(eventstreams.events) orElse
         unregisterPlayer.restApi orElse
-        trackPlayer.restApi)
+        startSession.restApi(eventstreams.events) orElse
+        endSession.restApi(eventstreams.events)
+      )
 
   }
 }

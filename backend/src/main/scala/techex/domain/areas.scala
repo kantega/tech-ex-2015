@@ -32,6 +32,7 @@ object areas {
   val testArea3     = Area("Stand3")
   val kantegaCoffee = Area("kantegaCoffee")
   val kantegaOffice = Area("KantegaOffice")
+  val meetingPoint  = Area("Meetingpoint")
 
   val beaconPlacement: Map[(Beacon, Proximity), Area] =
     Map(
@@ -41,12 +42,13 @@ object areas {
       (Beacon("d"), Near) -> stage,
       (Beacon("e"), Near) -> bar,
       (Beacon("f"), Near) -> technoportStand,
-      (Beacon("g"), Near) -> kantegaStand,
+      (Beacon("gg"), Near) -> kantegaStand,
       (Beacon("g"), Near) -> testArea1,
       (Beacon("h"), Near) -> testArea2,
       (Beacon("i"), Near) -> testArea3,
       (Beacon("j"), Near) -> kantegaCoffee,
-      (Beacon("k"), Near) -> coffeeStand)
+      (Beacon("k"), Near) -> coffeeStand,
+      (Beacon("l"), Near) -> meetingPoint)
 
   val locationHierarcy: Tree[Area] =
     allAreas.node(
@@ -63,11 +65,13 @@ object areas {
           technoportStand.leaf,
           auditoriumExit.leaf,
           toiletAtSeminar.leaf,
-          coffeeStand.leaf)),
+          coffeeStand.leaf,
+          meetingPoint.leaf)),
       kantegaOffice.node(
         testArea1.leaf,
         testArea2.leaf,
-        testArea3.leaf
+        testArea3.leaf,
+        kantegaCoffee.leaf
       ))
 
   def contains(parent: Area, other: Area): Boolean = {
@@ -144,18 +148,4 @@ case class LocationUpdate(id: UUID, playerId: PlayerId, area: Area, instant: Ins
 case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant, nick: Nick)
 case class FactUpdate(info: UpdateMeta, fact: Fact)
 
-trait Fact
-case class JoinedActivity(event: ScheduleEntry) extends Fact
-case class LeftActivity(event: ScheduleEntry) extends Fact
-case class JoinedOnTime(event: ScheduleEntry) extends Fact
-case class LeftOnTime(event: ScheduleEntry) extends Fact
-case class Entered(area: Area) extends Fact
-case class LeftArea(area: Area) extends Fact
-trait AggregatedFact extends Fact
-case class Attended(event: ScheduleEntry) extends AggregatedFact
-case class CameEarly(event: ScheduleEntry, duration: Duration) extends AggregatedFact
-case class CameLate(event: ScheduleEntry, duration: Duration) extends AggregatedFact
-case class LeftEarly(event: ScheduleEntry, duration: Duration, cause: String) extends AggregatedFact
-case class LeftFor(event: ScheduleEntry, activity: String, duration: Duration) extends AggregatedFact
-case class Connected(playerId: PlayerId) extends AggregatedFact
-case class AchievedBadge(name: String) extends AggregatedFact
+

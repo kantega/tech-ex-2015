@@ -9,7 +9,7 @@ import _root_.argonaut._
 import Argonaut._
 import org.http4s.argonaut.ArgonautSupport._
 import techex._
-import techex.data.{PlayerContext, streamContext}
+import techex.data.{codecJson, PlayerStore$, PlayerStore}
 import techex.domain._
 
 import scalaz.concurrent.Task
@@ -18,14 +18,14 @@ object listPersonalAchievements {
 
   import codecJson._
 
-  def acheivedBy(badge: Badge, ctx: PlayerContext) =
+  def acheivedBy(badge: Badge, ctx: PlayerStore) =
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
 
   val restApi: WebHandler = {
     case req@GET -> Root / "achievements" / "player" / playerId => {
       val achievemnts: Task[Task[Response]] =
-        streamContext.run[Task[Response]](State {
-          playerContext: PlayerContext =>
+        PlayerStore.run[Task[Response]](State {
+          playerContext: PlayerStore =>
             val maybePlayerData =
               playerContext.playerData.get(PlayerId(playerId))
 

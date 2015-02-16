@@ -60,9 +60,9 @@ object playerSignup {
         fail
       )
 
-  val checkNickTaken: Nick => State[PlayerContext, Boolean] =
+  val checkNickTaken: Nick => State[PlayerStore, Boolean] =
     nick =>
-      streamContext.read(_.playerData.exists(entry => entry._2.player.nick === nick))
+      PlayerStore.read(_.playerData.exists(entry => entry._2.player.nick === nick))
 
 
   val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Player =
@@ -73,9 +73,9 @@ object playerSignup {
   val selectPersonalQuests: List[QuestId] =
     quests.quests.map(q => QuestId(q.id.value))
 
-  val updateContext: Player => State[PlayerContext, Player] =
+  val updateContext: Player => State[PlayerStore, Player] =
     player =>
-      State[PlayerContext, Player](ctx =>
+      State[PlayerStore, Player](ctx =>
         (ctx.putPlayerData(
           player.id,
           PlayerData(
@@ -86,15 +86,14 @@ object playerSignup {
             player.privateQuests
               .map(id => Qid(id.value))
               .map(id => quests.trackerForQuest.get(id))
-              .collect{case Some(x)=>x}
-              .foldLeft(PatternOutput.zero[Badge])( _ and _)
+              .collect { case Some(x) => x}
+              .foldLeft(PatternOutput.zero[Badge])(_ and _)
           )),
           player)
-        )
+      )
 
 
-
-  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerContext, Signupresult] =
+  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerStore, Signupresult] =
     (nick, playerPreference) =>
       for {
         taken <- checkNickTaken(nick)
@@ -105,15 +104,6 @@ object playerSignup {
           else SignupOk(player))
       } yield rsult
 
-
-  val storeIfSuccess: Signupresult => Task[Signupresult] = {
-    case ok@SignupOk(player) =>
-      for {
-        _ <- streamContext.run(updateContext(player))
-      } yield ok
-    case taken@NickTaken(_)  =>
-      Task.now(taken)
-  }
 
   val toResponse: Signupresult => Task[Response] = {
     case SignupOk(player) => Created(player.asJson)
@@ -130,11 +120,10 @@ object playerSignup {
           maybePlayerPref.getOrElse(PlayerPreference.default)
 
         for {
-          result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
-          _ <- storeIfSuccess(result)
+          result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
           _ <- result match {
-            case ok: SignupOk => notifyAboutUpdates.notifyMessageWithDefaultColor("Created player " + nick)
-            case _            => Task {}
+            case ok@SignupOk(player) => PlayerStore.run(updateContext(player)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Created player " + nick)
+            case _                   => Task {}
           }
           response <- toResponse(result)
         } yield response

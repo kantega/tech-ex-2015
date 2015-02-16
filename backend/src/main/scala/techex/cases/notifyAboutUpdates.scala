@@ -11,8 +11,8 @@ object notifyAboutUpdates {
 
   lazy val notifyUpdate: FactUpdate => Task[Unit] =
     update => update.fact match {
-      case AchievedBadge(id) =>
-        sendMessageToSlack(":star: " + update.info.nick + " was awarded " + id) *>
+      case AchievedBadge(name) =>
+        sendMessageToSlack(":star: " + update.info.nick.value + " was awarded the \"" + name+"\" badge") *>
           print(update.toString)
       case _                 =>
         print(update.toString)

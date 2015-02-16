@@ -1,10 +1,7 @@
-package techex.cases
-
-import java.util.UUID
+package techex.data
 
 import argonaut.Argonaut._
 import argonaut.{DecodeJson, EncodeJson}
-import org.joda.time.Instant
 import techex.domain._
 
 object codecJson {

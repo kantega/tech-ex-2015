@@ -42,8 +42,6 @@ class TrackUserSpec extends Specification {
     case t: Throwable => t.printStackTrace()
   }
 
-  def putObservation(playerId: PlayerId, beaconId: String, proximity: Proximity): Future[String] =
-      Http(((h / "location" / playerId.value) << "{'beaconId':'" + beaconId + "','proximity':'" + proximity.toString + "'}").POST)
-        .map(s => s.getStatusCode.toString)
+
 
 }

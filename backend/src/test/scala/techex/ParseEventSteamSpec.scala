@@ -8,7 +8,7 @@ import techex.domain._
 import techex.domain.matching._
 import techex.domain.areas._
 import techex.domain.predicates._
-import techex.domain.schedule._
+import techex.domain.scheduling._
 
 import scalaz.Scalaz._
 import scalaz._
@@ -19,10 +19,10 @@ class ParseEventSteamSpec extends Specification {
     fact({ case entered: Entered => true})
 
   val connected =
-    fact({ case c: Connected => true})
+    fact({ case c: MetPlayer => true})
 
   val joinedActivityAtSameArea =
-    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case Entered(e) if entry.space.area === e => true})) => true})
+    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case Entered(e) if entry.area === e => true})) => true})
 
 
   val time =
@@ -34,13 +34,13 @@ class ParseEventSteamSpec extends Specification {
   val events =
     List(
       FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(foyer)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1235"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1235"),Nick("falle"))),
       FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(auditorium)),
       FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(coffeeStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1234"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1234"),Nick("jalle"))),
       FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(kantegaStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1235"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Connected(PlayerId("1236"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1235"),Nick("falle"))),
+      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1236"),Nick("palle"))),
       FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(technoportStand)),
       FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time.plus(Hours.hours(3).toStandardDuration),Nick("AB")), JoinedActivity(keyNote))
     )
