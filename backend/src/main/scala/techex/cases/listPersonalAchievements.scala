@@ -9,53 +9,34 @@ import _root_.argonaut._
 import Argonaut._
 import org.http4s.argonaut.ArgonautSupport._
 import techex._
-import techex.data.{PlayerContext, streamContext}
+import techex.data.{codecJson, PlayerStore$, PlayerStore}
 import techex.domain._
 
 import scalaz.concurrent.Task
 
 object listPersonalAchievements {
 
-  implicit val badgeEncodeJson: EncodeJson[Badge] =
-    EncodeJson(
-      (b: Badge) =>
-        ("id" := b.id.value) ->:
-          ("name" := b.name) ->:
-          ("desc" := b.desc) ->:
-          ("visibility" := b.visibility.toString) ->:
-          jEmptyObject
-    )
+  import codecJson._
 
-  implicit val achievemntEncodeJson: EncodeJson[Achievement] =
-    EncodeJson(
-      (a: Achievement) =>
-        ("badge" := a.badge) ->:
-          ("achieved" := a.achieved) ->:
-          ("achievedBy" := a.achievedBy.map(_.value)) ->:
-          jEmptyObject
-    )
-
-  def acheivedBy(badge: Badge, ctx: PlayerContext) =
+  def acheivedBy(badge: Badge, ctx: PlayerStore) =
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
 
   val restApi: WebHandler = {
-    case req@GET -> Root / "achievements" / "user" / playerId => {
-      val achievemnts:Task[Task[Response]] =
-        streamContext.run[Task[Response]](State {
-          playerContext: PlayerContext =>
+    case req@GET -> Root / "achievements" / "player" / playerId => {
+      val achievemnts: Task[Task[Response]] =
+        PlayerStore.run[Task[Response]](State {
+          playerContext: PlayerStore =>
             val maybePlayerData =
               playerContext.playerData.get(PlayerId(playerId))
 
-            maybePlayerData.fold((playerContext,NotFound())) { playerData =>
+            maybePlayerData.fold((playerContext, NotFound())) { playerData =>
               val player =
                 playerData.player
 
               val visibleForUser =
-                quests.badges
-                  .filter(_.visibility === Public) ++
-                  player.privateQuests
-                    .map(id => quests.questMap(Qid(id.value)))
-                    .flatMap(Quest.badges)
+                player.privateQuests
+                  .map(id => quests.questMap(Qid(id.value)))
+                  .flatMap(_.badges)
 
               val progress =
                 visibleForUser
@@ -64,7 +45,7 @@ object listPersonalAchievements {
               (playerContext, Ok(progress.asJson))
             }
         })
-      achievemnts.flatMap(i=>i)
+      achievemnts.flatMap(i => i)
     }
   }
 }

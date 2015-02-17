@@ -9,13 +9,13 @@ import techex.domain._
 
 import scalaz.stream.Process
 
-object mappers {
+object sqlmappers {
 
   implicit val uuidAtom: Atom[UUID] =
     Atom.fromScalaType[String].xmap(UUID.fromString, _.toString)
 
-  implicit val beaconAtom: Atom[Option[Beacon]] =
-    Atom.fromScalaType[String].xmap(nonEmpty(_).map(Beacon), _.getOrElse(Beacon("")).id)
+  implicit val beaconAtom: Atom[Beacon] =
+    Atom.fromScalaType[String].xmap(Beacon, _.id)
 
   implicit val playerIdAtom: Atom[PlayerId] =
     Atom.fromScalaType[String].xmap(PlayerId(_), _.value)
@@ -40,7 +40,7 @@ object mappers {
       case "near"      => Near
       case "far"       => Far
       case "immediate" => Immediate
-    }, prox => prox match {
+    }, {
       case Near      => "near"
       case Far       => "far"
       case Immediate => "immediate"
@@ -50,7 +50,7 @@ object mappers {
 
 object PlayerDAO {
 
-  import mappers._
+  import sqlmappers._
 
 
 
@@ -97,7 +97,7 @@ object PlayerDAO {
 
 object ObservationDAO {
 
-  import mappers._
+  import sqlmappers._
 
   def createObservationtable: ConnectionIO[Int] = {
     sql"""
@@ -127,7 +127,7 @@ object ObservationDAO {
 
 object LocationDao {
 
-  import mappers._
+  import sqlmappers._
 
   def createLocationTable: ConnectionIO[Int] = {
     sql"""

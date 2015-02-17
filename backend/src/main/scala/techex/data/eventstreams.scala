@@ -1,7 +1,5 @@
 package techex.data
 
-import techex.domain.{ScheduleEvent, Observation}
-
 import scalaz.stream.async.mutable.Topic
 
 object eventstreams {
@@ -14,3 +12,4 @@ object eventstreams {
 }
 
 trait StreamEvent
+trait Command extends StreamEvent

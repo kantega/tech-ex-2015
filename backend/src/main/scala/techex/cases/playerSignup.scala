@@ -7,13 +7,14 @@ import org.http4s.dsl._
 
 import _root_.argonaut._
 import Argonaut._
+import org.http4s.argonaut.ArgonautSupport._
 import techex.data._
 import techex.domain._
 
 import scalaz._, Scalaz._
 
 import scalaz.concurrent.Task
-import org.http4s.argonaut.ArgonautSupport._
+
 
 object playerSignup {
 
@@ -59,8 +60,9 @@ object playerSignup {
         fail
       )
 
-  val checkNickTaken: Nick => State[PlayerContext, Boolean] =
-    nick => streamContext.read(_.playerData.exists(entry => entry._2.player.nick === nick))
+  val checkNickTaken: Nick => State[PlayerStore, Boolean] =
+    nick =>
+      PlayerStore.read(_.playerData.exists(entry => entry._2.player.nick === nick))
 
 
   val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Player =
@@ -71,18 +73,27 @@ object playerSignup {
   val selectPersonalQuests: List[QuestId] =
     quests.quests.map(q => QuestId(q.id.value))
 
-  val storePlayer: Player => ConnectionIO[Player] =
-    (player) => {
-      PlayerDAO.insertPlayer(player).map(any => player)
-    }
-
-  val updateContext: Player => State[PlayerContext, Player] =
+  val updateContext: Player => State[PlayerStore, Player] =
     player =>
-      State[PlayerContext, Player](ctx =>
-        (ctx.putPlayerData(player.id, PlayerData(player, Set(), Vector(), Vector())), player))
+      State[PlayerStore, Player](ctx =>
+        (ctx.putPlayerData(
+          player.id,
+          PlayerData(
+            player,
+            Set(),
+            Vector(),
+            Vector(),
+            player.privateQuests
+              .map(id => Qid(id.value))
+              .map(id => quests.trackerForQuest.get(id))
+              .collect { case Some(x) => x}
+              .foldLeft(PatternOutput.zero[Badge])(_ and _)
+          )),
+          player)
+      )
 
 
-  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerContext, Signupresult] =
+  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerStore, Signupresult] =
     (nick, playerPreference) =>
       for {
         taken <- checkNickTaken(nick)
@@ -94,37 +105,29 @@ object playerSignup {
       } yield rsult
 
 
-  val storeIfSuccess: Signupresult => Task[Signupresult] = {
-    case ok@SignupOk(player) =>
-      for {
-        _ <- streamContext.run(updateContext(player))
-        _ <- db.ds.transact(storePlayer(player))
-      } yield ok
-    case taken@NickTaken(_)  =>
-      Task.now(taken)
-  }
-
   val toResponse: Signupresult => Task[Response] = {
     case SignupOk(player) => Created(player.asJson)
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
-  val restApi: WebHandler = {
+  def restApi: WebHandler = {
     case req@PUT -> Root / "player" / nick =>
       EntityDecoder.text(req)(body => {
         val maybePlayerPref =
           toJsonQuotes(body).decodeValidation[PlayerPreference]
 
-        maybePlayerPref
-          .fold(
-            str => BadRequest(s"Failed to parse the preferences: $str, expected something like  {'drink':'wine','eat':'meat'}"),
-            preference =>
-              for {
-                result <- streamContext.run(createPlayerIfNickAvailable(Nick(nick), preference))
-                _ <- storeIfSuccess(result)
-                response <- toResponse(result)
-              } yield response
-          )
+        val preference =
+          maybePlayerPref.getOrElse(PlayerPreference.default)
+
+        for {
+          result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
+          _ <- result match {
+            case ok@SignupOk(player) => PlayerStore.run(updateContext(player)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Player " + nick +" jsut signed up! :thumbsup:")
+            case _                   => Task {}
+          }
+          response <- toResponse(result)
+        } yield response
+
       })
   }
 

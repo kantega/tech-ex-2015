@@ -32,7 +32,7 @@ class LoadPersonalBadgesSpec extends Specification {
         val quests =
           decodeId
             .decodeJson(maybeParsedResponse.getOrElse(jEmptyObject))
-            .map(playerId => Http(h / "achievements" / "user" / playerId))
+            .map(playerId => Http(h / "achievements" / "player" / playerId))
             .fold((str, history) => str, s => s().getResponseBody)
 
         println(quests)

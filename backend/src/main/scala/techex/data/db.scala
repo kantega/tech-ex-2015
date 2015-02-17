@@ -1,5 +1,6 @@
 package techex.data
 
+
 import scalaz._, Scalaz._
 import scalaz.concurrent.Task
 import scalaz.effect.{ SafeApp, IO }
@@ -28,17 +29,34 @@ object HikariConnectionPoolTransactor {
 
 
 object db {
-  val config = new HikariConfig()
-  config.setUsername("sa")
-  config.setPassword("")
-  config.addDataSourceProperty("cachePrepStmts", "true")
-  config.addDataSourceProperty("prepStmtCacheSize", "250")
-  config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
-  config.addDataSourceProperty("useServerPrepStmts", "true")
-  config.setDriverClassName("org.h2.Driver")
-  config.setJdbcUrl("jdbc:h2:mem:test1")
 
-  lazy val ds = HikariConnectionPoolTransactor.create[Task](config).run
+  def mysqlConfig(username:String,password:String) = {
+    val config = new HikariConfig()
+    config.setUsername(username)
+    config.setPassword(password)
+    config.addDataSourceProperty("cachePrepStmts", "true")
+    config.addDataSourceProperty("prepStmtCacheSize", "250")
+    config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+    config.addDataSourceProperty("useServerPrepStmts", "true")
+    config.setDriverClassName("org.mysql.Driver")
+    config.setJdbcUrl("jdbc:mysql://mysql.kantega.no/technoport_experiments_2015")
+    config
+  }
+
+  def inMemConfig = {
+    val config = new HikariConfig()
+    config.setUsername("sa")
+    config.setPassword("")
+    config.addDataSourceProperty("cachePrepStmts", "true")
+    config.addDataSourceProperty("prepStmtCacheSize", "250")
+    config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+    config.addDataSourceProperty("useServerPrepStmts", "true")
+    config.setDriverClassName("org.h2.Driver") //"org.mysql.Driver")
+    config.setJdbcUrl("jdbc:h2:mem:test") //"jdbc:mysql://mysql.kantega.no/technoport_experiments_2015")
+    config
+  }
+  def ds(config:HikariConfig) =
+    HikariConnectionPoolTransactor.create[Task](config)
 
 }
 
