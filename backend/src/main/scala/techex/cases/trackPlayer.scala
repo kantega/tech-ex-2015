@@ -39,10 +39,9 @@ object trackPlayer {
           case observation: Observation =>
             for {
               maybeLocationUpdate <- nextLocation(observation)
-              a <- maybeLocationUpdate.map(location2ScheduleActivity).getOrElse(State.state[PlayerStore, List[FactUpdate]](nil))
               b <- maybeLocationUpdate.map(location2VisitActivities).getOrElse(State.state[PlayerStore, List[FactUpdate]](nil))
               c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffee)).getOrElse(State.state[PlayerStore, List[FactUpdate]](nil))
-            } yield a ::: b ::: c
+            } yield b ::: c
 
           case _ =>
             State(ctx => (ctx, Nil))
@@ -104,6 +103,7 @@ object trackPlayer {
     }
     }
 
+  /*
   def location2ScheduleActivity: LocationUpdate => State[PlayerStore, List[FactUpdate]] =
     incomingLocation => State {
       ctx => {
@@ -123,7 +123,7 @@ object trackPlayer {
         (ctx.addFacts(activities), activities)
       }
     }
-/*
+
   def scheduleEvent2Activity: ScheduleEvent => State[PlayerStore, List[FactUpdate]] =
     event =>
       State.gets { ctx =>
@@ -211,7 +211,9 @@ object trackPlayer {
 
   def restApi(topic: Topic[StreamEvent]): WebHandler = {
     case req@POST -> Root / "location" / playerId =>
+
       EntityDecoder.text(req)(body => {
+        notifyAboutUpdates.sendMessageToSlack("Request received: "+body.toString).run
         val maybeObservation =
           toJsonQuotes(body)
             .decodeValidation[ObservationData]

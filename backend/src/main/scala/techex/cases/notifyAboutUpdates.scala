@@ -2,20 +2,26 @@ package techex.cases
 
 import scalaz._, Scalaz._
 import doobie.util.process
-import techex.domain.{AchievedBadge, FactUpdate}
+import techex.domain.{ScheduleEvent, Fact, AchievedBadge, FactUpdate}
 
 import scalaz.concurrent.Task
 import scalaz.stream.Sink
 
 object notifyAboutUpdates {
 
+  lazy val notifyScheduleChanges:  ScheduleEvent => Task[Unit] =
+    evt =>  sendMessageToSlack("Schedule update: "+evt.toString)
+
+  lazy val notifyScheduleChangesSink: Sink[Task, ScheduleEvent] =
+    process.sink(notifyScheduleChanges)
+
   lazy val notifyUpdate: FactUpdate => Task[Unit] =
     update => update.fact match {
       case AchievedBadge(name) =>
         sendMessageToSlack(":star: " + update.info.nick.value + " was awarded the \"" + name+"\" badge") *>
           print(update.toString)
-      case _                 =>
-        sendMessageToSlack("Fact: "+update.toString)
+      case any:Fact                 =>
+        sendMessageToSlack("Fact: "+update.info.nick.value+" "+any.toString)
     }
 
   lazy val notifyUpdateSink: Sink[Task, FactUpdate] =

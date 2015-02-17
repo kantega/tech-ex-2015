@@ -26,11 +26,19 @@ object startup {
         process1.id.flatMap((list: List[FactUpdate]) => Process.emitAll(list.toSeq)) to
         notifyAboutUpdates.notifyUpdateSink
 
+    val scheduleStream =
+      eventstreams.events.subscribe pipe
+        updateSchedule.handleSchedulingProcess1 through
+        Schedule.updates[List[ScheduleEvent]] pipe
+        process1.id.flatMap((list: List[ScheduleEvent]) => Process.emitAll(list.toSeq)) to
+        notifyAboutUpdates.notifyScheduleChangesSink
 
-    Task{Task.fork(stream.onFailure(t=>{
-      t.printStackTrace()
-      stream
-    }).run)(streamRunner).runAsync(_.toString)}
+    Task {
+      Task.fork(stream.onFailure(t => {
+        t.printStackTrace()
+        stream
+      }).run)(streamRunner).runAsync(_.toString)
+    }
   }
 
 
@@ -62,7 +70,7 @@ object startup {
         unregisterPlayer.restApi orElse
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events)
-      )
+    )
 
   }
 }
