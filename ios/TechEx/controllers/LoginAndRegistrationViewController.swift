@@ -10,10 +10,11 @@ import UIKit
 
 class LoginAndRegistrationViewController: UIViewController {
 
-    //TODO: Last fra config
-    let baseApiUrl = "http://localhost:9000";
+   
+
+    let baseApiUrl = Config.get("ServerUrl")
     var nick:String!
-    var token:String!;
+    var id:String!
 
     @IBOutlet weak var welcomeView: UIView!
     @IBOutlet weak var registrationView: UIView!
@@ -26,6 +27,7 @@ class LoginAndRegistrationViewController: UIViewController {
             Alert.shared.showAlert("Nick cannot be empty", title: nil, buttonText: "OK", parent: self);
             return
         }
+
         
         self.nick = nickTextField.text;
         
@@ -38,13 +40,12 @@ class LoginAndRegistrationViewController: UIViewController {
                     NSLog("Error when registering user: \(error)");
                 } else {
                     let d = JSON(j!);
-                    let idToken = d["id"].string!
+                    let playerId = d["id"].string!
                     let nick = d["nick"].string!
-                    NSLog("Token: \(idToken), nick: \(nick)")
+                    NSLog("PlayerId: \(playerId), nick: \(nick)")
                 
                     KeychainService.save(.Username, value: nick)
-                    KeychainService.save(.Token, value: idToken)
-                
+                    KeychainService.save(.PlayerId, value: playerId)
                     self.showQuests()
                 }
                 LoadingOverlay.shared.hideOverlayView();
@@ -71,14 +72,15 @@ class LoginAndRegistrationViewController: UIViewController {
         }
     }
     
+    
     func loadCredentialsFromKeychain() {
-        self.token = KeychainService.load(.Token)
+        self.id = KeychainService.load(.PlayerId)
         self.nick = KeychainService.load(.Username)
     }
     
 
     func isLoggedIn() -> Bool {
-        return token != nil;
+        return id != nil;
     }
     
     func showWelcomeMessage() {
@@ -95,6 +97,9 @@ class LoginAndRegistrationViewController: UIViewController {
         NSLog("ShowingQuests, i.e. performing segue with identifier ShowQuests");
         self.performSegueWithIdentifier("ShowQuests", sender: nil);
     }
+    
+
+
     
 
 }

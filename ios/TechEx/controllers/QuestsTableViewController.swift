@@ -8,45 +8,62 @@
 
 import UIKit
 
-class QuestsTableViewController: UITableViewController {
+class QuestsTableViewController: UITableViewController{
     
-    //TODO: Last fra config
-    let baseApiUrl = "http://localhost:9000";
+
+    let questCellIdentifier = "QuestPrototypeCell"
+    let baseApiUrl = Config.get("ServerUrl")
+    var quests = Array<Quest>()
     
-    var quests = NSMutableArray()
     
     override func viewDidLoad() {
-        //Move the content down to prevent it from being behind the status bar.
-        self.tableView.contentInset = UIEdgeInsetsMake(20, 0, 0, 0);
+//        //Move the content down to prevent it from being behind the status bar.
+//        self.tableView.contentInset = UIEdgeInsetsMake(20, 0, 0, 0);
         loadInitialData()
+        self.startDetectingBeacons()
+        
+        self.refreshControl = UIRefreshControl()
+        //self.refreshControl!.attributedTitle = NSAttributedString(string: "Pull to refersh")
+        self.refreshControl!.addTarget(self, action: "loadInitialData", forControlEvents: UIControlEvents.ValueChanged)
+        self.tableView.addSubview(refreshControl!)
+        
         super.viewDidLoad()
     }
 
     
     func loadInitialData() {
         LoadingOverlay.shared.showOverlay(self.view)
-        let nick = KeychainService.load(.Username)!;
+        let playerId = KeychainService.load(.PlayerId)!;
         
-        request(.GET, "\(baseApiUrl)/quests/\(nick)")
+        request(.GET, "\(baseApiUrl)/quests/player/\(playerId)")
             .responseJSON { (req, resp, j, error) in
                 if error != nil {
                     Alert.shared.showAlert("Unable to load quests. Please try again later.", title: "Error", buttonText: "OK", parent: self);
                     NSLog("Error when loading quests: \(error)");
                 } else {
-                    let quests = JSON(j!)
-                    for (index: String, quest: JSON) in quests {
+                    let userQuests = JSON(j!)
+                    self.quests = Array<Quest>()
+                    for (index: String, quest: JSON) in userQuests {
                         let q = Quest()
                         let title = quest["title"].string!
                         NSLog("Adding quest with title \(title)")
                         q.title = title
-                        self.quests.addObject(q)
+                        q.desc = quest["desc"].string!
+                        self.quests.append(q)
                         self.tableView!.reloadData()
+
                     }
                 }
+                self.refreshControl?.endRefreshing()
                 LoadingOverlay.shared.hideOverlayView();
         }
     }
 
+    
+    func startDetectingBeacons() {
+        let appDelegate = UIApplication.sharedApplication().delegate as AppDelegate
+        appDelegate.startTrackingIBeacons()
+    }
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         return 1
@@ -58,10 +75,35 @@ class QuestsTableViewController: UITableViewController {
     
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("QuestPrototypeCell", forIndexPath: indexPath) as UITableViewCell
-        let quest = self.quests.objectAtIndex(indexPath.row) as Quest
-        cell.textLabel?.text = quest.title
+        let cell = tableView.dequeueReusableCellWithIdentifier(questCellIdentifier, forIndexPath: indexPath) as QuestTableViewCell
+        return configureTableCell(cell, indexPath: indexPath)
+    }
+
+    func configureTableCell(cell: QuestTableViewCell, indexPath: NSIndexPath) -> UITableViewCell {
+        let quest = self.quests[indexPath.row]
+        cell.titleLabel.text = quest.title
+        cell.descriptionLabel.text = quest.desc
         return cell
+    }
+    
+    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        let sizingCell = tableView.dequeueReusableCellWithIdentifier(questCellIdentifier) as QuestTableViewCell
+        
+        self.configureTableCell(sizingCell, indexPath: indexPath)
+        sizingCell.setNeedsLayout()
+        sizingCell.layoutIfNeeded()
+        
+        let size = sizingCell.contentView.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
+        return size.height + 1.0
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "QuestDetail" {
+            let questDetailViewController = segue.destinationViewController as UIViewController
+            let indexPath = self.tableView.indexPathForSelectedRow()!
+            let destinationTitle = self.quests[indexPath.row].title
+            questDetailViewController.title = destinationTitle
+        }
     }
 
     
@@ -99,16 +141,8 @@ class QuestsTableViewController: UITableViewController {
     return true
     }
     */
-    
-    /*
-    // MARK: - Navigation
-    
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-    }
-    */
+
+
     
 
 

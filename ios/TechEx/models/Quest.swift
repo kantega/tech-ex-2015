@@ -11,4 +11,5 @@ import UIKit
 class Quest: NSObject {
 
     var title: String = ""
+    var desc: String = ""
 }

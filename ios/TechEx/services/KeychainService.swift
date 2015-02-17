@@ -19,7 +19,7 @@ class KeychainService: NSObject {
     
     enum KeychainKey {
         case Username;
-        case Token;
+        case PlayerId;
     }
     
     /**
@@ -34,6 +34,12 @@ class KeychainService: NSObject {
         let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
         var token = self.load(serviceIdentifier, key: key)
         return token
+    }
+    
+    internal class func deleteAll() {
+        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
+        delete(serviceIdentifier, key: .Username)
+        delete(serviceIdentifier, key: .PlayerId)
     }
     
     /**
@@ -81,10 +87,18 @@ class KeychainService: NSObject {
         return contentsOfKeychain
     }
     
+    private class func delete(service: String, key: KeychainKey) {
+        let keyData: NSData = keyAsString(key).dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
+        var keychainQuery: NSMutableDictionary = NSMutableDictionary(objects: [kSecClassGenericPasswordValue, service, keyData], forKeys: [kSecClassValue, kSecAttrServiceValue, kSecAttrAccountValue])
+        
+        // Delete any existing items
+        SecItemDelete(keychainQuery as CFDictionaryRef)
+    }
+    
     private class func keyAsString(key: KeychainKey) -> String {
         switch key {
         case .Username: return "username";
-        case .Token: return "token";
+        case .PlayerId: return "id";
         }
     }
 }

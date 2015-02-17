@@ -43,5 +43,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Your location will be tracked only inside the Technoport premises</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location will be tracked only inside the Technoport premises only when the app is running</string>
 </dict>
 </plist>
