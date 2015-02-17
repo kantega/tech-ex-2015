@@ -39,11 +39,18 @@ object playerSignup {
           privateQuests.map(QuestId))
     )
 
+  implicit val platformDecode: CodecJson[PlatformData] =
+    casecodec2(PlatformData,PlatformData.unapply)("type","deviceToken")
+
   implicit def playerPreferenceCode: CodecJson[PlayerPreference] =
     casecodec2(
       (drinkS: String, eatS: String) => PlayerPreference(Drink(drinkS), Eat(eatS)),
       (preference: PlayerPreference) => Some(preference.drink.asString, preference.eat.asString)
     )("drink", "eat")
+
+  implicit val createPlayerDataDecode: CodecJson[CreatePlayerData] =
+    casecodec2(CreatePlayerData, CreatePlayerData.unapply)("platform", "preferences")
+
 
   sealed trait Signupresult
   case class SignupOk(player: Player) extends Signupresult
@@ -73,8 +80,8 @@ object playerSignup {
   val selectPersonalQuests: List[QuestId] =
     quests.quests.map(q => QuestId(q.id.value))
 
-  val updateContext: Player => State[PlayerStore, Player] =
-    player =>
+  val updateContext: (Player, MobilePlatform) => State[PlayerStore, Player] =
+    (player, platform) =>
       State[PlayerStore, Player](ctx =>
         (ctx.putPlayerData(
           player.id,
@@ -87,7 +94,8 @@ object playerSignup {
               .map(id => Qid(id.value))
               .map(id => quests.trackerForQuest.get(id))
               .collect { case Some(x) => x}
-              .foldLeft(PatternOutput.zero[Badge])(_ and _)
+              .foldLeft(PatternOutput.zero[Badge])(_ and _),
+            platform
           )),
           player)
       )
@@ -113,22 +121,37 @@ object playerSignup {
   def restApi: WebHandler = {
     case req@PUT -> Root / "player" / nick =>
       EntityDecoder.text(req)(body => {
-        val maybePlayerPref =
-          toJsonQuotes(body).decodeValidation[PlayerPreference]
+        val maybeCreatePlayerData =
+          toJsonQuotes(body).decodeValidation[CreatePlayerData]
 
-        val preference =
-          maybePlayerPref.getOrElse(PlayerPreference.default)
+        maybeCreatePlayerData.fold(
+          failMsg => BadRequest(failMsg),
+          createPlayerData => {
+            val preference =
+              createPlayerData.preferences.getOrElse(PlayerPreference.default)
 
-        for {
-          result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
-          _ <- result match {
-            case ok@SignupOk(player) => PlayerStore.run(updateContext(player)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Player " + nick +" jsut signed up! :thumbsup:")
-            case _                   => Task {}
+            for {
+              result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
+              _ <- result match {
+                case ok@SignupOk(player) => PlayerStore.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Player " + nick + " just signed up! :thumbsup:")
+                case _                   => Task {}
+              }
+              response <- toResponse(result)
+            } yield response
           }
-          response <- toResponse(result)
-        } yield response
+        )
 
       })
   }
 
+  case class PlatformData(plattformType: String, deviceToken: Option[String]){
+    def toPlatform =
+    plattformType.toLowerCase match {
+      case "ios" => iOS(DeviceToken(deviceToken.get))
+      case "android" => Android()
+      case _ => Web()
+    }
+  }
+  case class CreatePlayerData(platform: PlatformData,preferences: Option[PlayerPreference])
+  case class CreatePlayer(nick: Nick, preference: PlayerPreference, platform: MobilePlatform) extends Command
 }

@@ -34,21 +34,21 @@ object areas {
   val kantegaOffice = Area("KantegaOffice")
   val meetingPoint  = Area("Meetingpoint")
 
-  val beaconPlacement: Map[(Beacon, Proximity), Area] =
+  val beaconPlacement: Map[Beacon, (Proximity, Area)] =
     Map(
-      (Beacon("a"), Near) -> foyer,
-      (Beacon("b"), Near) -> toiletAtSamf,
-      (Beacon("c"), Near) -> toiletAtSamf,
-      (Beacon("d"), Near) -> stage,
-      (Beacon("e"), Near) -> bar,
-      (Beacon("f"), Near) -> technoportStand,
-      (Beacon("gg"), Near) -> kantegaStand,
-      (Beacon("58796:18570"), Near) -> testArea1,
-      (Beacon("51194:16395"), Near) -> testArea2,
-      (Beacon("54803:59488"), Near) -> testArea3,
-      (Beacon("j"), Near) -> kantegaCoffee,
-      (Beacon("k"), Near) -> coffeeStand,
-      (Beacon("l"), Near) -> meetingPoint)
+      (Beacon("a")) ->(Near, foyer),
+      (Beacon("b")) ->(Near, toiletAtSamf),
+      (Beacon("c")) ->(Near, toiletAtSamf),
+      (Beacon("d")) ->(Near, stage),
+      (Beacon("e")) ->(Near, bar),
+      (Beacon("f")) ->(Near, technoportStand),
+      (Beacon("gg")) ->(Near, kantegaStand),
+      (Beacon("58796:18570")) ->(Near, testArea1),
+      (Beacon("51194:16395")) ->(Near, testArea2),
+      (Beacon("54803:59488")) ->(Near, testArea3),
+      (Beacon("j")) ->(Near, kantegaCoffee),
+      (Beacon("k")) ->(Near, coffeeStand),
+      (Beacon("l")) ->(Near, meetingPoint))
 
   val locationHierarcy: Tree[Area] =
     allAreas.node(
@@ -124,7 +124,15 @@ object Area {
 
 case class Beacon(id: String)
 
-trait Proximity
+trait Proximity{
+  def isSameOrCloserThan(other: Proximity) =
+    (this, other) match {
+      case (Immediate, _)     => true
+      case (Near, Far | Near) => true
+      case (Far, Far)         => true
+      case _ => false
+    }
+}
 
 object Proximity {
   def apply(value: String) = value.toLowerCase match {
@@ -132,6 +140,8 @@ object Proximity {
     case "near" | "2"      => Near
     case _                 => Far
   }
+
+
 
 }
 case object Near extends Proximity

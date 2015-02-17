@@ -86,7 +86,7 @@ object trackPlayer {
         ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
 
       val maybeArea =
-        areas.beaconPlacement.get((observation.beacon, observation.proximity))
+        areas.beaconPlacement.get(observation.beacon).flatMap{case (requiredProximity,area) => if(observation.proximity isSameOrCloserThan requiredProximity) Some(area) else None}
 
       val maybeUpdate =
         (maybeArea, history) match {
@@ -213,7 +213,7 @@ object trackPlayer {
     case req@POST -> Root / "location" / playerId =>
 
       EntityDecoder.text(req)(body => {
-        notifyAboutUpdates.sendMessageToSlack("Request received: "+body.toString).run
+        //notifyAboutUpdates.sendMessageToSlack("Request received: "+body.toString).run
         val maybeObservation =
           toJsonQuotes(body)
             .decodeValidation[ObservationData]

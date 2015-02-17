@@ -45,7 +45,8 @@ libraryDependencies ++= {
     "com.zaxxer" % "HikariCP" % "2.2.5",
     "com.github.nscala-time" %% "nscala-time" % "1.8.0",
     "com.typesafe" % "config" % "1.2.1", //config
-    "io.argonaut" %% "argonaut" % "6.1-M4" //json
+    "io.argonaut" %% "argonaut" % "6.1-M4", //json
+    "com.notnoop.apns" % "apns" % "1.0.0.Beta6" //apple push notifications
   )
 }
 

@@ -1,21 +1,21 @@
 package techex.cases
 
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.Executors
 
-import com.typesafe.config.Config
+import com.notnoop.apns.APNS
 import org.http4s.server._
-import org.joda.time.DateTime
 import techex._
 import techex.data._
 import techex.domain._
 import techex.web.test
 
+import scalaz._, Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream._
-import scalaz.stream.async.mutable.Topic
 
 object startup {
-  val streamRunner = Executors.newSingleThreadScheduledExecutor()
+  val streamRunner =
+    Executors.newSingleThreadScheduledExecutor()
 
   def setupStream: Task[Unit] = {
 

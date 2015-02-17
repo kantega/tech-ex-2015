@@ -22,7 +22,7 @@ class LoadTotalProgressSpec extends Specification {
 
         println(quests)
 
-        quests must contain("quest")
+        quests must contain("desc")
       }
 
     }
