@@ -57,8 +57,5 @@ object PlayerPreference{
   def default = PlayerPreference(Coke(),Salad())
 }
 
-case class DeviceToken(value:String)
-sealed trait MobilePlatform
-case class Android() extends MobilePlatform
-case class iOS(token:DeviceToken) extends MobilePlatform
-case class Web() extends MobilePlatform
+
+

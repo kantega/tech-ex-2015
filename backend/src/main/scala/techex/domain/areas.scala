@@ -155,7 +155,7 @@ case class ObservationData(beacon: Beacon, proximity: Proximity) {
 case class Observation(id: UUID, beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends StreamEvent
 case class Timed[A](timestamp: Instant, value: A)
 case class LocationUpdate(id: UUID, playerId: PlayerId, area: Area, instant: Instant)
-case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant, nick: Nick)
+case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant)
 case class FactUpdate(info: UpdateMeta, fact: Fact)
 
 

@@ -5,6 +5,7 @@ import javax.servlet.annotation.WebListener
 
 import org.http4s.servlet.Http4sServlet
 import techex.cases.{notifyAboutUpdates, startup}
+import techex.domain.{Green, Notification, Slack, Alert}
 
 @WebListener
 class Bootstrap extends ServletContextListener {
@@ -57,9 +58,9 @@ class InitingServlet extends Servlet {
       startup.setup(Map())
         .onFinish(maybeErr =>
         if (maybeErr.isDefined)
-          notifyAboutUpdates.notifyMessage("Server failed to start: "+maybeErr.get.getMessage, "error")
+          notifyAboutUpdates.sendNotification(Notification(Slack(), "Server failed to start: " + maybeErr.get.getMessage, Alert))
         else
-          notifyAboutUpdates.notifyMessage("Server started", "good")
+          notifyAboutUpdates.sendNotification(Notification(Slack(), "Server started", Green))
         ).run
 
     wrapped = Some(new Http4sServlet(service))

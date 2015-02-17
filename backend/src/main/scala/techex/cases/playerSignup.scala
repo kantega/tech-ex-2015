@@ -80,7 +80,7 @@ object playerSignup {
   val selectPersonalQuests: List[QuestId] =
     quests.quests.map(q => QuestId(q.id.value))
 
-  val updateContext: (Player, MobilePlatform) => State[PlayerStore, Player] =
+  val updateContext: (Player, NotificationTarget) => State[PlayerStore, Player] =
     (player, platform) =>
       State[PlayerStore, Player](ctx =>
         (ctx.putPlayerData(
@@ -133,7 +133,7 @@ object playerSignup {
             for {
               result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
               _ <- result match {
-                case ok@SignupOk(player) => PlayerStore.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Player " + nick + " just signed up! :thumbsup:")
+                case ok@SignupOk(player) => PlayerStore.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(),"Player " + nick + " just signed up! :thumbsup:",Green))
                 case _                   => Task {}
               }
               response <- toResponse(result)
@@ -153,5 +153,5 @@ object playerSignup {
     }
   }
   case class CreatePlayerData(platform: PlatformData,preferences: Option[PlayerPreference])
-  case class CreatePlayer(nick: Nick, preference: PlayerPreference, platform: MobilePlatform) extends Command
+  case class CreatePlayer(nick: Nick, preference: PlayerPreference, platform: NotificationTarget) extends Command
 }

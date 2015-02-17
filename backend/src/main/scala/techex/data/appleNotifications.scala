@@ -14,14 +14,15 @@ object appleNotifications {
       .build()
 
 
-  def sendNotification(token: DeviceToken, msg: String) = Task {
-    val payload =
-      APNS
-        .newPayload()
-        .alertBody("Can't be simpler than this!")
-        .build()
+  def sendNotification(token: DeviceToken, msg: String): Task[Unit] =
+    Task {
+      val payload =
+        APNS
+          .newPayload()
+          .alertBody("Can't be simpler than this!")
+          .build()
 
-    service.push(token.value, payload)
+      service.push(token.value, payload)
 
-  }
+    }
 }

@@ -10,11 +10,6 @@ import scala.concurrent.Future
 import scalaz.\/
 
 class TrackUserSpec extends Specification {
-  /*
-  (Beacon("58796:18570"), Near) -> testArea1,
-      (Beacon("51194:16395"), Near) -> testArea2,
-      (Beacon("54803:59488"), Near) -> testArea3,
-  */
 
 
   try {

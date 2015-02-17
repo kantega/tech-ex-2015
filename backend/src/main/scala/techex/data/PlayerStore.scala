@@ -89,7 +89,7 @@ case class PlayerData(
   movements: Vector[LocationUpdate],
   activities: Vector[FactUpdate],
   progress: PatternOutput[Badge],
-  platform:MobilePlatform) {
+  platform:NotificationTarget) {
 
   def addAchievement(achievemnt: Badge): PlayerData =
     copy(achievements = achievements + achievemnt)

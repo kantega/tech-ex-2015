@@ -23,15 +23,19 @@ object startup {
       eventstreams.events.subscribe pipe
         trackPlayer.handleTracking through
         PlayerStore.updates[List[FactUpdate]] pipe
-        process1.id.flatMap((list: List[FactUpdate]) => Process.emitAll(list.toSeq)) to
-        notifyAboutUpdates.notifyUpdateSink
+        process1.unchunk[FactUpdate] through
+        notifyAboutUpdates.factNotifcationChannel pipe
+        process1.unchunk[Notification] to
+        notifyAboutUpdates.notificationSink
 
     val scheduleStream =
       eventstreams.events.subscribe pipe
         updateSchedule.handleSchedulingProcess1 through
         Schedule.updates[List[ScheduleEvent]] pipe
-        process1.id.flatMap((list: List[ScheduleEvent]) => Process.emitAll(list.toSeq)) to
-        notifyAboutUpdates.notifyScheduleChangesSink
+        process1.unchunk[ScheduleEvent] through
+        notifyAboutUpdates.scheduleupdateChannel pipe
+        process1.unchunk[Notification] to
+        notifyAboutUpdates.notificationSink
 
     Task {
       Task.fork(stream.onFailure(t => {
@@ -51,7 +55,7 @@ object startup {
         db.inMemConfig
 
     for {
-      _ <- notifyAboutUpdates.notifyMessage("Starting up server", "warning")
+      _ <- notifyAboutUpdates.sendNotification(Notification(Slack(),"Starting up server", Attention))
       _ <- setupStream
       ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)

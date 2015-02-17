@@ -166,11 +166,11 @@ object trackPlayer {
 
         val left =
           lastLocation
-            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant, getNick(locationUpdate.playerId, ctx)), LeftArea(area)))
+            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), LeftArea(area)))
 
         val arrived =
           nextLocation
-            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant, getNick(locationUpdate.playerId, ctx)), Entered(area)))
+            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), Entered(area)))
 
         val updates =
           left ::: arrived
@@ -186,18 +186,15 @@ object trackPlayer {
       val playerData =
         ctx.playerData(location.playerId)
 
-      val nick =
-        playerData.player.nick
-
       val facts =
         ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
           .flatMap(other =>
           List(
             FactUpdate(
-              UpdateMeta(UUID.randomUUID(), location.playerId, location.instant, nick),
+              UpdateMeta(UUID.randomUUID(), location.playerId, location.instant),
               MetPlayer(other.player.id, other.player.nick)),
             FactUpdate(
-              UpdateMeta(UUID.randomUUID(), other.player.id, location.instant, other.player.nick),
+              UpdateMeta(UUID.randomUUID(), other.player.id, location.instant),
               MetPlayer(playerData.player.id, playerData.player.nick))))
 
 
@@ -230,6 +227,4 @@ object trackPlayer {
       })
   }
 
-  def getNick(playerId: PlayerId, ctx: PlayerStore): Nick =
-    ctx.playerData(playerId).player.nick
 }
