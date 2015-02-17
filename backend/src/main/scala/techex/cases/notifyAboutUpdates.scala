@@ -15,7 +15,7 @@ object notifyAboutUpdates {
         sendMessageToSlack(":star: " + update.info.nick.value + " was awarded the \"" + name+"\" badge") *>
           print(update.toString)
       case _                 =>
-        print(update.toString)
+        sendMessageToSlack("Fact: "+update.toString)
     }
 
   lazy val notifyUpdateSink: Sink[Task, FactUpdate] =

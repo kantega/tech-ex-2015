@@ -29,14 +29,7 @@ object scheduling {
       session5,
       crowdFunding)
 
-  val schedule =
-    scheduleEntries.map(e => (e.id,e)).toMap
-
-  def querySchedule(pred: ScheduleEntry => Boolean) =
-    scheduleEntries.filter(pred)
-
 }
-
 
 
 trait TimeBounds {
@@ -51,10 +44,10 @@ case class IntervalBounds(start: DateTime, duration: Dur) extends TimeBounds {
 }
 
 object IntervalBounds {
-  def apply(readableInstant: ReadableInstant, readableDuration: ReadableDuration):IntervalBounds =
+  def apply(readableInstant: ReadableInstant, readableDuration: ReadableDuration): IntervalBounds =
     IntervalBounds(readableInstant.toInstant.toDateTime, readableDuration.toDuration)
 
-  def apply(readableInstant: ReadableInstant, readablePeriod: ReadablePeriod):IntervalBounds =
+  def apply(readableInstant: ReadableInstant, readablePeriod: ReadablePeriod): IntervalBounds =
     IntervalBounds(readableInstant.toInstant.toDateTime, readablePeriod.toPeriod.toDurationFrom(readableInstant))
 }
 case object AnyTime extends TimeBounds {
@@ -63,18 +56,29 @@ case object AnyTime extends TimeBounds {
 }
 
 
+case class ScId(value: String)
+case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Area, started: Boolean = false) {
+  def start =
+    copy(started = true)
 
-case class ScId(value:String)
-case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Area)
+  def stop =
+    copy(started = false)
+}
 object ScheduleEntry {
   implicit val scheduleEntryEqual: Equal[ScheduleEntry] =
     Equal.equalA[String].contramap((entry: ScheduleEntry) => entry.id.value)
 }
-case class Started(instant: DateTime, entry: ScheduleEntry) extends StreamEvent
-case class Ended(instant:DateTime,entry:ScheduleEntry) extends StreamEvent
-case class StartEntry(entry: ScheduleEntry) extends Command
-case class EndEntry(entry:ScheduleEntry) extends Command
-case class AddEntry(entry:ScheduleEntry) extends Command
-case class RemoveEntry(entry:ScheduleEntry) extends Command
+
+trait ScheduleEvent extends StreamEvent
+case class Started(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
+case class Ended(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
+case class Added(entry: ScheduleEntry) extends ScheduleEvent
+case class Removed(entry: ScheduleEntry) extends ScheduleEvent
+case class StartEntry(entryId: ScId) extends Command
+case class EndEntry(entryId: ScId) extends Command
+case class AddEntry(entry: ScheduleEntry) extends Command
+case class RemoveEntry(entryId: ScId) extends Command
+
+
 
 

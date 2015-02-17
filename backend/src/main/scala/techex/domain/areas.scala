@@ -43,9 +43,9 @@ object areas {
       (Beacon("e"), Near) -> bar,
       (Beacon("f"), Near) -> technoportStand,
       (Beacon("gg"), Near) -> kantegaStand,
-      (Beacon("g"), Near) -> testArea1,
-      (Beacon("h"), Near) -> testArea2,
-      (Beacon("i"), Near) -> testArea3,
+      (Beacon("58796:18570"), Near) -> testArea1,
+      (Beacon("51194:16395"), Near) -> testArea2,
+      (Beacon("54803:59488"), Near) -> testArea3,
       (Beacon("j"), Near) -> kantegaCoffee,
       (Beacon("k"), Near) -> coffeeStand,
       (Beacon("l"), Near) -> meetingPoint)

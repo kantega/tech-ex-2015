@@ -13,18 +13,10 @@ object endSession {
 
   def restApi(topic: Topic[StreamEvent]): WebHandler = {
     case req@POST -> Root / "session" / "end" / sessionId => {
-      val maybeEntry =
-        scheduling.schedule.get(ScId(sessionId))
-
-      maybeEntry match {
-        case None        => NotFound()
-        case Some(entry) =>
-          for {
-            b <- topic.publishOne(EndEntry(entry))
-            ok <- Ok()
-          } yield ok
-      }
-
+      for {
+        _ <- topic.publishOne(EndEntry(ScId(sessionId)))
+        ok <- Ok()
+      } yield ok
     }
   }
 

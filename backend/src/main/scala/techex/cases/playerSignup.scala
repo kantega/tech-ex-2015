@@ -122,7 +122,7 @@ object playerSignup {
         for {
           result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
           _ <- result match {
-            case ok@SignupOk(player) => PlayerStore.run(updateContext(player)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Created player " + nick)
+            case ok@SignupOk(player) => PlayerStore.run(updateContext(player)) *> notifyAboutUpdates.notifyMessageWithDefaultColor("Player " + nick +" jsut signed up! :thumbsup:")
             case _                   => Task {}
           }
           response <- toResponse(result)
