@@ -42,9 +42,25 @@ object startup {
         t.printStackTrace()
         stream
       }).run)(streamRunner).runAsync(_.toString)
+      Task.fork(scheduleStream.onFailure(t => {
+        t.printStackTrace()
+        scheduleStream
+      }).run)(streamRunner).runAsync(_.toString)
     }
   }
 
+  def setupSchedule: Task[Unit] = {
+    val commands =
+      scheduling.scheduleEntries.map(AddEntry).toSeq
+
+    val t: Process[Task, Command] =
+      Process.emitAll(commands)
+
+    val tt =
+      t to eventstreams.events.publish
+
+    tt.run
+  }
 
   def setup(cfg: Map[String, String]): Task[HttpService] = {
 
@@ -55,8 +71,9 @@ object startup {
         db.inMemConfig
 
     for {
-      _ <- notifyAboutUpdates.sendNotification(Notification(Slack(),"Starting up server", Attention))
+      _ <- notifyAboutUpdates.sendNotification(Notification(Slack(), "Starting up server", Attention))
       _ <- setupStream
+      _ <- setupSchedule
       ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))

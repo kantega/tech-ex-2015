@@ -4,10 +4,7 @@ import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
-import techex.domain.{Near, Proximity, PlayerId, Nick}
-
-import scala.concurrent.Future
-import scalaz.\/
+import techex.domain.{Near, Nick}
 
 class TrackUserSpec extends Specification {
 
