@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
     </dependencies>
     <scenes>
@@ -17,69 +16,76 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="URP-FC-ywu" userLabel="WelcomeView">
-                                <rect key="frame" x="150" y="150" width="300" height="300"/>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dUj-pu-2E2" userLabel="Registration view">
+                                <rect key="frame" x="150" y="120" width="300" height="400"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OME-CQ-7BK">
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <constraints>
-                                    <constraint firstAttribute="centerY" secondItem="OME-CQ-7BK" secondAttribute="centerY" id="3of-UM-lLd"/>
-                                    <constraint firstAttribute="height" constant="300" id="DXi-Y0-Uii"/>
-                                    <constraint firstAttribute="trailing" secondItem="OME-CQ-7BK" secondAttribute="trailing" id="Kaa-fH-tj5"/>
-                                    <constraint firstAttribute="width" constant="300" id="WFX-mD-7up"/>
-                                    <constraint firstItem="OME-CQ-7BK" firstAttribute="leading" secondItem="URP-FC-ywu" secondAttribute="leading" id="hSs-CW-ETU"/>
-                                </constraints>
-                            </view>
-                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pfO-mM-ngK" userLabel="RegistrationDetails">
-                                <rect key="frame" x="150" y="150" width="300" height="300"/>
-                                <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Or7-jU-Krx">
-                                        <rect key="frame" x="0.0" y="70" width="300" height="80"/>
-                                        <state key="normal" title="Register" backgroundImage="Button background">
-                                            <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <color key="titleShadowColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <connections>
-                                            <action selector="registerUser" destination="BYZ-38-t0r" eventType="touchUpInside" id="1dn-vx-y3M"/>
-                                        </connections>
-                                    </button>
-                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Nick" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="d3O-cI-t02">
-                                        <rect key="frame" x="0.0" y="0.0" width="300" height="30"/>
+                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" minimumFontSize="17" background="Text field background" translatesAutoresizingMaskIntoConstraints="NO" id="2GF-0c-thu" customClass="TechexTextField" customModule="TechEx" customModuleProvider="target">
+                                        <rect key="frame" x="10" y="10" width="280" height="40"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="40" id="Th5-vi-2Mx"/>
+                                        </constraints>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Q2V-EP-OTm">
+                                        <rect key="frame" x="10" y="68" width="280" height="40"/>
+                                        <fontDescription key="fontDescription" name="HelveticaNeue-Bold" family="Helvetica Neue" pointSize="15"/>
+                                        <state key="normal" title="Register" backgroundImage="Button background"/>
+                                        <connections>
+                                            <action selector="registerUser" destination="BYZ-38-t0r" eventType="touchUpInside" id="c5Y-kd-9pa"/>
+                                        </connections>
+                                    </button>
+                                    <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" editable="NO" usesAttributedText="YES" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Z9x-RL-FhM">
+                                        <rect key="frame" x="10" y="168" width="280" height="150"/>
+                                        <color key="backgroundColor" red="0.078431372549019607" green="0.47058823529411764" blue="0.35686274509803922" alpha="0.5" colorSpace="calibratedRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="150" id="2wf-dW-zpc"/>
+                                        </constraints>
+                                        <attributedString key="attributedText">
+                                            <fragment content="Disclaimer">
+                                                <attributes>
+                                                    <font key="NSFont" size="14" name="HelveticaNeue-Bold"/>
+                                                    <font key="NSOriginalFont" size="14" name="HelveticaNeue-Bold"/>
+                                                    <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                                </attributes>
+                                            </fragment>
+                                            <fragment>
+                                                <string key="content"> Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip viuda.</string>
+                                                <attributes>
+                                                    <font key="NSFont" size="14" name="HelveticaNeue"/>
+                                                    <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                                </attributes>
+                                            </fragment>
+                                        </attributedString>
+                                        <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                    </textView>
                                 </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <constraints>
-                                    <constraint firstAttribute="trailing" secondItem="Or7-jU-Krx" secondAttribute="trailing" id="64e-hu-W12"/>
-                                    <constraint firstItem="Or7-jU-Krx" firstAttribute="top" secondItem="d3O-cI-t02" secondAttribute="bottom" constant="40" id="6Cf-uZ-k3e"/>
-                                    <constraint firstAttribute="height" constant="300" id="CyM-NK-cGW"/>
-                                    <constraint firstAttribute="trailing" secondItem="d3O-cI-t02" secondAttribute="trailing" id="RsH-P0-nAg"/>
-                                    <constraint firstItem="d3O-cI-t02" firstAttribute="leading" secondItem="pfO-mM-ngK" secondAttribute="leading" id="TEq-Rh-dVI"/>
-                                    <constraint firstAttribute="width" constant="300" id="i50-AW-bQ8"/>
-                                    <constraint firstItem="Or7-jU-Krx" firstAttribute="leading" secondItem="pfO-mM-ngK" secondAttribute="leading" id="me7-bA-3dR"/>
-                                    <constraint firstItem="d3O-cI-t02" firstAttribute="top" secondItem="pfO-mM-ngK" secondAttribute="top" id="zHD-s1-ce5"/>
+                                    <constraint firstItem="Z9x-RL-FhM" firstAttribute="leading" secondItem="dUj-pu-2E2" secondAttribute="leading" constant="10" id="3nQ-T1-bat"/>
+                                    <constraint firstItem="2GF-0c-thu" firstAttribute="leading" secondItem="dUj-pu-2E2" secondAttribute="leading" constant="10" id="WIM-QA-tFg"/>
+                                    <constraint firstItem="Z9x-RL-FhM" firstAttribute="top" secondItem="Q2V-EP-OTm" secondAttribute="bottom" constant="60" id="ah0-zV-SPt"/>
+                                    <constraint firstItem="Q2V-EP-OTm" firstAttribute="top" secondItem="2GF-0c-thu" secondAttribute="bottom" constant="18" id="cJl-ej-6f4"/>
+                                    <constraint firstItem="Q2V-EP-OTm" firstAttribute="leading" secondItem="dUj-pu-2E2" secondAttribute="leading" constant="10" id="fXk-AE-SCa"/>
+                                    <constraint firstAttribute="width" constant="300" id="hqh-pd-QA1"/>
+                                    <constraint firstAttribute="trailing" secondItem="Z9x-RL-FhM" secondAttribute="trailing" constant="10" id="jOa-Y5-y3D"/>
+                                    <constraint firstAttribute="trailing" secondItem="Q2V-EP-OTm" secondAttribute="trailing" constant="10" id="lPf-UI-I4M"/>
+                                    <constraint firstItem="2GF-0c-thu" firstAttribute="top" secondItem="dUj-pu-2E2" secondAttribute="top" constant="10" id="szp-dj-8B9"/>
+                                    <constraint firstAttribute="height" constant="400" id="xeE-CI-OoW"/>
+                                    <constraint firstAttribute="trailing" secondItem="2GF-0c-thu" secondAttribute="trailing" constant="10" id="zeW-4M-CX1"/>
                                 </constraints>
                             </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
-                            <constraint firstAttribute="centerY" secondItem="URP-FC-ywu" secondAttribute="centerY" id="2Sb-vF-1M3"/>
-                            <constraint firstAttribute="centerX" secondItem="URP-FC-ywu" secondAttribute="centerX" id="ikS-2e-Fv3"/>
-                            <constraint firstAttribute="centerY" secondItem="pfO-mM-ngK" secondAttribute="centerY" id="tzV-xb-2Of"/>
-                            <constraint firstAttribute="centerX" secondItem="pfO-mM-ngK" secondAttribute="centerX" id="ubZ-62-qbw"/>
+                            <constraint firstAttribute="centerX" secondItem="dUj-pu-2E2" secondAttribute="centerX" id="1Df-bo-yhI"/>
+                            <constraint firstItem="dUj-pu-2E2" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="100" id="oCR-cT-wWb"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="nickTextField" destination="d3O-cI-t02" id="trg-rE-gei"/>
-                        <outlet property="registrationView" destination="pfO-mM-ngK" id="xur-EX-fx0"/>
-                        <outlet property="welcomeLabel" destination="OME-CQ-7BK" id="vhi-bb-roF"/>
-                        <outlet property="welcomeView" destination="URP-FC-ywu" id="MG9-Sd-miU"/>
+                        <outlet property="disclaimer" destination="Z9x-RL-FhM" id="NMR-Uc-d4e"/>
+                        <outlet property="nickTextField" destination="2GF-0c-thu" id="Se9-4z-9X7"/>
+                        <outlet property="registrationView" destination="dUj-pu-2E2" id="WrR-QF-WEL"/>
                         <segue destination="iYk-j1-emn" kind="show" identifier="ShowQuests" id="Zen-KK-hke"/>
                     </connections>
                 </viewController>
@@ -186,6 +192,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Button background" width="600" height="80"/>
+        <image name="Button background" width="300" height="40"/>
+        <image name="Text field background" width="5" height="5"/>
     </resources>
 </document>

@@ -15,7 +15,7 @@
     var quests = [{
         "id": 1,
         "title": "Se all the talks",
-        "desc": "Lorem ipsum",
+        "desc": "A very long description that should either wrap on separate lines or be clipped at a certain length.",
         "visibility": "public",
         "achievements":  [{
             "id": 1,
@@ -58,13 +58,14 @@
             res.status(409)
                 .send({error: "Nick '"+nick+"' already registered"})
         } else {
+            var playerId = generateRandomId();
             var playerData = {
                 "quests": ["seealltalks", "networkingchanp"],
                 "preferences": {"drink": "Wine", "eat": "Meat"},
-                "id": generateRandomId(),
+                "id": playerId,
                 "nick": nick
             };
-            players[nick] = playerData;
+            players[playerId] = playerData;
             res.status(201);
             setTimeout(function(){
                 res.send(playerData);
@@ -72,9 +73,9 @@
         }
     });
 
-    server.get("/quests/:nick", function(req, res){
-        var nick = req.params.nick;
-        console.log("GET: /quests/"+nick);
+    server.get("/quests/player/:playerId", function(req, res){
+        var playerId = req.params.playerId;
+        console.log("GET: /quests/"+playerId);
         res.json(quests);
     });
 

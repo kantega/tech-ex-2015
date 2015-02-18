@@ -21,15 +21,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             KeychainService.deleteAll()
             NSUserDefaults.standardUserDefaults().setValue(true, forKey: "appInitialized")
         }
+
+        let settings = UIUserNotificationSettings(forTypes: .Alert, categories: nil)
+        UIApplication.sharedApplication().registerUserNotificationSettings(settings)
+        UIApplication.sharedApplication().registerForRemoteNotifications();
+        println("Has registered for remote notifications")
+
+        window?.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
+        //TODO: Ta vekk!! Kun for testing
+        //sleep(5);
         return true
     }
     
     
     func startTrackingIBeacons() {
-        NSLog("Initiating LocationService")
+        println("Initiating LocationService")
         locationService.startDetectingBeacons();
     }
+
+    func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+        println("Device token for notifications: \(deviceToken)")
+    }
     
+    func application(application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: NSError) {
+        println("Failed to register for notifications. Error: \(error)")
+    }
+
+//    func tokenAsString(token: NSData) -> String{
+//        let tokenChars = UnsafePointer<CChar>(token.bytes)
+//        var tokenString = NSMutableString()
+//        
+//        for var i = 0; i < token.length; i++ {
+//            tokenString.appendFormat("%02.2hhx", tokenChars[i])
+//        }
+//        
+//        return tokenString
+//    }
 
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.

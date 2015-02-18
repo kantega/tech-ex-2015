@@ -16,9 +16,11 @@ class LoginAndRegistrationViewController: UIViewController {
     var nick:String!
     var id:String!
 
-    @IBOutlet weak var welcomeView: UIView!
+    @IBOutlet weak var disclaimer: UITextView!
+    
+    //@IBOutlet weak var welcomeView: UIView!
+    //@IBOutlet weak var welcomeLabel: UILabel!
     @IBOutlet weak var registrationView: UIView!
-    @IBOutlet weak var welcomeLabel: UILabel!
     @IBOutlet weak var nickTextField: UITextField!
 
     
@@ -37,12 +39,12 @@ class LoginAndRegistrationViewController: UIViewController {
             .responseJSON { (req, resp, j, error) in
                 if error != nil {
                     Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
-                    NSLog("Error when registering user: \(error)");
+                    println("Error when registering user: \(error)");
                 } else {
                     let d = JSON(j!);
                     let playerId = d["id"].string!
                     let nick = d["nick"].string!
-                    NSLog("PlayerId: \(playerId), nick: \(nick)")
+                    println("PlayerId: \(playerId), nick: \(nick)")
                 
                     KeychainService.save(.Username, value: nick)
                     KeychainService.save(.PlayerId, value: playerId)
@@ -57,19 +59,23 @@ class LoginAndRegistrationViewController: UIViewController {
     override func viewWillAppear(animated: Bool) {
         loadCredentialsFromKeychain();
         if (isLoggedIn()) {
-            NSLog("User is logged in as \(nick). Displaying welcome message.");
+            println("User is logged in as \(nick). Displaying welcome message.");
             showWelcomeMessage();
         } else {
-            NSLog("User is not logged in. Displaying registration form.");
+            println("User is not logged in. Displaying registration form.");
             showRegistrationView();
         }
         super.viewWillAppear(animated);
     }
     
     override func viewDidAppear(animated: Bool) {
-        if (!welcomeView.hidden) {
-            showQuests();
-        }
+//        if (!welcomeView.hidden) {
+//            showQuests();
+//        }
+    }
+    
+    override func viewDidLoad() {
+         self.view.backgroundColor = UIColor.clearColor()
     }
     
     
@@ -84,17 +90,20 @@ class LoginAndRegistrationViewController: UIViewController {
     }
     
     func showWelcomeMessage() {
-        welcomeLabel.text = "Velkommen tilbake, \(nick)!";
-        welcomeView.hidden = false;
+//        welcomeLabel.text = "Velkommen tilbake, \(nick)!";
+//        welcomeView.hidden = false;
     }
     
     func showRegistrationView() {
-        welcomeView.hidden = true;
+//        welcomeView.hidden = true;
         registrationView.hidden = false;
+        nickTextField.attributedPlaceholder = NSAttributedString(string:"Nickname...",
+            attributes:[NSForegroundColorAttributeName: UIColor(red: CGFloat(197/255.0), green: CGFloat(49/255.0), blue: CGFloat(147/255.0), alpha: 1.0)])
+        disclaimer.textColor = UIColor.whiteColor()
     }
     
     func showQuests() {
-        NSLog("ShowingQuests, i.e. performing segue with identifier ShowQuests");
+        println("ShowingQuests, i.e. performing segue with identifier ShowQuests");
         self.performSegueWithIdentifier("ShowQuests", sender: nil);
     }
     

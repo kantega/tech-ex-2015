@@ -22,12 +22,12 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         locationManager.delegate = self
         playerId = KeychainService.load(.PlayerId)!
         if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.Authorized) {
-            NSLog("Requesting authorization")
+            println("Requesting authorization")
             // The 'when in use' authorization only allows you to use location services while the app is in the foreground,
             // whereas the 'always' authorization lets you access location services at any time, even waking up and starting the app in response to some event
             locationManager.requestAlwaysAuthorization()
         }
-        NSLog("Start ranging beacons")
+        println("Start ranging beacons")
         locationManager.startRangingBeaconsInRegion(region)
      }
     
@@ -37,18 +37,18 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
         if (knownBeacons.count > 0) {
             let closestBeacon = knownBeacons[0] as CLBeacon
-            NSLog("Beacon detected. Minor: \(closestBeacon.minor). Proximity: \(closestBeacon.proximity.rawValue). \(closestBeacon)")
+            println("Beacon detected. Minor: \(closestBeacon.minor). Proximity: \(closestBeacon.proximity.rawValue). \(closestBeacon)")
             if closestBeacon.minor != lastBeacon?.minor || closestBeacon.proximity != lastProximity {
                 self.lastBeacon = closestBeacon
                 self.lastProximity = closestBeacon.proximity
 
                 let parameters = [
-                    "beacon": "\(closestBeacon.major):\(closestBeacon.minor)",
+                    "beaconId": "\(closestBeacon.major):\(closestBeacon.minor)",
                     "proximity": "\(closestBeacon.proximity.rawValue)"
                 ];
-                NSLog("Sending beacon data to server. Parameters: \(parameters)")
+                println("Sending beacon data to server. Parameters: \(parameters)")
                 
-                request(.POST, "\(baseApiUrl)/location/\(playerId)", parameters: parameters)
+                request(.POST, "\(baseApiUrl)/location/\(playerId)", parameters: parameters, encoding: .JSON)
                    .responseString { (req, resp, s, error) in
                         if error != nil {                            
                             println("Error when reporting location: \(error)");

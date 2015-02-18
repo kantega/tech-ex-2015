@@ -2,18 +2,17 @@
   "images" : [
     {
       "idiom" : "universal",
-      "scale" : "1x",
-      "filename" : "button_bg.png"
+      "scale" : "1x"
     },
     {
       "idiom" : "universal",
       "scale" : "2x",
-      "filename" : "button_bg@2x.png"
+      "filename" : "Technoport_750x1334_@2x.png"
     },
     {
       "idiom" : "universal",
       "scale" : "3x",
-      "filename" : "button_bg@3x.png"
+      "filename" : "Technoport_1242x2208@3x.png"
     }
   ],
   "info" : {

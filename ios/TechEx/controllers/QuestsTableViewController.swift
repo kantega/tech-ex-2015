@@ -27,6 +27,7 @@ class QuestsTableViewController: UITableViewController{
         self.refreshControl!.addTarget(self, action: "loadInitialData", forControlEvents: UIControlEvents.ValueChanged)
         self.tableView.addSubview(refreshControl!)
         
+        self.view.backgroundColor = UIColor.clearColor()
         super.viewDidLoad()
     }
 
@@ -39,14 +40,14 @@ class QuestsTableViewController: UITableViewController{
             .responseJSON { (req, resp, j, error) in
                 if error != nil {
                     Alert.shared.showAlert("Unable to load quests. Please try again later.", title: "Error", buttonText: "OK", parent: self);
-                    NSLog("Error when loading quests: \(error)");
+                    println("Error when loading quests: \(error)");
                 } else {
                     let userQuests = JSON(j!)
                     self.quests = Array<Quest>()
                     for (index: String, quest: JSON) in userQuests {
                         let q = Quest()
                         let title = quest["title"].string!
-                        NSLog("Adding quest with title \(title)")
+                        println("Adding quest with title \(title)")
                         q.title = title
                         q.desc = quest["desc"].string!
                         self.quests.append(q)
