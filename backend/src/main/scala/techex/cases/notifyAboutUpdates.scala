@@ -34,7 +34,7 @@ object notifyAboutUpdates {
         update.fact match {
           case AchievedBadge(name) =>
             Notification(Slack(), ":star: " + data.player.nick.value + " was awarded the \"" + name + "\" badge") ::
-              Notification(data.platform, "You have been awarded the \"" + name + "\" badge") ::
+              Notification(Slack()/*data.platform*/, "Egentlig push notification til :"+ data.platform +" You have been awarded the \"" + name + "\" badge") ::
               Nil
           case any: Fact           =>
             Notification(Slack(), "Fact: " + data.player.nick.value + " " + any.toString) :: Nil
