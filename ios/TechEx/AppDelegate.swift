@@ -28,6 +28,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         println("Has registered for remote notifications")
 
         window?.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
+        
+        //Transparent navigation bar
+        UINavigationBar.appearance().setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
+        UINavigationBar.appearance().shadowImage = UIImage()
+        UINavigationBar.appearance().translucent = true
+        // Link and title text color
+        UINavigationBar.appearance().tintColor = UIColor.whiteColor()
+        
+        UIView.appearance().backgroundColor = UIColor.clearColor()
+        
         //TODO: Ta vekk!! Kun for testing
         //sleep(5);
         return true

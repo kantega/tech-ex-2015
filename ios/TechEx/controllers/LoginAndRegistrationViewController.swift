@@ -16,12 +16,12 @@ class LoginAndRegistrationViewController: UIViewController {
     var nick:String!
     var id:String!
 
-    @IBOutlet weak var disclaimer: UITextView!
     
     @IBOutlet weak var welcomeView: UIView!
     @IBOutlet weak var welcomeLabel: UILabel!
     @IBOutlet weak var registrationView: UIView!
     @IBOutlet weak var nickTextField: UITextField!
+    @IBOutlet weak var disclaimer: UITextView!
 
     
     @IBAction func registerUser() {
@@ -82,11 +82,7 @@ class LoginAndRegistrationViewController: UIViewController {
         }
     }
     
-    override func viewDidLoad() {
-         self.view.backgroundColor = UIColor.clearColor()
-    }
-    
-    
+      
     func loadCredentialsFromKeychain() {
         self.id = KeychainService.load(.PlayerId)
         self.nick = KeychainService.load(.Username)
@@ -109,6 +105,7 @@ class LoginAndRegistrationViewController: UIViewController {
         nickTextField.attributedPlaceholder = NSAttributedString(string:"Nickname...",
             attributes:[NSForegroundColorAttributeName: UIColor(red: CGFloat(197/255.0), green: CGFloat(49/255.0), blue: CGFloat(147/255.0), alpha: 1.0)])
         disclaimer.textColor = UIColor.whiteColor()
+        disclaimer.backgroundColor = UIColor(red: CGFloat(15/255.0), green: CGFloat(134/255.0), blue: CGFloat(128/255.0), alpha: 0.7)
     }
     
     func showQuests() {

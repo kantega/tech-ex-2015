@@ -3,15 +3,17 @@
     {
       "idiom" : "universal",
       "scale" : "1x",
-      "filename" : "logo.png"
+      "filename" : "Logo_statusbar_320x480_@1x.png"
     },
     {
       "idiom" : "universal",
-      "scale" : "2x"
+      "scale" : "2x",
+      "filename" : "Logo_statusbar_640x1136_@2x.png"
     },
     {
       "idiom" : "universal",
-      "scale" : "3x"
+      "scale" : "3x",
+      "filename" : "Logo_statusbar_1242x2208_@3x.png"
     }
   ],
   "info" : {

@@ -16,14 +16,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="Logo" translatesAutoresizingMaskIntoConstraints="NO" id="uU0-5J-Ysc">
-                                <rect key="frame" x="272" y="60" width="56" height="55"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LogoWithTitle" translatesAutoresizingMaskIntoConstraints="NO" id="uU0-5J-Ysc">
+                                <rect key="frame" x="181" y="60" width="238" height="66"/>
                             </imageView>
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fbX-71-Wiy" userLabel="Welcome view">
                                 <rect key="frame" x="150" y="150" width="300" height="300"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
-                                        <rect key="frame" x="129" y="140" width="42" height="21"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -108,7 +107,7 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="disclaimer" destination="Z9x-RL-FhM" id="NMR-Uc-d4e"/>
+                        <outlet property="disclaimer" destination="Z9x-RL-FhM" id="WjQ-E5-TEq"/>
                         <outlet property="nickTextField" destination="2GF-0c-thu" id="Se9-4z-9X7"/>
                         <outlet property="registrationView" destination="dUj-pu-2E2" id="WrR-QF-WEL"/>
                         <outlet property="welcomeLabel" destination="IWH-1K-csB" id="kQP-Fj-Jr3"/>
@@ -120,10 +119,10 @@
             </objects>
             <point key="canvasLocation" x="-495" y="177"/>
         </scene>
-        <!--Quests-->
+        <!--Quests Table View Controller-->
         <scene sceneID="34G-Eu-LDn">
             <objects>
-                <tableViewController id="kyq-em-Gy3" customClass="QuestsTableViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController storyboardIdentifier="Quests table view" id="kyq-em-Gy3" customClass="QuestsTableViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="Wxc-lp-lWV">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -135,7 +134,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </tableViewCellContentView>
                                 <connections>
-                                    <segue destination="SVz-kQ-HCQ" kind="show" identifier="QuestDetail" id="huL-fA-68h"/>
+                                    <segue destination="TNq-4a-3TK" kind="show" identifier="QuestDetail" id="AEU-qJ-u7b"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -145,32 +144,55 @@
                         </connections>
                     </tableView>
                     <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
-                    <navigationItem key="navigationItem" title="Quests" id="5BY-Qm-boy"/>
+                    <navigationItem key="navigationItem" id="5BY-Qm-boy"/>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="eB7-es-dME" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1139" y="176"/>
         </scene>
-        <!--Quest View Controller-->
-        <scene sceneID="PEd-ne-Vua">
+        <!--Quest Table View Controller-->
+        <scene sceneID="q6C-xa-e2q">
             <objects>
-                <viewController id="SVz-kQ-HCQ" customClass="QuestViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="rvg-Vd-MAO"/>
-                        <viewControllerLayoutGuide type="bottom" id="rWo-jd-xec"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="BA8-i3-suN">
+                <tableViewController id="TNq-4a-3TK" customClass="QuestTableViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="OCh-XV-XSJ">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                    </view>
-                    <navigationItem key="navigationItem" id="MTp-3V-Fi0"/>
-                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="MoD-05-CiW" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                        <prototypes>
+                            <tableViewCell userInteractionEnabled="NO" contentMode="scaleToFill" restorationIdentifier="BadgeTableCell" selectionStyle="default" indentationWidth="10" reuseIdentifier="BadgePrototypeCell" textLabel="Xjw-hC-HJP" detailTextLabel="up0-pv-n6Q" style="IBUITableViewCellStyleSubtitle" id="Wf1-DL-dE6">
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Wf1-DL-dE6" id="qzD-6Z-Yb4">
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Title" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Xjw-hC-HJP">
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Subtitle" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="up0-pv-n6Q">
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                    </subviews>
+                                </tableViewCellContentView>
+                                <accessibility key="accessibilityConfiguration">
+                                    <accessibilityTraits key="traits" none="YES" notEnabled="YES"/>
+                                </accessibility>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="TNq-4a-3TK" id="8kz-BQ-Vxj"/>
+                            <outlet property="delegate" destination="TNq-4a-3TK" id="Oz3-sY-Prb"/>
+                        </connections>
+                    </tableView>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="bbI-Og-AXX" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1929" y="177"/>
+            <point key="canvasLocation" x="1858" y="176"/>
         </scene>
         <!--Quests-->
         <scene sceneID="rLH-vu-Xyy">
@@ -195,7 +217,7 @@
     </scenes>
     <resources>
         <image name="Button background" width="300" height="40"/>
-        <image name="Logo" width="56" height="55"/>
+        <image name="LogoWithTitle" width="238" height="66"/>
         <image name="Text field background" width="5" height="5"/>
     </resources>
 </document>

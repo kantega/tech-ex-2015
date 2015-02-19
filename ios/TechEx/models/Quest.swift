@@ -12,4 +12,6 @@ class Quest: NSObject {
 
     var title: String = ""
     var desc: String = ""
+    var visibility = ""
+    var achievements: [Achievement] = []
 }

@@ -24,8 +24,9 @@ class QuestsTableViewController: UITableViewController{
         //self.refreshControl!.attributedTitle = NSAttributedString(string: "Pull to refersh")
         self.refreshControl!.addTarget(self, action: "loadInitialData", forControlEvents: UIControlEvents.ValueChanged)
         self.tableView.addSubview(refreshControl!)
+              
+        self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
         
-        self.view.backgroundColor = UIColor.clearColor()
         super.viewDidLoad()
     }
 
@@ -43,11 +44,20 @@ class QuestsTableViewController: UITableViewController{
                     let userQuests = JSON(j!)
                     self.quests = Array<Quest>()
                     for (index: String, quest: JSON) in userQuests {
+                        println(quest)
                         let q = Quest()
-                        let title = quest["title"].string!
-                        println("Adding quest with title \(title)")
-                        q.title = title
+                        q.title = quest["title"].string!
                         q.desc = quest["desc"].string!
+                        q.visibility = quest["visibility"].string!
+                        let achievements = quest["achievements"].array!
+                        for a in achievements {
+                            let ach = Achievement()
+                            ach.id = a["id"].string!
+                            ach.title = a["title"].string!
+                            ach.desc = a["desc"].string!
+                            ach.achieved = a["achieved"].bool!
+                            q.achievements.append(ach)
+                        }
                         self.quests.append(q)
                         self.tableView!.reloadData()
 
@@ -100,7 +110,7 @@ class QuestsTableViewController: UITableViewController{
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "QuestDetail" {
-            let questDetailViewController = segue.destinationViewController as UIViewController
+            let questDetailViewController = segue.destinationViewController as QuestTableViewController
             let indexPath = self.tableView.indexPathForSelectedRow()!
             questDetailViewController.quest = self.quests[indexPath.row]
         }
