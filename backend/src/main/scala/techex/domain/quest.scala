@@ -275,7 +275,15 @@ object Badge {
     quests.badgesMap(id)
 }
 
-trait Visibility
+trait Visibility {
+  def asString = {
+    this match {
+      case Personal => "personal"
+      case Public   => "public"
+      case Secret   => "secret"
+    }
+  }
+}
 case object Personal extends Visibility
 case object Public extends Visibility
 case object Secret extends Visibility
@@ -284,7 +292,7 @@ object Visibility {
     Equal.equalRef[Visibility]
 }
 case class QuestProgress(quest: Quest, achievements: List[Achievement])
-case class Achievement(id:String,title:String,desc:String, achieved: Boolean, achievedBy: List[Nick])
+case class Achievement(id: String, title: String, desc: String, achieved: Boolean, achievedBy: List[Nick])
 
 
 

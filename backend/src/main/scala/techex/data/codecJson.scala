@@ -36,10 +36,10 @@ object codecJson {
   implicit val progressEncodeJson: EncodeJson[QuestProgress] =
     EncodeJson(
       (progress: QuestProgress) =>
-        ("id" := progress.quest.id) ->:
+        ("id" := progress.quest.id.value) ->:
           ("title" := progress.quest.name) ->:
           ("desc" := progress.quest.desc) ->:
-          ("visibility" := progress.quest.visibility) ->:
+          ("visibility" := progress.quest.visibility.asString) ->:
           ("achievements" := progress.achievements) ->:
           jEmptyObject
     )
