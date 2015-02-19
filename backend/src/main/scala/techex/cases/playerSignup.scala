@@ -147,7 +147,7 @@ object playerSignup {
   case class PlatformData(plattformType: String, deviceToken: Option[String]){
     def toPlatform =
     plattformType.toLowerCase match {
-      case "ios" => iOS(DeviceToken(deviceToken.get))
+      case "ios" => iOS(deviceToken.map(t=> DeviceToken(t)))
       case "android" => Android()
       case _ => Web()
     }

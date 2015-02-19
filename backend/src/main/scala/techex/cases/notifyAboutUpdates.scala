@@ -34,7 +34,7 @@ object notifyAboutUpdates {
         update.fact match {
           case AchievedBadge(name) =>
             Notification(Slack(), ":star: " + data.player.nick.value + " was awarded the \"" + name + "\" badge") ::
-              Notification(Slack()/*data.platform*/, "Egentlig push notification til :"+ data.platform +" You have been awarded the \"" + name + "\" badge") ::
+              Notification(Slack() /*data.platform*/ , "Egentlig push notification til :" + data.platform + " You have been awarded the \"" + name + "\" badge") ::
               Nil
           case any: Fact           =>
             Notification(Slack(), "Fact: " + data.player.nick.value + " " + any.toString) :: Nil
@@ -45,10 +45,10 @@ object notifyAboutUpdates {
   lazy val sendNotification: Notification => Task[Unit] =
     notification => {
       notification.platform match {
-        case Slack()                      => slack.sendMessage(notification.message, notification.severity.asColor)
-        case iOS(token)                   => appleNotifications.sendNotification(token, notification.message)
-        case SysOut()                     => print(notification.severity.toString + " : " + notification.message)
-        case platform: NotificationTarget => print(platform.toString + "-" + notification.message)
+        case Slack()                       => slack.sendMessage(notification.message, notification.severity.asColor)
+        case iOS(token) if token.isDefined => appleNotifications.sendNotification(token.get, notification.message)
+        case SysOut()                      => print(notification.severity.toString + " : " + notification.message)
+        case platform: NotificationTarget  => print("Unspecified notification target:" + platform.toString + "-" + notification.message)
 
       }
     }
