@@ -52,7 +52,8 @@
     server.put("/player/:nick", function(req, res) {
         var nick = req.params.nick;
         console.log("PUT: /player/"+nick);
-
+        console.log("Body: ");
+        console.log(req.body);
         res.set("Access-Control-Allow-Origin", "*");
         if (players[nick]) {
             res.status(409)

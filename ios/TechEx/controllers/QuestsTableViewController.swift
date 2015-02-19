@@ -17,8 +17,6 @@ class QuestsTableViewController: UITableViewController{
     
     
     override func viewDidLoad() {
-//        //Move the content down to prevent it from being behind the status bar.
-//        self.tableView.contentInset = UIEdgeInsetsMake(20, 0, 0, 0);
         loadInitialData()
         self.startDetectingBeacons()
         
@@ -82,28 +80,29 @@ class QuestsTableViewController: UITableViewController{
 
     func configureTableCell(cell: QuestTableViewCell, indexPath: NSIndexPath) -> UITableViewCell {
         let quest = self.quests[indexPath.row]
-        cell.titleLabel.text = quest.title
-        cell.descriptionLabel.text = quest.desc
+        cell.textLabel?.text = quest.title
+        cell.textLabel?.textColor = UIColor.whiteColor()
+        //cell.descriptionLabel.text = quest.desc
+        cell.backgroundColor = UIColor.clearColor()
         return cell
     }
     
-    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
-        let sizingCell = tableView.dequeueReusableCellWithIdentifier(questCellIdentifier) as QuestTableViewCell
-        
-        self.configureTableCell(sizingCell, indexPath: indexPath)
-        sizingCell.setNeedsLayout()
-        sizingCell.layoutIfNeeded()
-        
-        let size = sizingCell.contentView.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
-        return size.height + 1.0
-    }
+//    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+//        let sizingCell = tableView.dequeueReusableCellWithIdentifier(questCellIdentifier) as QuestTableViewCell
+//        
+//        self.configureTableCell(sizingCell, indexPath: indexPath)
+//        sizingCell.setNeedsLayout()
+//        sizingCell.layoutIfNeeded()
+//        
+//        let size = sizingCell.contentView.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
+//        return size.height + 1.0
+//    }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "QuestDetail" {
             let questDetailViewController = segue.destinationViewController as UIViewController
             let indexPath = self.tableView.indexPathForSelectedRow()!
-            let destinationTitle = self.quests[indexPath.row].title
-            questDetailViewController.title = destinationTitle
+            questDetailViewController.quest = self.quests[indexPath.row]
         }
     }
 

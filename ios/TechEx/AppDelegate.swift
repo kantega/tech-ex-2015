@@ -40,6 +40,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+        NSUserDefaults.standardUserDefaults().setValue(deviceToken, forKey: "deviceToken")
         println("Device token for notifications: \(deviceToken)")
     }
     

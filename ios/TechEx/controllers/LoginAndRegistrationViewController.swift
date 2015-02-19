@@ -18,8 +18,8 @@ class LoginAndRegistrationViewController: UIViewController {
 
     @IBOutlet weak var disclaimer: UITextView!
     
-    //@IBOutlet weak var welcomeView: UIView!
-    //@IBOutlet weak var welcomeLabel: UILabel!
+    @IBOutlet weak var welcomeView: UIView!
+    @IBOutlet weak var welcomeLabel: UILabel!
     @IBOutlet weak var registrationView: UIView!
     @IBOutlet weak var nickTextField: UITextField!
 
@@ -32,10 +32,18 @@ class LoginAndRegistrationViewController: UIViewController {
 
         
         self.nick = nickTextField.text;
-        
+        let tokenData = NSUserDefaults.standardUserDefaults().objectForKey("deviceToken") as? NSData
+        let deviceToken = (tokenData != nil) ? "\(tokenData)" : ""
+
         LoadingOverlay.shared.showOverlay(self.view);
         
-        request(.PUT, "\(baseApiUrl)/player/\(nick)")
+        let parameters = [
+            "platform": [
+                "type": "ios",
+                "deviceToken": deviceToken
+            ]
+        ]
+        request(.PUT, "\(baseApiUrl)/player/\(nick)", parameters: parameters, encoding: .JSON)
             .responseJSON { (req, resp, j, error) in
                 if error != nil {
                     Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
@@ -69,9 +77,9 @@ class LoginAndRegistrationViewController: UIViewController {
     }
     
     override func viewDidAppear(animated: Bool) {
-//        if (!welcomeView.hidden) {
-//            showQuests();
-//        }
+        if (!welcomeView.hidden) {            
+            showQuests();
+        }
     }
     
     override func viewDidLoad() {
@@ -90,12 +98,13 @@ class LoginAndRegistrationViewController: UIViewController {
     }
     
     func showWelcomeMessage() {
-//        welcomeLabel.text = "Velkommen tilbake, \(nick)!";
-//        welcomeView.hidden = false;
+        welcomeLabel.text = "Velkommen tilbake, \(nick)!";
+        welcomeLabel.textColor = UIColor.whiteColor()
+        welcomeView.hidden = false;
     }
     
     func showRegistrationView() {
-//        welcomeView.hidden = true;
+        welcomeView.hidden = true;
         registrationView.hidden = false;
         nickTextField.attributedPlaceholder = NSAttributedString(string:"Nickname...",
             attributes:[NSForegroundColorAttributeName: UIColor(red: CGFloat(197/255.0), green: CGFloat(49/255.0), blue: CGFloat(147/255.0), alpha: 1.0)])
