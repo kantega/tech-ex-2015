@@ -33,16 +33,16 @@ class ParseEventSteamSpec extends Specification {
 
   val events =
     List(
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(foyer)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1235"),Nick("falle"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(auditorium)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(coffeeStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1234"),Nick("jalle"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(kantegaStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1235"),Nick("falle"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), MetPlayer(PlayerId("1236"),Nick("palle"))),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time,Nick("AB")), Entered(technoportStand)),
-      FactUpdate(UpdateMeta(UUID.randomUUID(), playerId, time.plus(Hours.hours(3).toStandardDuration),Nick("AB")), JoinedActivity(keyNote))
+      FactUpdate(UpdateMeta(playerId, time), Entered(foyer)),
+      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1235"),Nick("falle"))),
+      FactUpdate(UpdateMeta( playerId, time), Entered(auditorium)),
+      FactUpdate(UpdateMeta( playerId, time), Entered(coffeeStand)),
+      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1234"),Nick("jalle"))),
+      FactUpdate(UpdateMeta( playerId, time), Entered(kantegaStand)),
+      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1235"),Nick("falle"))),
+      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1236"),Nick("palle"))),
+      FactUpdate(UpdateMeta( playerId, time), Entered(technoportStand)),
+      FactUpdate(UpdateMeta( playerId, time.plus(Hours.hours(3).toStandardDuration)), JoinedActivity(keyNote))
     )
 
 

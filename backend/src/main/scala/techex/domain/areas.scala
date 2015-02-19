@@ -3,7 +3,7 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.{Duration, DateTime, Instant}
-import techex.data.StreamEvent
+import techex.data.InputMessage
 import scalaz._, Scalaz._
 import scalaz.Tree
 
@@ -34,21 +34,21 @@ object areas {
   val kantegaOffice = Area("KantegaOffice")
   val meetingPoint  = Area("Meetingpoint")
 
-  val beaconPlacement: Map[(Beacon, Proximity), Area] =
+  val beaconPlacement: Map[Beacon, (Proximity, Area)] =
     Map(
-      (Beacon("a"), Near) -> foyer,
-      (Beacon("b"), Near) -> toiletAtSamf,
-      (Beacon("c"), Near) -> toiletAtSamf,
-      (Beacon("d"), Near) -> stage,
-      (Beacon("e"), Near) -> bar,
-      (Beacon("f"), Near) -> technoportStand,
-      (Beacon("gg"), Near) -> kantegaStand,
-      (Beacon("58796:18570"), Near) -> testArea1,
-      (Beacon("51194:16395"), Near) -> testArea2,
-      (Beacon("54803:59488"), Near) -> testArea3,
-      (Beacon("j"), Near) -> kantegaCoffee,
-      (Beacon("k"), Near) -> coffeeStand,
-      (Beacon("l"), Near) -> meetingPoint)
+      (Beacon("a")) ->(Near, foyer),
+      (Beacon("b")) ->(Near, toiletAtSamf),
+      (Beacon("c")) ->(Near, toiletAtSamf),
+      (Beacon("d")) ->(Near, stage),
+      (Beacon("e")) ->(Near, bar),
+      (Beacon("f")) ->(Near, technoportStand),
+      (Beacon("gg")) ->(Near, kantegaStand),
+      (Beacon("58796:18570")) ->(Near, testArea1),
+      (Beacon("51194:16395")) ->(Near, testArea2),
+      (Beacon("54803:59488")) ->(Near, testArea3),
+      (Beacon("j")) ->(Near, kantegaCoffee),
+      (Beacon("k")) ->(Near, coffeeStand),
+      (Beacon("l")) ->(Near, meetingPoint))
 
   val locationHierarcy: Tree[Area] =
     allAreas.node(
@@ -124,7 +124,15 @@ object Area {
 
 case class Beacon(id: String)
 
-trait Proximity
+trait Proximity{
+  def isSameOrCloserThan(other: Proximity) =
+    (this, other) match {
+      case (Immediate, _)     => true
+      case (Near, Far | Near) => true
+      case (Far, Far)         => true
+      case _ => false
+    }
+}
 
 object Proximity {
   def apply(value: String) = value.toLowerCase match {
@@ -133,19 +141,21 @@ object Proximity {
     case _                 => Far
   }
 
+
+
 }
 case object Near extends Proximity
 case object Far extends Proximity
 case object Immediate extends Proximity
 
 case class ObservationData(beacon: Beacon, proximity: Proximity) {
-  def toObservation(id: UUID, playerId: PlayerId, instant: Instant) =
-    Observation(id, beacon, playerId, instant, proximity)
+  def toObservation(playerId: PlayerId, instant: Instant) =
+    Observation(beacon, playerId, instant, proximity)
 }
-case class Observation(id: UUID, beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends StreamEvent
+case class Observation(beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage
 case class Timed[A](timestamp: Instant, value: A)
-case class LocationUpdate(id: UUID, playerId: PlayerId, area: Area, instant: Instant)
-case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant, nick: Nick)
+case class LocationUpdate(playerId: PlayerId, area: Area, instant: Instant)
+case class UpdateMeta(playerId: PlayerId, instant: Instant)
 case class FactUpdate(info: UpdateMeta, fact: Fact)
 
 

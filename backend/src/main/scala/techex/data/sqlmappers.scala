@@ -102,7 +102,7 @@ object ObservationDAO {
   def createObservationtable: ConnectionIO[Int] = {
     sql"""
           CREATE TABLE observations (
-            id VARCHAR(100) NOT NULL,
+            id BIGINT AUTO_INCREMENT NOT NULL,
             beaconId VARCHAR(200) NOT NULL ,
             playerId VARCHAR(200) NOT NULL,
             instant BIGINT NOT NULL,
@@ -114,7 +114,7 @@ object ObservationDAO {
   def storeObservation(observation: Observation): ConnectionIO[Int] = {
     sql"""
           INSERT INTO observations
-          VALUES (${observation.id},${observation.beacon},${observation.playerId},${observation.instant}  )
+          VALUES (${observation.beacon},${observation.playerId},${observation.instant}  )
     """.update.run
   }
 
@@ -132,7 +132,7 @@ object LocationDao {
   def createLocationTable: ConnectionIO[Int] = {
     sql"""
           CREATE TABLE movements(
-            id  BIGINT NOT NULL,
+            id  BIGINT AUTO_INCREMENT NOT NULL,
             playerId VARCHAR(200) NOT NULL,
             direction VARCHAR(200) NOT NULL,
             locationId VARCHAR(200) NOT NULL,
@@ -151,7 +151,7 @@ object LocationDao {
   def storeLocation(movement: LocationUpdate): ConnectionIO[Int] = {
     sql"""
           INSERT INTO movement
-          VALUES (${movement.id},${movement.playerId},${movement.area},${movement.instant});
+          VALUES (${movement.playerId},${movement.area},${movement.instant});
     """.update.run
   }
 }

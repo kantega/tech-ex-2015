@@ -56,3 +56,6 @@ case class PlayerPreference(drink: Drink, eat: Eat)
 object PlayerPreference{
   def default = PlayerPreference(Coke(),Salad())
 }
+
+
+

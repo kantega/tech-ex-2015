@@ -5,24 +5,22 @@ import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
 
-class LoadTotalProgressSpec extends Specification {
+class StartsessionSpec  extends Specification {
+
+
   try {
     val runningserver =
       server.start.run
 
-
-
     "The webserwer" should {
-      "yield a list of quests for one player" in {
-        val questsF = Http(h / "quests")
-          .map(_.getResponseBody)
-
+      "consume a list of locationupdates" in {
         val quests =
-          questsF()
+          Http((h / "sessions" / "start" / "1") POST)
 
-        println(quests)
 
-        quests must contain("desc")
+        Thread.sleep(5000)
+
+        quests().getStatusCode must_== 200
       }
 
     }
@@ -30,5 +28,6 @@ class LoadTotalProgressSpec extends Specification {
   } catch {
     case t: Throwable => t.printStackTrace()
   }
+
 
 }

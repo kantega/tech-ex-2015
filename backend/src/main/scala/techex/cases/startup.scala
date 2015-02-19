@@ -1,21 +1,20 @@
 package techex.cases
 
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.Executors
 
-import com.typesafe.config.Config
 import org.http4s.server._
-import org.joda.time.DateTime
 import techex._
 import techex.data._
 import techex.domain._
 import techex.web.test
 
+import scalaz._, Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream._
-import scalaz.stream.async.mutable.Topic
 
 object startup {
-  val streamRunner = Executors.newSingleThreadScheduledExecutor()
+  val streamRunner =
+    Executors.newSingleThreadScheduledExecutor()
 
   def setupStream: Task[Unit] = {
 
@@ -23,16 +22,44 @@ object startup {
       eventstreams.events.subscribe pipe
         trackPlayer.handleTracking through
         PlayerStore.updates[List[FactUpdate]] pipe
-        process1.id.flatMap((list: List[FactUpdate]) => Process.emitAll(list.toSeq)) to
-        notifyAboutUpdates.notifyUpdateSink
+        process1.unchunk[FactUpdate] through
+        notifyAboutUpdates.factNotifcationChannel pipe
+        process1.unchunk[Notification] to
+        notifyAboutUpdates.notificationSink
 
+    val scheduleStream =
+      eventstreams.events.subscribe pipe
+        updateSchedule.handleSchedulingProcess1 through
+        ScheduleStore.updates[List[ScheduleEvent]] pipe
+        process1.unchunk[ScheduleEvent] through
+        notifyAboutUpdates.scheduleupdateChannel pipe
+        process1.unchunk[Notification] to
+        notifyAboutUpdates.notificationSink
 
-    Task{Task.fork(stream.onFailure(t=>{
-      t.printStackTrace()
-      stream
-    }).run)(streamRunner).runAsync(_.toString)}
+    Task {
+      Task.fork(stream.onFailure(t => {
+        t.printStackTrace()
+        stream
+      }).run)(streamRunner).runAsync(_.toString)
+      Task.fork(scheduleStream.onFailure(t => {
+        t.printStackTrace()
+        scheduleStream
+      }).run)(streamRunner).runAsync(_.toString)
+    }
   }
 
+  def setupSchedule: Task[Unit] = {
+    val commands =
+      scheduling.scheduleEntries.map(AddEntry).toSeq
+
+    val t: Process[Task, Command] =
+      Process.emitAll(commands)
+
+    val tt =
+      t to eventstreams.events.publish
+
+    tt.run
+  }
 
   def setup(cfg: Map[String, String]): Task[HttpService] = {
 
@@ -43,8 +70,9 @@ object startup {
         db.inMemConfig
 
     for {
-      _ <- notifyAboutUpdates.notifyMessage("Starting up server", "warning")
+      _ <- notifyAboutUpdates.sendNotification(Notification(Slack(), "Starting up server", Attention))
       _ <- setupStream
+      _ <- setupSchedule
       ds <- db.ds(dbConfig)
       _ <- ds.transact(PlayerDAO.create)
       _ <- Task.delay(println("Created player table"))
@@ -61,8 +89,9 @@ object startup {
         trackPlayer.restApi(eventstreams.events) orElse
         unregisterPlayer.restApi orElse
         startSession.restApi(eventstreams.events) orElse
-        endSession.restApi(eventstreams.events)
-      )
+        endSession.restApi(eventstreams.events) orElse
+        listSchedule.restApi
+    )
 
   }
 }

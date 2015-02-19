@@ -4,10 +4,10 @@ import java.util.UUID
 
 import org.joda.time.Minutes._
 import org.joda.time.{Duration => Dur, _}
-import techex.data.{Command, StreamEvent}
+import techex.data.{Command, InputMessage}
 import techex.domain.areas._
 
-import scalaz.Equal
+import scalaz._,Scalaz._
 
 object scheduling {
 
@@ -17,7 +17,7 @@ object scheduling {
   val session3     = ScheduleEntry(ScId("4"), "Session 3", IntervalBounds(new DateTime(2015, 3, 18, 12, 30), minutes(60)), auditorium)
   val session4     = ScheduleEntry(ScId("5"), "Session 4", IntervalBounds(new DateTime(2015, 3, 18, 15, 0), minutes(60)), auditorium)
   val session5     = ScheduleEntry(ScId("6"), "Session 5", IntervalBounds(new DateTime(2015, 3, 18, 16, 30), minutes(60)), auditorium)
-  val crowdFunding = ScheduleEntry(ScId("7"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 18, 9, 0), minutes(90)), auditorium)
+  val crowdFunding = ScheduleEntry(ScId("7"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 18, 19, 0), minutes(90)), auditorium)
 
   val scheduleEntries =
     List(
@@ -66,10 +66,20 @@ case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Are
 }
 object ScheduleEntry {
   implicit val scheduleEntryEqual: Equal[ScheduleEntry] =
-    Equal.equalA[String].contramap((entry: ScheduleEntry) => entry.id.value)
+    Equal.equalBy((entry: ScheduleEntry) => entry.id.value)
+
+  implicit val scheduleEntryOrder: Order[ScheduleEntry] =
+    Order.orderBy((entry: ScheduleEntry) => entry.time.start.getMillis)
+
+  def withStringId(id: String, name: String, time: IntervalBounds, area: Area, started: Boolean) = {
+    ScheduleEntry(ScId(id), name, time, area, started)
+  }
+
+  def unapplyWithStringId(entry: ScheduleEntry): Option[(String, String, IntervalBounds, Area, Boolean)] =
+    ScheduleEntry.unapply(entry).map(t => t.copy(_1 = t._1.value))
 }
 
-trait ScheduleEvent extends StreamEvent
+trait ScheduleEvent extends InputMessage
 case class Started(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
 case class Ended(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
 case class Added(entry: ScheduleEntry) extends ScheduleEvent

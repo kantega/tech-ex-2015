@@ -26,12 +26,14 @@ object TestServer {
 
   val h = host("localhost", 8080)
 
+  val prod = host("techex.kantega.no")
+
   val decodeId =
     jdecode1L((value: String) => value)("id")
 
   def putPlayer(nick: Nick): Future[PlayerId] = {
     val putPlayerTask =
-      Http(((h / "player" / nick.value) << "{'drink':'wine','eat':'meat'}").PUT)
+      Http(((h / "player" / nick.value) << "{'platform':{'type':'web'},'preferences':{'drink':'wine','eat':'meat'}}").PUT)
 
     val response =
       putPlayerTask.map(response => {

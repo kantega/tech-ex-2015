@@ -1,7 +1,7 @@
 package techex.cases
 
 import org.joda.time.DateTime
-import techex.data.{StreamEvent, Schedule}
+import techex.data.{InputMessage, Schedule}
 import techex.domain._
 
 import scalaz.State
@@ -12,11 +12,11 @@ object updateSchedule {
 
   type SchedS = State[Schedule, List[ScheduleEvent]]
 
-  def handleSchedulingProcess1: Process1[StreamEvent, State[Schedule, List[ScheduleEvent]]] = {
+  def handleSchedulingProcess1: Process1[InputMessage, State[Schedule, List[ScheduleEvent]]] = {
     process1.lift(handleScheduling)
   }
 
-  def handleScheduling: StreamEvent => State[Schedule, List[ScheduleEvent]] = {
+  def handleScheduling: InputMessage => State[Schedule, List[ScheduleEvent]] = {
     case AddEntry(entry)      => addEntry(entry)
     case RemoveEntry(entryId) => removeEntry(entryId)
     case StartEntry(entryId)  => startEntry(entryId)
@@ -49,7 +49,7 @@ object updateSchedule {
 
       maybeEntry match {
         case None        => (sch, Nil)
-        case Some(entry) => (sch.updateEntry(entryId, _.start), List(Started(DateTime.now, entry)))
+        case Some(entry) => (sch.updateEntry(entryId, _.start), List(Started(DateTime.now, entry.start)))
       }
 
     }
