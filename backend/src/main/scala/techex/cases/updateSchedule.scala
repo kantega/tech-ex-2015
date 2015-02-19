@@ -49,7 +49,7 @@ object updateSchedule {
 
       maybeEntry match {
         case None        => (sch, Nil)
-        case Some(entry) => (sch.updateEntry(entryId, _.start), List(Started(DateTime.now, entry)))
+        case Some(entry) => (sch.updateEntry(entryId, _.start), List(Started(DateTime.now, entry.start)))
       }
 
     }
