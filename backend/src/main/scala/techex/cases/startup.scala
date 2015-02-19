@@ -31,7 +31,7 @@ object startup {
     val scheduleStream =
       eventstreams.events.subscribe pipe
         updateSchedule.handleSchedulingProcess1 through
-        Schedule.updates[List[ScheduleEvent]] pipe
+        ScheduleStore.updates[List[ScheduleEvent]] pipe
         process1.unchunk[ScheduleEvent] through
         notifyAboutUpdates.scheduleupdateChannel pipe
         process1.unchunk[Notification] to
@@ -90,7 +90,8 @@ object startup {
         trackPlayer.restApi(eventstreams.events) orElse
         unregisterPlayer.restApi orElse
         startSession.restApi(eventstreams.events) orElse
-        endSession.restApi(eventstreams.events)
+        endSession.restApi(eventstreams.events) orElse
+        listSchedule.restApi
     )
 
   }

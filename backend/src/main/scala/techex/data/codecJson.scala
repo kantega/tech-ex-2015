@@ -1,10 +1,13 @@
 package techex.data
 
 import argonaut.Argonaut._
-import argonaut.{DecodeJson, EncodeJson}
+import argonaut.{CodecJson, DecodeJson, EncodeJson}
 import techex.domain._
 
 object codecJson {
+
+  implicit val areaCodec : CodecJson[Area] =
+    casecodec1(Area.apply,Area.unapply)("name")
 
   implicit val visibilityEncode: EncodeJson[Visibility] =
     jencode1((v: Visibility) => v.getClass.getSimpleName.toLowerCase)

@@ -5,7 +5,7 @@ import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
 
-class StartsessionSpec  extends Specification {
+class ListSessionsSpec extends Specification {
 
 
   try {
@@ -13,14 +13,12 @@ class StartsessionSpec  extends Specification {
       server.start.run
 
     "The webserwer" should {
-      "consume a list of locationupdates" in {
-        val quests =
-          Http((h / "sessions" / "start" / "1") POST)
+      "yield a json structure of all the schedule entries" in {
+        val sessions =
+          Http((h / "sessions") GET)
 
 
-        Thread.sleep(5000)
-
-        quests().getStatusCode must_== 200
+        sessions().getStatusCode must_== 200
       }
 
     }
@@ -28,6 +26,5 @@ class StartsessionSpec  extends Specification {
   } catch {
     case t: Throwable => t.printStackTrace()
   }
-
 
 }

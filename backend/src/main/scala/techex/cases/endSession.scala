@@ -12,7 +12,7 @@ object endSession {
 
 
   def restApi(topic: Topic[StreamEvent]): WebHandler = {
-    case req@POST -> Root / "session" / "end" / sessionId => {
+    case req@POST -> Root / "sessions" / "end" / sessionId => {
       for {
         _ <- topic.publishOne(EndEntry(ScId(sessionId)))
         ok <- Ok()

@@ -7,7 +7,7 @@ import org.joda.time.{Duration => Dur, _}
 import techex.data.{Command, StreamEvent}
 import techex.domain.areas._
 
-import scalaz.Equal
+import scalaz._,Scalaz._
 
 object scheduling {
 
@@ -66,7 +66,17 @@ case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Are
 }
 object ScheduleEntry {
   implicit val scheduleEntryEqual: Equal[ScheduleEntry] =
-    Equal.equalA[String].contramap((entry: ScheduleEntry) => entry.id.value)
+    Equal.equalBy((entry: ScheduleEntry) => entry.id.value)
+
+  implicit val scheduleEntryOrder: Order[ScheduleEntry] =
+    Order.orderBy((entry: ScheduleEntry) => entry.time.start.getMillis)
+
+  def withStringId(id: String, name: String, time: IntervalBounds, area: Area, started: Boolean) = {
+    ScheduleEntry(ScId(id), name, time, area, started)
+  }
+
+  def unapplyWithStringId(entry: ScheduleEntry): Option[(String, String, IntervalBounds, Area, Boolean)] =
+    ScheduleEntry.unapply(entry).map(t => t.copy(_1 = t._1.value))
 }
 
 trait ScheduleEvent extends StreamEvent

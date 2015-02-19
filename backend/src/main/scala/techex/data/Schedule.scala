@@ -8,7 +8,7 @@ import scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream._
 
-object Schedule {
+object ScheduleStore {
 
   implicit val executor =
     Executors.newSingleThreadExecutor()
@@ -42,5 +42,8 @@ case class Schedule(entries: Map[ScId, ScheduleEntry]) {
     else
       this
   }
+
+  def entriesList =
+    entries.toList.map(_._2).sorted(ScheduleEntry.scheduleEntryOrder.toScalaOrdering)
 
 }

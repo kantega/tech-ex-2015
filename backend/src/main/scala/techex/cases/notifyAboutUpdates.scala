@@ -49,7 +49,6 @@ object notifyAboutUpdates {
         case iOS(token) if token.isDefined => appleNotifications.sendNotification(token.get, notification.message)
         case SysOut()                      => print(notification.severity.toString + " : " + notification.message)
         case platform: NotificationTarget  => print("Unspecified notification target:" + platform.toString + "-" + notification.message)
-
       }
     }
 

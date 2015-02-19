@@ -133,7 +133,7 @@ object playerSignup {
             for {
               result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
               _ <- result match {
-                case ok@SignupOk(player) => PlayerStore.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(),"Player " + nick + " just signed up! :thumbsup:",Green))
+                case ok@SignupOk(player) => PlayerStore.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(),"Player " + nick + " just signed up! :thumbsup:",Good))
                 case _                   => Task {}
               }
               response <- toResponse(result)

@@ -16,14 +16,15 @@ case class SysOut() extends NotificationTarget
 trait AttentionLevel{
   def asColor =
     this match{
-      case Info => "good"
+      case Info => "#36a64f"
+      case Good => "good"
       case Attention => "warning"
-      case Alert => "error"
+      case Alert => "danger"
       case _ => ""
     }
 }
 case object Info extends AttentionLevel
-case object Green extends AttentionLevel
+case object Good extends AttentionLevel
 case object Attention extends AttentionLevel
 case object Alert extends AttentionLevel
 case class Notification(platform:NotificationTarget, message:String,severity:AttentionLevel = Info)
