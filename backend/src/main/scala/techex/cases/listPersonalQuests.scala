@@ -42,7 +42,7 @@ object listPersonalQuests {
             personalQuests.map(quest => {
               val achievementsInQuest =
                 quest.badges
-                  .map(badge => Achievement(badge, playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
+                  .map(badge => Achievement(badge.id.value,badge.name,badge.desc,playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
               QuestProgress(quest, achievementsInQuest)
             })
           Ok(progress.asJson)

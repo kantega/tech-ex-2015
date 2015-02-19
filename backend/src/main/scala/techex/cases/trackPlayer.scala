@@ -23,16 +23,11 @@ import scalaz.stream.async.mutable.Topic
 object trackPlayer {
 
 
-  def handleTracking: Process1[StreamEvent, State[PlayerStore, List[FactUpdate]]] =
-    process1.lift(event => {
-      for {
-        updates <- calcActivity(event)
-        badges <- calcBadges(updates)
-      } yield updates ++ badges
-    })
+  def handleTracking: Process1[InputMessage, State[PlayerStore, List[FactUpdate]]] =
+    process1.lift(calcActivity)
 
 
-  def calcActivity: StreamEvent => State[PlayerStore, List[FactUpdate]] =
+  def calcActivity: InputMessage => State[PlayerStore, List[FactUpdate]] =
     event => {
       val simpleActivities: State[PlayerStore, List[FactUpdate]] =
         event match {
@@ -50,34 +45,6 @@ object trackPlayer {
       simpleActivities
     }
 
-  def calcBadges: List[FactUpdate] => State[PlayerStore, List[FactUpdate]] =
-    inFactUpdates => State { inctx =>
-
-      inFactUpdates.foldLeft((inctx, nil[FactUpdate])) { (pair, factUpdate) =>
-        val ctx =
-          pair._1
-
-        val outUpdates =
-          pair._2
-
-        val playerId =
-          factUpdate.info.playerId
-
-        val matcher =
-          ctx.playerData(factUpdate.info.playerId).progress
-
-        val (next, updates) =
-          matcher(factUpdate)
-
-
-        val nextCtx =
-          ctx.updatePlayerData(playerId, PlayerData.updateProgess(next))
-
-        (nextCtx, outUpdates ++ updates.map(b => FactUpdate(factUpdate.info, AchievedBadge(b.name))))
-      }
-
-    }
-
 
   def nextLocation: Observation => State[PlayerStore, Option[LocationUpdate]] =
     observation => State { ctx => {
@@ -86,15 +53,15 @@ object trackPlayer {
         ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
 
       val maybeArea =
-        areas.beaconPlacement.get(observation.beacon).flatMap{case (requiredProximity,area) => if(observation.proximity isSameOrCloserThan requiredProximity) Some(area) else None}
+        areas.beaconPlacement.get(observation.beacon).flatMap { case (requiredProximity, area) => if (observation.proximity isSameOrCloserThan requiredProximity) Some(area) else None}
 
       val maybeUpdate =
         (maybeArea, history) match {
-          case (None, _)                  => None
-          case (Some(area), Nil)          => Some(LocationUpdate(UUID.randomUUID(), observation.playerId, area, Instant.now()))
+          case (None, _)         => None
+          case (Some(area), Nil) => Some(LocationUpdate(observation.playerId, area, Instant.now()))
           case (Some(area), last :: rest) =>
             if (area === last.area) None
-            else Some(LocationUpdate(UUID.randomUUID(), observation.playerId, area, Instant.now()))
+            else Some(LocationUpdate(observation.playerId, area, Instant.now()))
         }
 
       maybeUpdate.fold((ctx, maybeUpdate)) { update =>
@@ -103,50 +70,6 @@ object trackPlayer {
     }
     }
 
-  /*
-  def location2ScheduleActivity: LocationUpdate => State[PlayerStore, List[FactUpdate]] =
-    incomingLocation => State {
-      ctx => {
-        val joinActivities =
-          for {
-            event <- scheduling.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.area contains incomingLocation.area)
-          } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant, getNick(incomingLocation.playerId, ctx)), JoinedActivity(event))
-
-        val leaveActivities =
-          for {
-            outgoingLocation <- ctx.playerData(incomingLocation.playerId).movements.tail.headOption.toList
-            event <- scheduling.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.area contains outgoingLocation.area)
-          } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant, getNick(incomingLocation.playerId, ctx)), LeftActivity(event))
-
-        val activities = joinActivities ++ leaveActivities
-
-        (ctx.addFacts(activities), activities)
-      }
-    }
-
-  def scheduleEvent2Activity: ScheduleEvent => State[PlayerStore, List[FactUpdate]] =
-    event =>
-      State.gets { ctx =>
-        val area =
-          event.entry.area
-
-        val presentPlayers =
-          ctx.playersPresentAt(area)
-
-        event.msg match {
-          case Start =>
-            presentPlayers
-              .map(playerData => FactUpdate(
-              UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant, playerData.player.nick),
-              JoinedOnTime(event.entry)))
-          case End   =>
-            presentPlayers
-              .map(playerData => FactUpdate(
-              UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant, playerData.player.nick),
-              LeftOnTime(event.entry)))
-        }
-      }
-*/
 
   def location2VisitActivities: LocationUpdate => State[PlayerStore, List[FactUpdate]] =
     locationUpdate => State {
@@ -166,11 +89,11 @@ object trackPlayer {
 
         val left =
           lastLocation
-            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), LeftArea(area)))
+            .map(area => FactUpdate(UpdateMeta(locationUpdate.playerId, locationUpdate.instant), LeftArea(area)))
 
         val arrived =
           nextLocation
-            .map(area => FactUpdate(UpdateMeta(UUID.randomUUID(), locationUpdate.playerId, locationUpdate.instant), Entered(area)))
+            .map(area => FactUpdate(UpdateMeta(locationUpdate.playerId, locationUpdate.instant), Entered(area)))
 
         val updates =
           left ::: arrived
@@ -178,7 +101,6 @@ object trackPlayer {
         (ctx.addFacts(updates), updates)
       }
     }
-
 
 
   def meetingPoints2Activity(meetingArea: Area): LocationUpdate => State[PlayerStore, List[FactUpdate]] =
@@ -191,10 +113,10 @@ object trackPlayer {
           .flatMap(other =>
           List(
             FactUpdate(
-              UpdateMeta(UUID.randomUUID(), location.playerId, location.instant),
+              UpdateMeta(location.playerId, location.instant),
               MetPlayer(other.player.id, other.player.nick)),
             FactUpdate(
-              UpdateMeta(UUID.randomUUID(), other.player.id, location.instant),
+              UpdateMeta(other.player.id, location.instant),
               MetPlayer(playerData.player.id, playerData.player.nick))))
 
 
@@ -206,7 +128,7 @@ object trackPlayer {
     }
 
 
-  def restApi(topic: Topic[StreamEvent]): WebHandler = {
+  def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "location" / playerId =>
 
       EntityDecoder.text(req)(body => {
@@ -214,7 +136,7 @@ object trackPlayer {
         val maybeObservation =
           toJsonQuotes(body)
             .decodeValidation[ObservationData]
-            .map(data => data.toObservation(UUID.randomUUID(), PlayerId(playerId), Instant.now()))
+            .map(data => data.toObservation(PlayerId(playerId), Instant.now()))
 
         maybeObservation.fold(
           failMsg =>

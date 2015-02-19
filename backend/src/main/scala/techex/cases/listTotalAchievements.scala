@@ -26,7 +26,7 @@ object listTotalAchievements {
       ctx => {
         val progress =
           quests.badges
-            .map(badge => Achievement(badge, false, acheivedBy(badge, ctx)))
+            .map(badge => Achievement(badge.id.value,badge.name,badge.desc, false, acheivedBy(badge, ctx)))
         Ok(progress.asJson)
       }
     )

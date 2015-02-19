@@ -2,7 +2,6 @@ package techex.cases
 
 import java.util.concurrent.Executors
 
-import com.notnoop.apns.APNS
 import org.http4s.server._
 import techex._
 import techex.data._

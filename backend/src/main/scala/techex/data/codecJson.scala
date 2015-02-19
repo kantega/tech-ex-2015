@@ -16,16 +16,18 @@ object codecJson {
     jencode1L((id: Qid) => id.value)("id")
 
   implicit val questEncode: EncodeJson[Quest] =
-    jencode3L((q: Quest) => (q.id.value, q.name, q.desc))("id", "name", "desc")
+    jencode3L((q: Quest) => (q.id.value, q.name, q.desc))("id", "title", "desc")
 
 
   implicit val badgeEncodeJson: EncodeJson[Badge] =
-    jencode3L((b: Badge) => (b.id.value, b.name, b.desc))("id", "name", "desc")
+    jencode3L((b: Badge) => (b.id.value, b.name, b.desc))("id", "title", "desc")
 
   implicit val achievemntEncodeJson: EncodeJson[Achievement] =
     EncodeJson(
       (a: Achievement) =>
-        ("badge" := a.badge) ->:
+        ("id" := a.id) ->:
+          ("title" := a.title) ->:
+          ("desc" := a.desc) ->:
           ("achieved" := a.achieved) ->:
           ("achievedBy" := a.achievedBy.map(_.value)) ->:
           jEmptyObject

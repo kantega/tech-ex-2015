@@ -40,7 +40,7 @@ object listPersonalAchievements {
 
               val progress =
                 visibleForUser
-                  .map(badge => Achievement(badge, playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
+                  .map(badge => Achievement(badge.id.value,badge.name,badge.desc, playerData.achievements.contains(badge), acheivedBy(badge, playerContext)))
 
               (playerContext, Ok(progress.asJson))
             }

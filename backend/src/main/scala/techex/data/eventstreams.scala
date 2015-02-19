@@ -5,11 +5,11 @@ import scalaz.stream.async.mutable.Topic
 object eventstreams {
 
 
-  lazy val events: Topic[StreamEvent] =
+  lazy val events: Topic[InputMessage] =
     scalaz.stream.async.topic()
 
 
 }
 
-trait StreamEvent
-trait Command extends StreamEvent
+trait InputMessage
+trait Command extends InputMessage

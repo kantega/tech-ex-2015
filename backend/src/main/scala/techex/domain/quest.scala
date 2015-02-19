@@ -284,7 +284,7 @@ object Visibility {
     Equal.equalRef[Visibility]
 }
 case class QuestProgress(quest: Quest, achievements: List[Achievement])
-case class Achievement(badge: Badge, achieved: Boolean, achievedBy: List[Nick])
+case class Achievement(id:String,title:String,desc:String, achieved: Boolean, achievedBy: List[Nick])
 
 
 

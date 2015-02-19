@@ -3,7 +3,7 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.{Duration, DateTime, Instant}
-import techex.data.StreamEvent
+import techex.data.InputMessage
 import scalaz._, Scalaz._
 import scalaz.Tree
 
@@ -149,13 +149,13 @@ case object Far extends Proximity
 case object Immediate extends Proximity
 
 case class ObservationData(beacon: Beacon, proximity: Proximity) {
-  def toObservation(id: UUID, playerId: PlayerId, instant: Instant) =
-    Observation(id, beacon, playerId, instant, proximity)
+  def toObservation(playerId: PlayerId, instant: Instant) =
+    Observation(beacon, playerId, instant, proximity)
 }
-case class Observation(id: UUID, beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends StreamEvent
+case class Observation(beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage
 case class Timed[A](timestamp: Instant, value: A)
-case class LocationUpdate(id: UUID, playerId: PlayerId, area: Area, instant: Instant)
-case class UpdateMeta(id: UUID, playerId: PlayerId, instant: Instant)
+case class LocationUpdate(playerId: PlayerId, area: Area, instant: Instant)
+case class UpdateMeta(playerId: PlayerId, instant: Instant)
 case class FactUpdate(info: UpdateMeta, fact: Fact)
 
 

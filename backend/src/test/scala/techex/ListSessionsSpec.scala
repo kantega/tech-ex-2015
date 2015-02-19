@@ -1,5 +1,6 @@
 package techex
 
+import argonaut.Parse
 import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
@@ -18,7 +19,14 @@ class ListSessionsSpec extends Specification {
           Http((h / "sessions") GET)
 
 
-        sessions().getStatusCode must_== 200
+        val response = sessions()
+
+        val json =
+          Parse.parse(response.getResponseBody).map(_.spaces4).fold(x=>x,y=>y)
+
+
+
+        json ! (response.getStatusCode must_== 200)
       }
 
     }

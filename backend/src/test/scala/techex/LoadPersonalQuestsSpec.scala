@@ -20,13 +20,16 @@ class LoadPersonalQuestsSpec extends Specification {
         val quests =
           for {
             playerId <- putPlayer(Nick("balle"))
-            response <- Http(h / "quests" / "player" / playerId.value).map(s => s.getResponseBody)
+            r <- Http(h / "quests" / "player" / playerId.value)
+          } yield r
 
-          } yield response
+        val response =
+          quests()
 
+        val json =
+          Parse.parse(response.getResponseBody).map(_.spaces4).fold(x=>x,y=>y)
 
-
-        quests() must contain("desc")
+        json ! (response.getResponseBody must contain("desc"))
       }
 
     }
