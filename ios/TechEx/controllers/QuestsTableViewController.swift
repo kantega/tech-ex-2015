@@ -24,9 +24,12 @@ class QuestsTableViewController: UITableViewController{
         //self.refreshControl!.attributedTitle = NSAttributedString(string: "Pull to refersh")
         self.refreshControl!.addTarget(self, action: "loadInitialData", forControlEvents: UIControlEvents.ValueChanged)
         self.tableView.addSubview(refreshControl!)
-              
-        self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
         
+        self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
+        self.tableView.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
+        // Hide empty table rows
+        self.tableView.tableFooterView = UIView(frame: CGRectZero)
+
         super.viewDidLoad()
     }
 
@@ -43,8 +46,7 @@ class QuestsTableViewController: UITableViewController{
                 } else {
                     let userQuests = JSON(j!)
                     self.quests = Array<Quest>()
-                    for (index: String, quest: JSON) in userQuests {
-                        println(quest)
+                    for (index: String, quest: JSON) in userQuests {                        
                         let q = Quest()
                         q.title = quest["title"].string!
                         q.desc = quest["desc"].string!
@@ -92,21 +94,19 @@ class QuestsTableViewController: UITableViewController{
         let quest = self.quests[indexPath.row]
         cell.textLabel?.text = quest.title
         cell.textLabel?.textColor = UIColor.whiteColor()
-        //cell.descriptionLabel.text = quest.desc
         cell.backgroundColor = UIColor.clearColor()
+        
+        // Background colour for the active (selected) row
+        let backgroundView = UIView(frame: cell.frame);
+        backgroundView.backgroundColor = UIColor(red: 0/255.0, green:0/255.0, blue:0/255.0, alpha: 0.1);
+        cell.selectedBackgroundView = backgroundView;
+        
         return cell
     }
     
-//    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
-//        let sizingCell = tableView.dequeueReusableCellWithIdentifier(questCellIdentifier) as QuestTableViewCell
-//        
-//        self.configureTableCell(sizingCell, indexPath: indexPath)
-//        sizingCell.setNeedsLayout()
-//        sizingCell.layoutIfNeeded()
-//        
-//        let size = sizingCell.contentView.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
-//        return size.height + 1.0
-//    }
+    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 80
+    }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "QuestDetail" {
@@ -117,40 +117,6 @@ class QuestsTableViewController: UITableViewController{
     }
 
     
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-    // Return NO if you do not want the specified item to be editable.
-    return true
-    }
-    */
-    
-    /*
-    // Override to support editing the table view.
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-    if editingStyle == .Delete {
-    // Delete the row from the data source
-    tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-    } else if editingStyle == .Insert {
-    // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }
-    }
-    */
-    
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(tableView: UITableView, moveRowAtIndexPath fromIndexPath: NSIndexPath, toIndexPath: NSIndexPath) {
-    
-    }
-    */
-    
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-    // Return NO if you do not want the item to be re-orderable.
-    return true
-    }
-    */
 
 
     

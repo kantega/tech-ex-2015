@@ -24,6 +24,30 @@ class LoginAndRegistrationViewController: UIViewController {
     @IBOutlet weak var disclaimer: UITextView!
 
     
+    override func viewDidLoad() {
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        loadCredentialsFromKeychain();
+        if (isLoggedIn()) {
+            println("User is logged in as \(nick). Displaying welcome message.");
+            showWelcomeMessage();
+        } else {
+            println("User is not logged in. Displaying registration form.");
+            showRegistrationView();
+        }
+        super.viewWillAppear(animated);
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        if (!welcomeView.hidden) {
+            sleep(2)
+            showQuests();
+        }
+    }
+    
+    
     @IBAction func registerUser() {
         if (!nickTextField.hasText()) {
             Alert.shared.showAlert("Nick cannot be empty", title: nil, buttonText: "OK", parent: self);
@@ -63,24 +87,7 @@ class LoginAndRegistrationViewController: UIViewController {
 
     }
 
-    
-    override func viewWillAppear(animated: Bool) {
-        loadCredentialsFromKeychain();
-        if (isLoggedIn()) {
-            println("User is logged in as \(nick). Displaying welcome message.");
-            showWelcomeMessage();
-        } else {
-            println("User is not logged in. Displaying registration form.");
-            showRegistrationView();
-        }
-        super.viewWillAppear(animated);
-    }
-    
-    override func viewDidAppear(animated: Bool) {
-        if (!welcomeView.hidden) {            
-            showQuests();
-        }
-    }
+
     
       
     func loadCredentialsFromKeychain() {

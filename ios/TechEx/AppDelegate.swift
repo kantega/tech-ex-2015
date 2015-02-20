@@ -27,19 +27,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UIApplication.sharedApplication().registerForRemoteNotifications();
         println("Has registered for remote notifications")
 
-        window?.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
         
         //Transparent navigation bar
+//        UINavigationBar.appearance().backgroundColor = UIColor(red: 0/255.0, green:0/255.0, blue:0/255.0, alpha: 0.1);
         UINavigationBar.appearance().setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
         UINavigationBar.appearance().shadowImage = UIImage()
         UINavigationBar.appearance().translucent = true
         // Link and title text color
         UINavigationBar.appearance().tintColor = UIColor.whiteColor()
         
-        UIView.appearance().backgroundColor = UIColor.clearColor()
-        
         //TODO: Ta vekk!! Kun for testing
-        //sleep(5);
+        sleep(2);
         return true
     }
     

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="JTb-uW-QJ4">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="lil-8y-2Pc">
+            <objects>
+                <viewController id="JTb-uW-QJ4" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="imW-aW-7LQ"/>
+                        <viewControllerLayoutGuide type="bottom" id="XS3-yH-GTz"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="VkX-MO-fHX">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchScreen" translatesAutoresizingMaskIntoConstraints="NO" id="t0b-I2-jpK">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LogoWithTitle" translatesAutoresizingMaskIntoConstraints="NO" id="br8-N1-eVI">
+                                <rect key="frame" x="181" y="60" width="238" height="66"/>
+                            </imageView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="centerX" secondItem="br8-N1-eVI" secondAttribute="centerX" id="KtU-Wn-xKG"/>
+                            <constraint firstItem="t0b-I2-jpK" firstAttribute="top" secondItem="VkX-MO-fHX" secondAttribute="top" id="Rnt-hY-Bol"/>
+                            <constraint firstItem="br8-N1-eVI" firstAttribute="top" secondItem="imW-aW-7LQ" secondAttribute="bottom" constant="40" id="bB2-0U-NJb"/>
+                            <constraint firstItem="t0b-I2-jpK" firstAttribute="leading" secondItem="VkX-MO-fHX" secondAttribute="leading" id="oVV-Rr-ynS"/>
+                            <constraint firstItem="XS3-yH-GTz" firstAttribute="top" secondItem="t0b-I2-jpK" secondAttribute="bottom" id="um1-a4-EbH"/>
+                            <constraint firstAttribute="trailing" secondItem="t0b-I2-jpK" secondAttribute="trailing" id="wIY-sR-8jX"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="eed-fx-jBY" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="457" y="376"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="LaunchScreen" width="320" height="480"/>
+        <image name="LogoWithTitle" width="238" height="66"/>
+    </resources>
+</document>
