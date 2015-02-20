@@ -55,7 +55,8 @@ class QuestTableViewController: UITableViewController {
         configureLabel(cell.descriptionLabel, text: achievement.desc)
 
         cell.backgroundColor = UIColor.clearColor()
-        let badgeView = UIImageView(image: UIImage(named: "BadgeUncompleted"));
+        var badge = achievement.achieved ? "BadgeCompleted": "BadgeUncompleted"
+        let badgeView = UIImageView(image: UIImage(named: badge));
         cell.accessoryView = badgeView;
         return cell
     }
