@@ -11,6 +11,7 @@ import org.http4s.argonaut.ArgonautSupport._
 import techex.data._
 import techex.domain._
 
+import scala.util.Random
 import scalaz._, Scalaz._
 
 import scalaz.concurrent.Task
@@ -40,7 +41,7 @@ object playerSignup {
     )
 
   implicit val platformDecode: CodecJson[PlatformData] =
-    casecodec2(PlatformData,PlatformData.unapply)("type","deviceToken")
+    casecodec2(PlatformData, PlatformData.unapply)("type", "deviceToken")
 
   implicit def playerPreferenceCode: CodecJson[PlayerPreference] =
     casecodec2(
@@ -77,8 +78,16 @@ object playerSignup {
       Player(PlayerId.randomId(), nick, playerPreference, personalQuests)
     }
 
-  val selectPersonalQuests: List[Quest] =
-    quests.quests //TODO: Random algoritme her
+  def selectPersonalQuests(nick: Nick): List[Quest] = {
+    val rand = Random
+    rand.setSeed(nick.value.hashCode)
+    val index =
+      rand.nextInt(quests.questPermutations.length-1)
+    val perm =
+      quests.questPermutations(index)
+
+    List(perm._1,perm._2)
+  }
 
   val updateContext: (Player, NotificationTarget) => State[Storage, Player] =
     (player, platform) =>
@@ -104,7 +113,7 @@ object playerSignup {
     (nick, playerPreference) =>
       for {
         taken <- checkNickTaken(nick)
-        randomPersonQuests <- State.state(selectPersonalQuests)
+        randomPersonQuests <- State.state(selectPersonalQuests(nick))
         player <- State.state(createPlayer(nick, playerPreference, randomPersonQuests))
         rsult <- State.state(
           if (taken) NickTaken(nick)
@@ -132,7 +141,7 @@ object playerSignup {
             for {
               result <- Storage.run(createPlayerIfNickAvailable(Nick(nick), preference))
               _ <- result match {
-                case ok@SignupOk(player) => Storage.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(),"Player " + nick + " just signed up! :thumbsup:",Good))
+                case ok@SignupOk(player) => Storage.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(), "Player " + nick + " just signed up! :thumbsup:", Good))
                 case _                   => Task {}
               }
               response <- toResponse(result)
@@ -143,14 +152,14 @@ object playerSignup {
       })
   }
 
-  case class PlatformData(plattformType: String, deviceToken: Option[String]){
+  case class PlatformData(plattformType: String, deviceToken: Option[String]) {
     def toPlatform =
-    plattformType.toLowerCase match {
-      case "ios" => iOS(deviceToken.map(t=> DeviceToken(t)))
-      case "android" => Android()
-      case _ => Web()
-    }
+      plattformType.toLowerCase match {
+        case "ios"     => iOS(deviceToken.map(t => DeviceToken(t)))
+        case "android" => Android()
+        case _         => Web()
+      }
   }
-  case class CreatePlayerData(platform: PlatformData,preferences: Option[PlayerPreference])
+  case class CreatePlayerData(platform: PlatformData, preferences: Option[PlayerPreference])
   case class CreatePlayer(nick: Nick, preference: PlayerPreference, platform: NotificationTarget) extends Command
 }
