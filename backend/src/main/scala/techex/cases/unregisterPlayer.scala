@@ -2,22 +2,22 @@ package techex.cases
 
 import org.http4s.dsl._
 import techex._
-import techex.data.{PlayerStore$, PlayerStore}
+import techex.data. Storage
 import techex.domain.PlayerId
 
 import scalaz._
 
 object unregisterPlayer {
 
-  val unregisterUser: PlayerId => State[PlayerStore, Unit] =
+  val unregisterUser: PlayerId => State[Storage, Unit] =
     id =>
-      State[PlayerStore, Unit](ctx =>
+      State[Storage, Unit](ctx =>
         (ctx.removePlayer(id), Unit))
 
   def restApi: WebHandler = {
     case req@DELETE -> Root / "player" / id =>
       for {
-        result <- PlayerStore.run(unregisterUser(PlayerId(id)))
+        result <- Storage.run(unregisterUser(PlayerId(id)))
         r <- Ok()
       } yield r
   }

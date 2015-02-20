@@ -1,42 +1,57 @@
 package techex.cases
 
-import techex.data.{PlayerData, PlayerStore}
-import techex.domain.{AchievedBadge, FactUpdate}
+import techex.data.{PlayerData, Storage}
+import techex.domain._
+import techex.streams
 
 import scalaz.Scalaz._
 import scalaz._
-import scalaz.stream.{process1, Process1}
 
 object calculatAchievements {
 
-  def calcAchievements:Process1[List[FactUpdate], State[PlayerStore, List[FactUpdate]]] =
-    process1.lift(calcBadges)
 
-  def calcBadges: List[FactUpdate] => State[PlayerStore, List[FactUpdate]] =
-    inFactUpdates => State { inctx =>
-
-      inFactUpdates.foldLeft((inctx, nil[FactUpdate])) { (pair, factUpdate) =>
-        val ctx =
-          pair._1
-
-        val outUpdates =
-          pair._2
-
-        val playerId =
-          factUpdate.info.playerId
-
-        val matcher =
-          ctx.playerData(factUpdate.info.playerId).progress
-
-        val (next, updates) =
-          matcher(factUpdate)
+  def calcAchievementsAndAwardBadges: Fact => State[Storage, List[Fact]] =
+    calcAchievemnts andThen streams.appendAccum(awardBadges)
 
 
-        val nextCtx =
-          ctx.updatePlayerData(playerId, PlayerData.updateProgess(next))
+  def calcAchievemnts: Fact => State[Storage, List[Fact]] = {
+    case fap: FactAboutPlayer => State { ctx =>
 
-        (nextCtx, outUpdates ++ updates.map(b => FactUpdate(factUpdate.info, AchievedBadge(b.name))))
-      }
+      val matcher =
+        ctx.playerData(fap.player.player.id).progress
 
+      val (next, updates) =
+        matcher(fap)
+
+      val facts =
+        updates.map(b => EarnedAchievemnt(fap.player, b))
+
+      val nextCtx =
+        ctx
+          .updatePlayerData(fap.player.player.id, PlayerData.updateProgess(next))
+          .addFacts(facts)
+          .addAchievements(facts)
+
+      (nextCtx, facts)
     }
+    case fact: Fact           => State.state(nil)
+
+  }
+
+  def awardBadges: Fact => State[Storage, List[Fact]] = {
+    case ab: EarnedAchievemnt => State { ctx =>
+
+      val facts =
+        if (ab.player.player.privateQuests.exists( _.containsAchievement(ab.achievemnt)))
+          List(AwardedBadge(ab.player, Badge(ab.achievemnt)))
+        else
+          List()
+
+      val nxtctx =
+        ctx.addFacts(facts)
+
+      (nxtctx, facts)
+    }
+    case _: Fact              => State.state(nil)
+  }
 }

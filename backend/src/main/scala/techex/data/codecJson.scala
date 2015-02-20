@@ -19,23 +19,22 @@ object codecJson {
     jencode3L((q: Quest) => (q.id.value, q.name, q.desc))("id", "title", "desc")
 
 
-  implicit val badgeEncodeJson: EncodeJson[Badge] =
-    jencode3L((b: Badge) => (b.id.value, b.name, b.desc))("id", "title", "desc")
+  implicit val badgeEncodeJson: EncodeJson[Achievement] =
+    jencode3L((b: Achievement) => (b.id.value, b.name, b.desc))("id", "title", "desc")
 
-  implicit val achievemntEncodeJson: EncodeJson[Achievement] =
+  implicit val achievemntEncodeJson: EncodeJson[PlayerBadgeProgress] =
     EncodeJson(
-      (a: Achievement) =>
+      (a: PlayerBadgeProgress) =>
         ("id" := a.id) ->:
           ("title" := a.title) ->:
           ("desc" := a.desc) ->:
           ("achieved" := a.achieved) ->:
-          ("achievedBy" := a.achievedBy.map(_.value)) ->:
           jEmptyObject
     )
 
-  implicit val progressEncodeJson: EncodeJson[QuestProgress] =
+  implicit val progressEncodeJson: EncodeJson[PlayerQuestProgress] =
     EncodeJson(
-      (progress: QuestProgress) =>
+      (progress: PlayerQuestProgress) =>
         ("id" := progress.quest.id.value) ->:
           ("title" := progress.quest.name) ->:
           ("desc" := progress.quest.desc) ->:
@@ -48,4 +47,17 @@ object codecJson {
     jdecode2L(
       ( beaconId: String, proximity: String) =>
         ObservationData(Beacon(beaconId), Proximity(proximity)))("beaconId","proximity")
+
+  implicit val summaryEncode:CodecJson[ProgressSummary] =
+    casecodec4(ProgressSummary,ProgressSummary.unapply)("level","max","onQuest","notOnQuest")
+
+
+  implicit val totalQuestPogessEncode:EncodeJson[TotalQuestProgress] =
+    EncodeJson(
+      (a: TotalQuestProgress) =>
+        ("id" := a.quest.id) ->:
+          ("title" := a.quest.name) ->:
+          ("progress" := a.progressSummary) ->:
+          jEmptyObject
+    )
 }

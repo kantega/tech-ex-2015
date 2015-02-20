@@ -23,61 +23,54 @@ import scalaz.stream.async.mutable.Topic
 object trackPlayer {
 
 
-  def handleTracking: Process1[InputMessage, State[PlayerStore, List[FactUpdate]]] =
-    process1.lift(calcActivity)
+  def calcActivity: PartialFunction[InputMessage, State[Storage, List[Fact]]] = {
+    case observation: Observation =>
+      for {
+        maybeLocationUpdate <- nextLocation(observation)
+        b <- maybeLocationUpdate.map(location2VisitActivities).getOrElse(State.state[Storage, List[Fact]](nil))
+        c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffee)).getOrElse(State.state[Storage, List[Fact]](nil))
+      } yield b ::: c
+  }
 
+  def nextLocation: Observation => State[Storage, Option[LocationUpdate]] =
+    observation => State {
+      ctx => {
 
-  def calcActivity: InputMessage => State[PlayerStore, List[FactUpdate]] =
-    event => {
-      val simpleActivities: State[PlayerStore, List[FactUpdate]] =
-        event match {
-          case observation: Observation =>
-            for {
-              maybeLocationUpdate <- nextLocation(observation)
-              b <- maybeLocationUpdate.map(location2VisitActivities).getOrElse(State.state[PlayerStore, List[FactUpdate]](nil))
-              c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffee)).getOrElse(State.state[PlayerStore, List[FactUpdate]](nil))
-            } yield b ::: c
+        val history =
+          ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
 
-          case _ =>
-            State(ctx => (ctx, Nil))
+        val maybeArea =
+          areas.beaconPlacement.get(observation.beacon).flatMap {
+            case (requiredProximity, area) => if (observation.proximity isSameOrCloserThan requiredProximity) Some(area) else None
+          }
+
+        val maybeUpdate =
+          (maybeArea, history) match {
+            case (None, _)                  => None
+            case (Some(area), Nil)          => Some(LocationUpdate(observation.playerId, area, Instant.now()))
+            case (Some(area), last :: rest) =>
+              if (area === last.area) None
+              else Some(LocationUpdate(observation.playerId, area, Instant.now()))
+          }
+
+        maybeUpdate.fold((ctx, maybeUpdate)) {
+          update =>
+            (ctx.updatePlayerData(observation.playerId, _.addMovement(update)), maybeUpdate)
         }
-
-      simpleActivities
-    }
-
-
-  def nextLocation: Observation => State[PlayerStore, Option[LocationUpdate]] =
-    observation => State { ctx => {
-
-      val history =
-        ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
-
-      val maybeArea =
-        areas.beaconPlacement.get(observation.beacon).flatMap { case (requiredProximity, area) => if (observation.proximity isSameOrCloserThan requiredProximity) Some(area) else None}
-
-      val maybeUpdate =
-        (maybeArea, history) match {
-          case (None, _)         => None
-          case (Some(area), Nil) => Some(LocationUpdate(observation.playerId, area, Instant.now()))
-          case (Some(area), last :: rest) =>
-            if (area === last.area) None
-            else Some(LocationUpdate(observation.playerId, area, Instant.now()))
-        }
-
-      maybeUpdate.fold((ctx, maybeUpdate)) { update =>
-        (ctx.updatePlayerData(observation.playerId, _.addMovement(update)), maybeUpdate)
       }
     }
-    }
 
 
-  def location2VisitActivities: LocationUpdate => State[PlayerStore, List[FactUpdate]] =
+  def location2VisitActivities: LocationUpdate => State[Storage, List[Fact]] =
     locationUpdate => State {
       ctx => {
 
-        val lastLocation =
+        val player =
           ctx
             .playerData(locationUpdate.playerId)
+
+        val lastLocation =
+          player
             .movements
             .tail //The update is already prepended to history at this stage
             .headOption
@@ -89,11 +82,11 @@ object trackPlayer {
 
         val left =
           lastLocation
-            .map(area => FactUpdate(UpdateMeta(locationUpdate.playerId, locationUpdate.instant), LeftArea(area)))
+            .map(area => LeftArea(player, area))
 
         val arrived =
           nextLocation
-            .map(area => FactUpdate(UpdateMeta(locationUpdate.playerId, locationUpdate.instant), Entered(area)))
+            .map(area => ArrivedAtArea(player, area))
 
         val updates =
           left ::: arrived
@@ -103,28 +96,26 @@ object trackPlayer {
     }
 
 
-  def meetingPoints2Activity(meetingArea: Area): LocationUpdate => State[PlayerStore, List[FactUpdate]] =
-    location => State { ctx =>
-      val playerData =
-        ctx.playerData(location.playerId)
-
-      val facts =
-        ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
-          .flatMap(other =>
-          List(
-            FactUpdate(
-              UpdateMeta(location.playerId, location.instant),
-              MetPlayer(other.player.id, other.player.nick)),
-            FactUpdate(
-              UpdateMeta(other.player.id, location.instant),
-              MetPlayer(playerData.player.id, playerData.player.nick))))
+  def meetingPoints2Activity(meetingArea: Area): LocationUpdate => State[Storage, List[Fact]] =
+    location => State {
+      ctx =>
+        val playerData =
+          ctx.playerData(location.playerId)
 
 
-      val nextState =
-        ctx.addFacts(facts)
+        val facts =
+          ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
+            .flatMap(other =>
+            List(
+              MetPlayer(playerData, other),
+              MetPlayer(other, playerData)))
 
 
-      (nextState, facts)
+        val nextState =
+          ctx.addFacts(facts)
+
+
+        (nextState, facts)
     }
 
 

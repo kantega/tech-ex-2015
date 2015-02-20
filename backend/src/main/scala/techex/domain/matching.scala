@@ -1,7 +1,7 @@
 package techex.domain
 
 
-import org.joda.time.{Hours, Instant, Duration}
+import org.joda.time.Hours
 
 import scalaz._, Scalaz._
 import matching._
@@ -40,6 +40,12 @@ object predicates {
     def ~>(other: EventPattern) =
       exists(pred) ~> other
 
+    def ~><(other: Pred) =
+      exists(pred) ~>< exists(other)
+
+    def ~><(other: EventPattern) =
+      exists(pred) ~>< other
+
   }
 
   implicit def toInfixOps(pred: Pred): PredOps =
@@ -56,10 +62,10 @@ object predicates {
 
 
   def visited(area: Area) =
-    fact({ case Entered(a) if a === area => true})
+    fact({ case ArrivedAtArea(_, a) if a === area => true})
 
 
-  def ctx(f: PartialFunction[(FactUpdate, List[FactUpdate]), Boolean]) =
+  def ctx(f: PartialFunction[(Fact, List[Fact]), Boolean]) =
     Pred(
       ctx => {
         if (f.isDefinedAt((ctx.fact, ctx.matches)))
@@ -70,7 +76,7 @@ object predicates {
     )
 
 
-  def update(f: PartialFunction[FactUpdate, Boolean]) =
+  def fact(f: PartialFunction[Fact, Boolean]) =
     Pred(
       ctx => {
         if (f.isDefinedAt(ctx.fact))
@@ -80,37 +86,32 @@ object predicates {
       }, "Match by fact"
     )
 
-  def fact(f: PartialFunction[Fact, Boolean]) =
-    Pred(
-      ctx => {
-        if (f.isDefinedAt(ctx.fact.fact))
-          f(ctx.fact.fact)
-        else
-          false
-      }, "Match by fact"
-    )
 
-  def matched(f: PartialFunction[Fact, Boolean]): FactUpdate => Boolean = {
+  def matched(f: PartialFunction[Fact, Boolean]): Fact => Boolean = {
     update =>
-      if (f.isDefinedAt(update.fact))
-        f(update.fact)
+      if (f.isDefinedAt(update))
+        f(update)
       else
         false
   }
 }
 
 
-case class Token(fact: FactUpdate, matches: List[FactUpdate]) {
+case class Token(fact: Fact, matches: List[Fact]) {
 
-  def add(t: FactUpdate): Token = copy(matches = t :: matches)
+  def add(t: Fact): Token = copy(matches = t :: matches)
 
   def addToken = add(fact)
 
   def appendMatchesFrom(other: Token) =
     Token(fact, matches ::: other.matches)
 
+  def appendHistory(history: List[Fact]): Unit = {
+    Token(fact, matches ::: history)
+  }
+
   override def toString: String =
-    "Token(fact:" + fact.fact + " - matches: [" + matches.reverse.map(_.fact).mkString(" ~> ") + "])"
+    "Token(fact:" + fact + " - matches: [" + matches.reverse.mkString(" ~> ") + "])"
 }
 
 object Token {
@@ -171,34 +172,37 @@ sealed trait EventPattern {
   }
 
   def ~>(pred: Pred): EventPattern = {
-    this.~>(exists(pred))
+    this ~> exists(pred)
   }
 
   def ~><(until: EventPattern): EventPattern = {
-    until match {
-      case Halted()                   => Halted()
-      case Matched(untilTokens, next) => this match {
-        case Halted()                      => Halted()
-        case w@Waiting(g)                  => Halted()
-        case Matched(matched, patternNext) => Matched(Token.append(untilTokens, matched), patternNext ~>< next)
-      }
-      case uw@Waiting(f)              => this match {
-        case Halted()              => Halted()
-        case pw@Waiting(f)         => Waiting(Until(pw, uw))
-        case Matched(tokens, next) => Waiting(Until(Waiting(Append(tokens, next)), uw))
+    (this, until) match {
+      case (Halted(), _)                      => Halted()
+      case (_, Halted())                      => Halted()
+      case (Waiting(pf), Matched(ut, un))     => Halted()
+      case (Matched(pt, pn), Matched(ut, un)) => Matched(Token.append(ut, pt), pn ~>< un)
+      case (Matched(pt, pn), Waiting(uf))     => pn.accum(pt) ~>< Waiting(uf)
+      case (pw: Waiting, uw: Waiting)         => Waiting(Until(pw, uw))
 
-      }
     }
   }
 
   def ~><(pred: Pred): EventPattern = {
-    this.~><(exists(pred))
+    this ~>< exists(pred)
+  }
+
+  def accum(history: List[Token]): EventPattern = {
+    this match {
+      case Halted()        => Halted()
+      case Matched(tokens, next) => Matched(Token.append(tokens, history), next)
+      case w@Waiting(f)          => Matched(history, Waiting(Accumulate(w,history)))
+    }
   }
 }
 
 case class Matched(tokens: List[Token], next: EventPattern) extends EventPattern {
   override def toString() =
-    "[" + (tokens.map(x => x.fact.fact).mkString(",")) + "]"
+    "[" + tokens.map(x => x.fact).mkString(",") + "]"
 }
 case class Waiting(f: WaitFunc) extends EventPattern {
   override def toString() =
@@ -207,6 +211,13 @@ case class Waiting(f: WaitFunc) extends EventPattern {
 case class Halted() extends EventPattern
 trait WaitFunc {
   def apply(t: Token): EventPattern
+}
+
+
+case class Accumulate(p:Waiting,history:List[Token]) extends WaitFunc{
+  def apply(t:Token) =
+    p.f(t).accum(history)
+
 }
 case class AwaitSecond(first: Matched, second: Waiting) extends WaitFunc {
   def apply(t: Token) = {
@@ -217,7 +228,7 @@ case class AwaitSecond(first: Matched, second: Waiting) extends WaitFunc {
 
     next match {
       case m: Matched => (first ~> next) ++ (first ~> second)
-      case _          => (first ~> second)
+      case _          => first ~> second
     }
   }
 
@@ -232,7 +243,7 @@ case class AwaitFirst(first: Waiting, second: EventPattern) extends WaitFunc {
 
     next match {
       case m: Matched => (next ~> second) ++ (first ~> second)
-      case _          => (first ~> second)
+      case _          => first ~> second
     }
   }
 
@@ -248,7 +259,7 @@ case class AwaitOccurence(pred: Pred) extends WaitFunc {
       Waiting(this)
   }
 
-  override def toString() = "?"
+  override def toString() = "[?]"
 }
 
 case class HaltOnOccurence(pred: Pred) extends WaitFunc {
@@ -274,18 +285,9 @@ case class Until(pattern: Waiting, until: Waiting) extends WaitFunc {
   }
 
   override def toString =
-    pattern + " ~>| " + until
+    pattern + " ~>< " + until
 }
 
-case class Append(history: List[Token], next: EventPattern) extends WaitFunc {
-  def apply(t: Token) = {
-    next match {
-      case Halted()              => Halted()
-      case Matched(tokens, next) => Matched(Token.append(tokens, history), next)
-      case w@Waiting(f)          => Waiting(Append(history, w))
-    }
-  }
-}
 
 case class AndWaiting(one: Waiting, other: Waiting) extends WaitFunc {
   def apply(t: Token) =
@@ -302,7 +304,7 @@ case class WaitingAndEmit(one: Waiting, other: Matched) extends WaitFunc {
 
 
 trait PatternOutput[A] {
-  def apply(t: FactUpdate): (PatternOutput[A], List[A])
+  def apply(t: FactAboutPlayer): (PatternOutput[A], List[A])
 
   def and(other: PatternOutput[A]): PatternOutput[A] =
     (this, other) match {
@@ -322,12 +324,12 @@ object PatternOutput {
 }
 
 case class ZeroMatcher[A]() extends PatternOutput[A] {
-  def apply(t: FactUpdate) = (this, Nil)
+  def apply(t: FactAboutPlayer) = (this, Nil)
 }
 
 
 case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends PatternOutput[A] {
-  def apply(t: FactUpdate) = {
+  def apply(t: FactAboutPlayer) = {
     val (next1, tokens1) = one(t)
     val (next2, tokens2) = other(t)
 
@@ -336,7 +338,7 @@ case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends
 }
 
 case class CountingTracker[A](current: Int, max: Int, pattern: EventPattern)(f: Int => Option[A]) extends PatternOutput[A] {
-  def apply(t: FactUpdate): (PatternOutput[A], List[A]) = {
+  def apply(t: FactAboutPlayer): (PatternOutput[A], List[A]) = {
     val (next, tokens) =
       pattern.parse(Token(t, Nil))
 
@@ -362,7 +364,7 @@ case class StatefulTracker[S, A](pattern: EventPattern, s: S)(f: Token => State[
 
   type StateS[x] = State[S, x]
 
-  def apply(t: FactUpdate): (PatternOutput[A], List[A]) = {
+  def apply(t: FactAboutPlayer): (PatternOutput[A], List[A]) = {
     val (next, matches) =
       pattern.parse(Token(t, Nil))
 

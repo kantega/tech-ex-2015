@@ -6,7 +6,7 @@ import org.http4s.Response
 import org.http4s.argonaut.ArgonautSupport._
 import org.http4s.dsl._
 import techex.WebHandler
-import techex.data.{codecJson, PlayerStore$, PlayerStore}
+import techex.data.{codecJson, Storage}
 import techex.domain._
 
 import scalaz.Scalaz._
@@ -17,23 +17,23 @@ object listTotalAchievements {
 
   import codecJson._
 
-  def acheivedBy(badge: Badge, ctx: PlayerStore) =
+  def acheivedBy(badge: Achievement, ctx: Storage) =
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
 
 
-  def read: State[PlayerStore, Task[Response]] =
-    PlayerStore.read[Task[Response]](
+  def read: State[Storage, Task[Response]] =
+    State.gets(
       ctx => {
         val progress =
           quests.badges
-            .map(badge => Achievement(badge.id.value,badge.name,badge.desc, false, acheivedBy(badge, ctx)))
+            .map(badge => PlayerBadgeProgress(badge.id.value,badge.name,badge.desc, false))
         Ok(progress.asJson)
       }
     )
 
   val restApi: WebHandler = {
     case req@GET -> Root / "achievements" =>
-      PlayerStore.run(read).flatMap(i => i)
+      Storage.run(read).flatMap(i => i)
   }
 
 }

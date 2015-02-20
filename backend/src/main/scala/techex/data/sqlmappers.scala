@@ -62,7 +62,7 @@ object PlayerDAO {
           VALUES (${p.id.value}, ${p.nick.value}, $drink, $eat)
     """.update.run
   }
-
+/*
   def getPlayerById(id: PlayerId): ConnectionIO[Option[Player]] = {
     val value = id.value
     sql"""
@@ -81,7 +81,7 @@ object PlayerDAO {
           SELECT * FROM players
        """.query[(PlayerId, Nick, Drink, Eat, List[QuestId])].map(Player(_)).list
   }
-
+*/
   def create: ConnectionIO[Int] =
     sql"""
          CREATE TABLE players (

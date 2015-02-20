@@ -156,6 +156,5 @@ case class Observation(beacon: Beacon, playerId: PlayerId, instant: Instant, pro
 case class Timed[A](timestamp: Instant, value: A)
 case class LocationUpdate(playerId: PlayerId, area: Area, instant: Instant)
 case class UpdateMeta(playerId: PlayerId, instant: Instant)
-case class FactUpdate(info: UpdateMeta, fact: Fact)
 
 

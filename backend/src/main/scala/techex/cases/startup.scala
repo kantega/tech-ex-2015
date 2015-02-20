@@ -4,6 +4,7 @@ import java.util.concurrent.Executors
 
 import org.http4s.server._
 import techex._
+import streams._
 import techex.data._
 import techex.domain._
 import techex.web.test
@@ -14,36 +15,36 @@ import scalaz.stream._
 
 object startup {
   val streamRunner =
-    Executors.newSingleThreadScheduledExecutor()
+    namedSingleThreadExecutor("Streamsetup")
 
   def setupStream: Task[Unit] = {
 
+    val q = async.unboundedQueue[Notification]
+
+
     val stream =
       eventstreams.events.subscribe pipe
-        trackPlayer.handleTracking through
-        PlayerStore.updates[List[FactUpdate]] pipe
-        process1.unchunk[FactUpdate] through
-        notifyAboutUpdates.factNotifcationChannel pipe
-        process1.unchunk[Notification] to
-        notifyAboutUpdates.notificationSink
+        process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling) pipe
+        appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges) through
+        Storage.updates[List[Fact]] pipe
+        process1.unchunk[Fact] pipe
+        notifyAboutUpdates.factNotifcationProcess1 pipe
+        process1.unchunk[Notification] to q.enqueue
 
-    val scheduleStream =
-      eventstreams.events.subscribe pipe
-        updateSchedule.handleSchedulingProcess1 through
-        ScheduleStore.updates[List[ScheduleEvent]] pipe
-        process1.unchunk[ScheduleEvent] through
-        notifyAboutUpdates.scheduleupdateChannel pipe
-        process1.unchunk[Notification] to
-        notifyAboutUpdates.notificationSink
+    val notificationStream =
+      q.dequeue to notifyAboutUpdates.notificationSink
+
+
 
     Task {
       Task.fork(stream.onFailure(t => {
         t.printStackTrace()
         stream
       }).run)(streamRunner).runAsync(_.toString)
-      Task.fork(scheduleStream.onFailure(t => {
+
+      Task.fork(notificationStream.onFailure(t => {
         t.printStackTrace()
-        scheduleStream
+        notificationStream
       }).run)(streamRunner).runAsync(_.toString)
     }
   }
@@ -73,11 +74,11 @@ object startup {
       _ <- notifyAboutUpdates.sendNotification(Notification(Slack(), "Starting up server", Attention))
       _ <- setupStream
       _ <- setupSchedule
-      ds <- db.ds(dbConfig)
-      _ <- ds.transact(PlayerDAO.create)
-      _ <- Task.delay(println("Created player table"))
-      _ <- ds.transact(ObservationDAO.createObservationtable)
-      _ <- Task.delay(println("Created observation table"))
+    //ds <- db.ds(dbConfig)
+    //_ <- ds.transact(PlayerDAO.create)
+    //_ <- Task.delay(println("Created player table"))
+    //_ <- ds.transact(ObservationDAO.createObservationtable)
+    //_ <- Task.delay(println("Created observation table"))
 
     } yield HttpService(
       playerSignup.restApi orElse

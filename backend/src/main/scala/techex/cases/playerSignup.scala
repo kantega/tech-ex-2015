@@ -24,7 +24,7 @@ object playerSignup {
         ("nick" := p.nick.value) ->:
           ("id" := p.id.value) ->:
           ("preferences" := p.preference) ->:
-          ("quests" := p.privateQuests.map(_.value)) ->:
+          ("quests" := p.privateQuests.map(_.id.value)) ->:
           jEmptyObject,
       c => for {
         id <- (c --\ "id").as[String]
@@ -36,7 +36,7 @@ object playerSignup {
           PlayerId(id),
           Nick(nick),
           preference.getOrElse(PlayerPreference(Coke(), Salad())),
-          privateQuests.map(QuestId))
+          privateQuests.map(str => quests.questMap(Qid(str))))
     )
 
   implicit val platformDecode: CodecJson[PlatformData] =
@@ -67,22 +67,22 @@ object playerSignup {
         fail
       )
 
-  val checkNickTaken: Nick => State[PlayerStore, Boolean] =
+  val checkNickTaken: Nick => State[Storage, Boolean] =
     nick =>
-      PlayerStore.read(_.playerData.exists(entry => entry._2.player.nick === nick))
+      State.gets(_.playerData.exists(entry => entry._2.player.nick === nick))
 
 
-  val createPlayer: (Nick, PlayerPreference, List[QuestId]) => Player =
+  val createPlayer: (Nick, PlayerPreference, List[Quest]) => Player =
     (nick, playerPreference, personalQuests) => {
       Player(PlayerId.randomId(), nick, playerPreference, personalQuests)
     }
 
-  val selectPersonalQuests: List[QuestId] =
-    quests.quests.map(q => QuestId(q.id.value))
+  val selectPersonalQuests: List[Quest] =
+    quests.quests //TODO: Random algoritme her
 
-  val updateContext: (Player, NotificationTarget) => State[PlayerStore, Player] =
+  val updateContext: (Player, NotificationTarget) => State[Storage, Player] =
     (player, platform) =>
-      State[PlayerStore, Player](ctx =>
+      State[Storage, Player](ctx =>
         (ctx.putPlayerData(
           player.id,
           PlayerData(
@@ -91,17 +91,16 @@ object playerSignup {
             Vector(),
             Vector(),
             player.privateQuests
-              .map(id => Qid(id.value))
-              .map(id => quests.trackerForQuest.get(id))
+              .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
-              .foldLeft(PatternOutput.zero[Badge])(_ and _),
+              .foldLeft(PatternOutput.zero[Achievement])(_ and _),
             platform
           )),
           player)
       )
 
 
-  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[PlayerStore, Signupresult] =
+  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[Storage, Signupresult] =
     (nick, playerPreference) =>
       for {
         taken <- checkNickTaken(nick)
@@ -131,9 +130,9 @@ object playerSignup {
               createPlayerData.preferences.getOrElse(PlayerPreference.default)
 
             for {
-              result <- PlayerStore.run(createPlayerIfNickAvailable(Nick(nick), preference))
+              result <- Storage.run(createPlayerIfNickAvailable(Nick(nick), preference))
               _ <- result match {
-                case ok@SignupOk(player) => PlayerStore.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(),"Player " + nick + " just signed up! :thumbsup:",Good))
+                case ok@SignupOk(player) => Storage.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(),"Player " + nick + " just signed up! :thumbsup:",Good))
                 case _                   => Task {}
               }
               response <- toResponse(result)
