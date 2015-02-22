@@ -141,7 +141,7 @@ object playerSignup {
             for {
               result <- Storage.run(createPlayerIfNickAvailable(Nick(nick), preference))
               _ <- result match {
-                case ok@SignupOk(player) => Storage.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(), "Player " + nick + " just signed up! :thumbsup:", Good))
+                case ok@SignupOk(player) => Storage.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(), ":thumbsup: Player " + nick + " just signed up with quests '"+player.privateQuests.map(_.name).mkString( "' and '")+"'", Good))
                 case _                   => Task {}
               }
               response <- toResponse(result)

@@ -27,8 +27,8 @@ object notifyAboutUpdates {
   lazy val factToNotifcation: Fact => List[Notification] = {
     case f: FactAboutPlayer           =>
       f match {
-        case AwardedBadge(_, name)       =>
-          Notification(Slack(), ":star: " + f.player.player.nick.value + " was awarded the \"" + name + "\" badge") ::
+        case AwardedBadge(_, badge)       =>
+          Notification(Slack(), ":star: " + f.player.player.nick.value + " was awarded the \"" + badge.achievement.name + "\" badge") ::
             Notification(SysOut() /*data.platform*/ , "Egentlig push notification til :" + f.player.platform + " You have been awarded the \"" + name + "\" badge") ::
             Nil
         case a@ArrivedAtArea(player, area) =>
