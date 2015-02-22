@@ -1,7 +1,8 @@
 package techex
 
 import scalaz._, Scalaz._
-import scalaz.stream.{process1, Process1}
+import scalaz.concurrent.Task
+import scalaz.stream.{process1, Process1,Process}
 
 object streams {
   def mapAccum[S, I, O](s: S)(g: (S, I) => (S, O)): Process1[I, O] =
@@ -30,5 +31,11 @@ object streams {
         }
       }
     }
+
+  def printAndReset[A](p:Process[Task,A]):PartialFunction[Throwable,Process[Task,A]] = {
+    case t:Throwable =>
+      t.printStackTrace()
+      p
+  }
 
 }

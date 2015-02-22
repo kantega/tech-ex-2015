@@ -15,6 +15,8 @@ import scala.util.Random
 import scalaz._, Scalaz._
 
 import scalaz.concurrent.Task
+import scalaz.stream.Sink
+import scalaz.stream.async.mutable.Topic
 
 
 object playerSignup {
@@ -54,7 +56,7 @@ object playerSignup {
 
 
   sealed trait Signupresult
-  case class SignupOk(player: Player) extends Signupresult
+  case class SignupOk(player: PlayerData) extends Signupresult
   case class NickTaken(nick: Nick) extends Signupresult
 
   val getNick: String => Task[Nick] =
@@ -82,19 +84,28 @@ object playerSignup {
     val rand = Random
     rand.setSeed(nick.value.hashCode)
     val index =
-      rand.nextInt(quests.questPermutations.length-1)
+      rand.nextInt(quests.questPermutations.length - 1)
     val perm =
       quests.questPermutations(index)
 
-    List(perm._1,perm._2)
+    List(perm._1, perm._2)
   }
 
-  val updateContext: (Player, NotificationTarget) => State[Storage, Player] =
-    (player, platform) =>
-      State[Storage, Player](ctx =>
-        (ctx.putPlayerData(
-          player.id,
-          PlayerData(
+  val updateContext: PlayerData => State[Storage, PlayerData] =
+    playerData =>
+      State(ctx =>
+        (ctx.putPlayerData(playerData.player.id, playerData), playerData))
+
+
+  val createPlayerIfNickAvailable: (Nick, CreatePlayerData) => State[Storage, Signupresult] =
+    (nick, createData) =>
+      for {
+        taken <- checkNickTaken(nick)
+        randomPersonQuests <- State.state(selectPersonalQuests(nick))
+        player <- State.state(createPlayer(nick, createData.preferences.getOrElse(PlayerPreference.default), randomPersonQuests))
+        rsult <- State.state(
+          if (taken) NickTaken(nick)
+          else SignupOk(PlayerData(
             player,
             Set(),
             Vector(),
@@ -103,30 +114,17 @@ object playerSignup {
               .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
               .foldLeft(PatternOutput.zero[Achievement])(_ and _),
-            platform
-          )),
-          player)
-      )
-
-
-  val createPlayerIfNickAvailable: (Nick, PlayerPreference) => State[Storage, Signupresult] =
-    (nick, playerPreference) =>
-      for {
-        taken <- checkNickTaken(nick)
-        randomPersonQuests <- State.state(selectPersonalQuests(nick))
-        player <- State.state(createPlayer(nick, playerPreference, randomPersonQuests))
-        rsult <- State.state(
-          if (taken) NickTaken(nick)
-          else SignupOk(player))
+            createData.platform.toPlatform
+          )))
       } yield rsult
 
 
   val toResponse: Signupresult => Task[Response] = {
-    case SignupOk(player) => Created(player.asJson)
+    case SignupOk(player) => Created(player.player.asJson)
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
-  def restApi: WebHandler = {
+  def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@PUT -> Root / "player" / nick =>
       EntityDecoder.text(req)(body => {
         val maybeCreatePlayerData =
@@ -135,14 +133,15 @@ object playerSignup {
         maybeCreatePlayerData.fold(
           failMsg => BadRequest(failMsg),
           createPlayerData => {
-            val preference =
-              createPlayerData.preferences.getOrElse(PlayerPreference.default)
 
             for {
-              result <- Storage.run(createPlayerIfNickAvailable(Nick(nick), preference))
+              result <- Storage.run(createPlayerIfNickAvailable(Nick(nick), createPlayerData))
               _ <- result match {
-                case ok@SignupOk(player) => Storage.run(updateContext(player, createPlayerData.platform.toPlatform)) *> notifyAboutUpdates.sendNotification(Notification(Slack(), ":thumbsup: Player " + nick + " just signed up with quests '"+player.privateQuests.map(_.name).mkString( "' and '")+"'", Good))
-                case _                   => Task {}
+                case ok@SignupOk(playerData) =>
+                  Storage.run(updateContext(playerData)) *>
+                    topic.publishOne(CreatePlayer(playerData)) *>
+                    notifyAboutUpdates.sendNotification(Notification(Slack(), ":thumbsup: Player " + nick + " just signed up with quests '" + playerData.player.privateQuests.map(_.name).mkString("' and '") + "'", Good))
+                case _                       => Task {}
               }
               response <- toResponse(result)
             } yield response
@@ -161,5 +160,5 @@ object playerSignup {
       }
   }
   case class CreatePlayerData(platform: PlatformData, preferences: Option[PlayerPreference])
-  case class CreatePlayer(nick: Nick, preference: PlayerPreference, platform: NotificationTarget) extends Command
+  case class CreatePlayer(player: PlayerData) extends Command
 }

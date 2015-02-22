@@ -32,7 +32,7 @@ object notifyAboutUpdates {
             Notification(SysOut() /*data.platform*/ , "Egentlig push notification til :" + f.player.platform + " You have been awarded the \"" + badge.achievement.name + "\" badge") ::
             Nil
         case a@ArrivedAtArea(player, area) =>
-          Notification(Slack(), ":walking: " + f.player.player.nick.value + " visited " + area.id) ::
+          Notification(Slack(), f.player.player.nick.value + " visited " + area.id) ::
             Notification(SysOut(), "Fact: " + f.player.player.nick.value + " visited " + area.id) ::
             Nil
         case any: FactAboutPlayer        =>

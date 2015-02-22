@@ -19,34 +19,39 @@ object startup {
 
   def setupStream: Task[Unit] = {
 
-    val q = async.unboundedQueue[Notification]
+    val handleInputQueue =
+      async.unboundedQueue[InputMessage]
+
+    val notificationQueue =
+      async.unboundedQueue[Notification]
 
 
-    val stream =
-      eventstreams.events.subscribe pipe
-        process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling) pipe
+    val enqueueInputProcess =
+      eventstreams.events.subscribe to handleInputQueue.enqueue
+
+    val handleInputProcess =
+      handleInputQueue.dequeue pipe
+        process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse noOp) pipe
         appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges) through
         Storage.updates[List[Fact]] pipe
         process1.unchunk[Fact] pipe
         notifyAboutUpdates.factNotifcationProcess1 pipe
-        process1.unchunk[Notification] to q.enqueue
+        process1.unchunk[Notification] to notificationQueue.enqueue
 
-    val notificationStream =
-      q.dequeue to notifyAboutUpdates.notificationSink
-
+    val notificationProcess =
+      notificationQueue.dequeue to notifyAboutUpdates.notificationSink
 
 
     Task {
-      Task.fork(stream.onFailure(t => {
-        t.printStackTrace()
-        stream
-      }).run)(streamRunner).runAsync(_.toString)
-
-      Task.fork(notificationStream.onFailure(t => {
-        t.printStackTrace()
-        notificationStream
-      }).run)(streamRunner).runAsync(_.toString)
+      enqueueInputProcess.handle(streams.printAndReset(enqueueInputProcess)).run.runAsync(_.toString)
+      handleInputProcess.handle(streams.printAndReset(handleInputProcess)).run.runAsync(_.toString)
+      notificationProcess.handle(streams.printAndReset(notificationProcess)).run.runAsync(_.toString)
+      println("Streams set up")
     }
+  }
+
+  def noOp:PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
+    case _=> State.state(List())
   }
 
   def setupSchedule: Task[Unit] = {
@@ -81,7 +86,7 @@ object startup {
     //_ <- Task.delay(println("Created observation table"))
 
     } yield HttpService(
-      playerSignup.restApi orElse
+      playerSignup.restApi(eventstreams.events) orElse
         test.testApi orElse
         listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse
