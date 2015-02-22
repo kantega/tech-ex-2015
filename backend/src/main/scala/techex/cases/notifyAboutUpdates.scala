@@ -29,7 +29,7 @@ object notifyAboutUpdates {
       f match {
         case AwardedBadge(_, badge)       =>
           Notification(Slack(), ":star: " + f.player.player.nick.value + " was awarded the \"" + badge.achievement.name + "\" badge") ::
-            Notification(SysOut() /*data.platform*/ , "Egentlig push notification til :" + f.player.platform + " You have been awarded the \"" + name + "\" badge") ::
+            Notification(SysOut() /*data.platform*/ , "Egentlig push notification til :" + f.player.platform + " You have been awarded the \"" + badge.achievement.name + "\" badge") ::
             Nil
         case a@ArrivedAtArea(player, area) =>
           Notification(Slack(), ":walking: " + f.player.player.nick.value + " visited " + area.id) ::
