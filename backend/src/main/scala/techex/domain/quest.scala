@@ -14,23 +14,23 @@ object quests {
     fact { case j: JoinedOnTime => true}
 
   val leftSameOnTime =
-    ctx({ case (FactUpdate(_, LeftOnTime(entry)), matches) if matches.exists(matched({ case LeftActivity(e) => entry === e})) => true})
+    ctx({ case (LeftOnTime(_, entry), matches) if matches.exists(matched({ case LeftActivity(_, e) => entry === e})) => true})
 
 
   val leftActivity =
-    fact({ case LeftActivity(entry) => true})
+    fact({ case LeftActivity(_, entry) => true})
 
   val joinedActivity =
-    fact({ case JoinedActivity(entry) => true})
+    fact({ case JoinedActivity(_, entry) => true})
 
   val joinedSameActivity =
-    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case LeftActivity(e) => entry === e})) => true})
+    ctx({ case (JoinedActivity(_, entry), matches) if matches.exists(matched({ case LeftActivity(_, e) => entry === e})) => true})
 
   val joinedActivityAtSameArea =
-    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case Entered(e) => entry.area === e})) => true})
+    ctx({ case (JoinedActivity(_, entry), matches) if matches.exists(matched({ case ArrivedAtArea(_, e) => entry.area === e})) => true})
 
   val leftSameActivity =
-    ctx({ case (FactUpdate(_, LeftActivity(entry)), matches) if matches.exists(matched({ case JoinedActivity(e) => entry === e})) => true})
+    ctx({ case (LeftActivity(_, entry), matches) if matches.exists(matched({ case JoinedActivity(_, e) => entry === e})) => true})
 
   val coffee =
     visited(areas.coffeeStand)
@@ -42,7 +42,7 @@ object quests {
     joinedActivityOnTime ~> notExists(leftSameActivity) ~>< leftSameOnTime
 
   val enteredArea =
-    fact({ case entered: Entered => true})
+    fact({ case entered: ArrivedAtArea => true})
 
   val leftArea =
     fact({ case entered: LeftArea => true})
@@ -52,24 +52,24 @@ object quests {
 
 
   //Badges
-  val seetalksbronze        = Badge(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
-  val seetalkssilver        = Badge(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
-  val seetalksgold          = Badge(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
-  val firstsession          = Badge(Bid("firstsession"), "I have seen the light", "Attending a session")
-  val kreatorsession        = Badge(Bid("kreatorsession"), "I have been at Kreator", "Attending Kreator")
-  val fundingsession        = Badge(Bid("fundingsession"), "I know you've got funds", "Attending live crowdfunding")
-  val keepsringing          = Badge(Bid("keepsringing"), "Damned thing keeps ringing", "Left session for a couple of minutes")
-  val placestogo            = Badge(Bid("placestogo"), "Got places to go, people to meet...", "Left a session early")
-  val tinyjavabladder       = Badge(Bid("tinyjavabladder"), "Tiny java bladder", "Left session for toilet multiple times")
-  val smalljavabladder      = Badge(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time")
-  val earlybird             = Badge(Bid("earlybird"), "Early bird", "Arrived 20 mins early")
-  val ontime                = Badge(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
-  val intlnetworker         = Badge(Bid("intlnetworker"), "International networker", "You have many international connections")
-  val ambassador            = Badge(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
-  val seeAllTheStandsBronze = Badge(Bid("seestandsbronze"), "See at least a stand", "Visitng at least one stand")
-  val seeAllTheStandsSilver = Badge(Bid("seestandssilver"), "See many stands", "Visiting half the stands")
-  val seeAllTheStandsGold   = Badge(Bid("seestandsgold"), "Be at all the stands", "Visiting all the stands")
-  val networkingHero        = Badge(Bid("nethero"), "Networking hero", "Meet with half of the crowd")
+  val seetalksbronze        = Achievement(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
+  val seetalkssilver        = Achievement(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
+  val seetalksgold          = Achievement(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
+  val firstsession          = Achievement(Bid("firstsession"), "I have seen the light", "Attending a session")
+  val kreatorsession        = Achievement(Bid("kreatorsession"), "I have been at Kreator", "Attending Kreator")
+  val fundingsession        = Achievement(Bid("fundingsession"), "I know you've got funds", "Attending live crowdfunding")
+  val keepsringing          = Achievement(Bid("keepsringing"), "Damned thing keeps ringing", "Left session for a couple of minutes")
+  val placestogo            = Achievement(Bid("placestogo"), "Got places to go, people to meet...", "Left a session early")
+  val tinyjavabladder       = Achievement(Bid("tinyjavabladder"), "Tiny java bladder", "Left session for toilet multiple times")
+  val smalljavabladder      = Achievement(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time")
+  val earlybird             = Achievement(Bid("earlybird"), "Early bird", "Arrived 20 mins early")
+  val ontime                = Achievement(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
+  val intlnetworker         = Achievement(Bid("intlnetworker"), "International networker", "You have many international connections")
+  val ambassador            = Achievement(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
+  val seeAllTheStandsBronze = Achievement(Bid("seestandsbronze"), "See at least a stand", "Visitng at least one stand")
+  val seeAllTheStandsSilver = Achievement(Bid("seestandssilver"), "See many stands", "Visiting half the stands")
+  val seeAllTheStandsGold   = Achievement(Bid("seestandsgold"), "Be at all the stands", "Visiting all the stands")
+  val networkingHero        = Achievement(Bid("nethero"), "Networking hero", "Meet with half of the crowd")
 
   //Quests
   val seeAllTalks =
@@ -125,9 +125,9 @@ object quests {
     visited(areas.testArea1) or visited(areas.testArea2) or visited(areas.testArea3)
 
   val visitAllStandsTracker =
-    StatefulTracker[Set[Area], Badge](exists(vistitedStandPred), Set()) { token => State { set =>
+    StatefulTracker[Set[Area], Achievement](exists(vistitedStandPred), Set()) { token => State { set =>
       val entered =
-        token.fact.fact.asInstanceOf[Entered]
+        token.fact.asInstanceOf[ArrivedAtArea]
 
       val newSet =
         set + entered.area
@@ -174,12 +174,12 @@ object quests {
     )
 
   val networkingTracker =
-    StatefulTracker[Set[Nick], Badge](exists(metOtherPlayer), Set()) { token => State { set =>
+    StatefulTracker[Set[Nick], Achievement](exists(metOtherPlayer), Set()) { token => State { set =>
       val metOther =
-        token.fact.fact.asInstanceOf[MetPlayer]
+        token.fact.asInstanceOf[MetPlayer]
 
       val newSet =
-        set + metOther.nick
+        set + metOther.otherPlayer.player.nick
 
       val isIncrease =
         set.size != newSet.size
@@ -217,6 +217,13 @@ object quests {
       antihero
     )
 
+  val questPermutations =
+    (for {
+      q1 <- quests
+      q2 <- quests
+    } yield (q1, q2)).filterNot(t => t._1 == t._2)
+
+
   val questMap =
     quests
       .map(q => (q.id, q))
@@ -244,20 +251,23 @@ object quests {
       .map(badge => (badge.id, badge))
       .toMap
 
-  val trackerForQuest: Map[Qid, PatternOutput[Badge]] =
+  val trackerForQuest: Map[Qid, PatternOutput[Achievement]] =
     Map(
       visitAllStands.id -> visitAllStandsTracker,
       networking.id -> networkingTracker
     )
 
   val zeroTracker =
-    ZeroMatcher[Badge]()
+    ZeroMatcher[Achievement]()
 }
 
 
 case class Qid(value: String)
 case class Bid(value: String)
-case class Quest(id: Qid, name: String, desc: String, visibility: Visibility, badges: List[Badge])
+case class Quest(id: Qid, name: String, desc: String, visibility: Visibility, badges: List[Achievement]) {
+  def containsAchievement(achievemnt: Achievement) =
+    badges.contains(achievemnt)
+}
 
 object Quest {
   implicit val questEqual: Equal[Quest] =
@@ -265,10 +275,10 @@ object Quest {
 
 }
 
-case class Badge(id: Bid, name: String, desc: String)
+case class Achievement(id: Bid, name: String, desc: String)
 
-object Badge {
-  implicit val badgeEq: Equal[Badge] =
+object Achievement {
+  implicit val badgeEq: Equal[Achievement] =
     Equal.equalA[String].contramap(_.id.value)
 
   def byId(id: Bid) =
@@ -291,8 +301,32 @@ object Visibility {
   implicit val visibilityEqual: Equal[Visibility] =
     Equal.equalRef[Visibility]
 }
-case class QuestProgress(quest: Quest, achievements: List[Achievement])
-case class Achievement(id: String, title: String, desc: String, achieved: Boolean, achievedBy: List[Nick])
+case class PlayerQuestProgress(quest: Quest, achievements: List[PlayerBadgeProgress])
+case class Badge(achievement: Achievement)
+case class PlayerBadgeProgress(id: String, title: String, desc: String, achieved: Boolean)
+case class TotalAchievementProgress(playerId: PlayerId, isAssigned: Boolean, progress: List[PlayerBadgeProgress])
+case class ProgressSummary(progression: Int, max: Int, assigned: Int, unassigned: Int) {
+  def increment(isAssigned: Boolean) =
+    if (isAssigned) copy(assigned = assigned + 1) else copy(unassigned = unassigned + 1)
+}
+case class TotalQuestProgress(quest: Quest, achievemnt: List[TotalAchievementProgress]) {
+
+  def progressSummary: List[ProgressSummary] = {
+
+    val initMap: Map[Int, ProgressSummary] =
+      (0 to quest.badges.length).toSeq.map(index => (index, ProgressSummary(index, quest.badges.length, 0, 0))).toMap
+
+    val updatedMap =
+      achievemnt.foldLeft(initMap) { (map, progress) =>
+        val count = progress.progress.count(_.achieved)
+
+        map + (count -> map(count).increment(progress.isAssigned))
+      }
+
+    updatedMap.toList.map(_._2).sortBy(_.progression)
+  }
+
+}
 
 
 

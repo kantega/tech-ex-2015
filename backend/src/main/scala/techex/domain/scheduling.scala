@@ -79,15 +79,7 @@ object ScheduleEntry {
     ScheduleEntry.unapply(entry).map(t => t.copy(_1 = t._1.value))
 }
 
-trait ScheduleEvent extends InputMessage
-case class Started(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
-case class Ended(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
-case class Added(entry: ScheduleEntry) extends ScheduleEvent
-case class Removed(entry: ScheduleEntry) extends ScheduleEvent
-case class StartEntry(entryId: ScId) extends Command
-case class EndEntry(entryId: ScId) extends Command
-case class AddEntry(entry: ScheduleEntry) extends Command
-case class RemoveEntry(entryId: ScId) extends Command
+
 
 
 

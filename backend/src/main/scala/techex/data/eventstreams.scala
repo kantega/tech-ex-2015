@@ -8,7 +8,6 @@ object eventstreams {
   lazy val events: Topic[InputMessage] =
     scalaz.stream.async.topic()
 
-
 }
 
 trait InputMessage

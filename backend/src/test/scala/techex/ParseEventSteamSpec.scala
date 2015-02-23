@@ -1,105 +1,117 @@
 package techex
 
-import java.util.UUID
-
-import org.joda.time.{Duration, Hours, Instant}
+import org.joda.time.Instant
+import org.specs2.mutable._
 import org.specs2.mutable.Specification
 import techex.domain._
-import techex.domain.matching._
-import techex.domain.areas._
 import techex.domain.predicates._
-import techex.domain.scheduling._
-
-import scalaz.Scalaz._
-import scalaz._
+import _root_.scalaz.Scalaz
+import Scalaz._
 
 class ParseEventSteamSpec extends Specification {
 
-  val enteredArea =
-    fact({ case entered: Entered => true})
+  val factA =
+    fact({ case entered: FactA => true})
 
-  val connected =
-    fact({ case c: MetPlayer => true})
+  val factB =
+    fact({ case c: FactB => true})
 
-  val joinedActivityAtSameArea =
-    ctx({ case (FactUpdate(_, JoinedActivity(entry)), matches) if matches.exists(matched({ case Entered(e) if entry.area === e => true})) => true})
+  val factAWithSameValue =
+    ctx({ case (FactA(entry), matches) if matches.exists(matched({ case FactA(e) if entry === e => true})) => true})
 
 
   val time =
     Instant.now()
 
-  val playerId =
-    PlayerId("asbcd")
+
+  case class FactA(value: String) extends Fact
+  case class FactB() extends Fact
+
 
   val events =
     List(
-      FactUpdate(UpdateMeta(playerId, time), Entered(foyer)),
-      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1235"),Nick("falle"))),
-      FactUpdate(UpdateMeta( playerId, time), Entered(auditorium)),
-      FactUpdate(UpdateMeta( playerId, time), Entered(coffeeStand)),
-      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1234"),Nick("jalle"))),
-      FactUpdate(UpdateMeta( playerId, time), Entered(kantegaStand)),
-      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1235"),Nick("falle"))),
-      FactUpdate(UpdateMeta( playerId, time), MetPlayer(PlayerId("1236"),Nick("palle"))),
-      FactUpdate(UpdateMeta( playerId, time), Entered(technoportStand)),
-      FactUpdate(UpdateMeta( playerId, time.plus(Hours.hours(3).toStandardDuration)), JoinedActivity(keyNote))
+      FactA("a"),
+      FactA("b"),
+      FactB(),
+      FactA("c"),
+      FactB(),
+      FactB(),
+      FactA("b"),
+      FactB(),
+      FactB()
     )
 
 
   "The parser" should {
-    "create a single match when joining same area" in {
+
+    /*
+    "create a single match matching facts with same value" in {
 
       val pattern =
-        enteredArea ~> joinedActivityAtSameArea
+        factA ~> factAWithSameValue
 
       val tokens =
         foldEvents(pattern, events)
-
-      printTokens(tokens)
 
       tokens.length must_== 1
     }
 
-    "create a multiple matches when entering two areas" in {
+    "create a multiple matches when finding a and then b" in {
 
       val pattern =
-        enteredArea ~> enteredArea
+        factA ~> factB
 
       val tokens =
         foldEvents(pattern, events)
 
-      printTokens(tokens)
-
-      tokens.length must_== 10
-    }
-/*
-    "create a single match when entering an area without connecting" in {
-
-      val pattern =
-        enteredArea ~> enteredArea
-
-      val tokens =
-        foldEvents(pattern, events)
-
-      printTokens(tokens)
-
-      tokens.length must_== 1
+      tokens.length must_== 16
     }
 */
+    "create a multiple matches when finding a until b" in {
+
+      val pattern =
+        factA ~>< factB
+
+      val tokens =
+        foldEvents(pattern, events)
+
+
+
+      printTokens(tokens) ! (tokens.length must_== 1)
+    }
+    /*
+        "create a single match when entering an area without connecting" in {
+
+          val pattern =
+            enteredArea ~> enteredArea
+
+          val tokens =
+            foldEvents(pattern, events)
+
+          printTokens(tokens)
+
+          tokens.length must_== 1
+        }
+    */
   }
 
 
-  def foldEvents(pattern: EventPattern, event: List[FactUpdate]) =
+  def foldEvents(pattern: EventPattern, event: List[Fact]) =
     events
-      .foldLeft(pattern, nil[Token]) { (pair: (EventPattern, List[Token]), update: FactUpdate) => {
+      .foldLeft(pattern, nil[Token]) { (pair: (EventPattern, List[Token]), update: Fact) => {
       val (nextParser, newTokens) =
         pair._1.parse(Token(update, nil))
+
+      println(">>> "+ update.getClass.getName)
+      println("=== "+nextParser)
+      println("<<< "+newTokens)
+      println("")
 
       (nextParser, newTokens ::: pair._2)
     }
     }._2
 
-  def printTokens(tokens: List[Token]) = {
-    println("Final tokens: \n" + tokens.map(t => t.matches.reverse.map(_.fact).mkString(" ~> ")).mkString("\n") + "\n")
+  def printTokens(tokens: List[Token]):String = {
+    "Final tokens: \n" + tokens.map(t => t.matches.reverse.mkString(" ~> ")).mkString("\n") + "\n"
   }
 }

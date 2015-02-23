@@ -1,46 +1,51 @@
 package techex.cases
 
-import techex.data.{slack, appleNotifications, PlayerData, PlayerStore}
+import java.util.concurrent.{ThreadFactory, Executors}
+
+import techex.data.{slack, appleNotifications, PlayerData, Storage}
 
 import scalaz._, Scalaz._
 import doobie.util.process
 import techex.domain._
 
-import scalaz.concurrent.Task
-import scalaz.stream.{Process, Sink}
+import scalaz.concurrent.{Actor, Task}
+import scalaz.stream.{process1, Process, Sink}
 
 object notifyAboutUpdates {
 
-  val scheduleupdateChannel =
-    Process.constant(scheduleupdateToNotifcation)
 
-  lazy val scheduleupdateToNotifcation: ScheduleEvent => Task[List[Notification]] =
-    update => {
-      PlayerStore
-        .run[PlayerStore](State.gets(ctx => ctx))
-        .map(ctx => {
-        Notification(Slack(), "Scheduleupdate: " + update.toString) :: Nil
-      })
+  implicit val stateUpdateExecutor =
+    Executors.newSingleThreadExecutor(new ThreadFactory {
+      override def newThread(r: Runnable): Thread = {
+        new Thread(r, "Notification thread")
+      }
+    })
+
+  val factNotifcationProcess1 =
+    process1.lift(factToNotifcation)
+
+  lazy val factToNotifcation: Fact => List[Notification] = {
+    case f: FactAboutPlayer           =>
+      f match {
+        case AwardedBadge(_, badge)       =>
+          Notification(Slack(), ":star: " + f.player.player.nick.value + " was awarded the \"" + badge.achievement.name + "\" badge") ::
+            Notification(SysOut() /*data.platform*/ , "Egentlig push notification til :" + f.player.platform + " You have been awarded the \"" + badge.achievement.name + "\" badge") ::
+            Nil
+        case a@ArrivedAtArea(player, area) =>
+          Notification(Slack(), f.player.player.nick.value + " visited " + area.id) ::
+            Notification(SysOut(), "Fact: " + f.player.player.nick.value + " visited " + area.id) ::
+            Nil
+        case any: FactAboutPlayer        =>
+          Notification(SysOut(), "Fact: " + f.player.player.nick.value + " " + any) :: Nil
+      }
+    case scheduleEvent: ScheduleEvent => {
+      Notification(SysOut(), "Scheduleupdate: " + scheduleEvent.toString) :: Nil
     }
 
-  val factNotifcationChannel =
-    Process.constant(factToNotifcation)
+    case any: Fact =>
+      Notification(SysOut(), "Fact: " + any.toString) :: Nil
+  }
 
-  lazy val factToNotifcation: FactUpdate => Task[List[Notification]] =
-    update => {
-      PlayerStore
-        .run[PlayerData](State.gets(ctx => ctx.playerData(update.info.playerId)))
-        .map(data => {
-        update.fact match {
-          case AchievedBadge(name) =>
-            Notification(Slack(), ":star: " + data.player.nick.value + " was awarded the \"" + name + "\" badge") ::
-              Notification(Slack() /*data.platform*/ , "Egentlig push notification til :" + data.platform + " You have been awarded the \"" + name + "\" badge") ::
-              Nil
-          case any: Fact           =>
-            Notification(Slack(), "Fact: " + data.player.nick.value + " " + any.toString) :: Nil
-        }
-      })
-    }
 
   lazy val sendNotification: Notification => Task[Unit] =
     notification => {

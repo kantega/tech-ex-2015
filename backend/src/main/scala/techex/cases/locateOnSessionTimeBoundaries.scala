@@ -1,56 +1,59 @@
 package techex.cases
 
-import techex.data.PlayerStore
-import techex.domain.{FactUpdate, ScheduleEvent}
+import org.joda.time.Instant
+import techex.data.Storage
+import techex.domain._
+
 import scalaz.Scalaz._
 import scalaz._
-import scalaz.stream.{process1, Process1}
 
 object locateOnSessionTimeBoundaries {
 
-  /*
-def location2ScheduleActivity: FactUpdate => State[PlayerStore, List[FactUpdate]] =
-  incomingLocation => State {
-    ctx => {
-      val joinActivities =
-        for {
-          event <- scheduling.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.area contains incomingLocation.area)
-        } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant, getNick(incomingLocation.playerId, ctx)), JoinedActivity(event))
 
-      val leaveActivities =
-        for {
-          outgoingLocation <- ctx.playerData(incomingLocation.playerId).movements.tail.headOption.toList
-          event <- scheduling.querySchedule(_.time.abouts(incomingLocation.instant)).filter(_.area contains outgoingLocation.area)
-        } yield FactUpdate(UpdateMeta(UUID.randomUUID(), incomingLocation.playerId, incomingLocation.instant, getNick(incomingLocation.playerId, ctx)), LeftActivity(event))
+  def handleJoining: ArrivedAtArea => State[Storage, List[Fact]] =
+    arrival => State {
+      ctx => {
+        val joinActivities =
+          for {
+            event <- ctx.entriesList.filter(s => s.time.abouts(Instant.now()) && (s.area contains arrival.area))
+          } yield JoinedActivity(arrival.player, event)
 
-      val activities = joinActivities ++ leaveActivities
-
-      (ctx.addFacts(activities), activities)
-    }
-  }
-
-def scheduleEvent2Activity: ScheduleEvent => State[PlayerStore, List[FactUpdate]] =
-  event =>
-    State.gets { ctx =>
-      val area =
-        event.entry.area
-
-      val presentPlayers =
-        ctx.playersPresentAt(area)
-
-      event.msg match {
-        case Start =>
-          presentPlayers
-            .map(playerData => FactUpdate(
-            UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant, playerData.player.nick),
-            JoinedOnTime(event.entry)))
-        case End   =>
-          presentPlayers
-            .map(playerData => FactUpdate(
-            UpdateMeta(UUID.randomUUID(), playerData.player.id, event.instant.toInstant, playerData.player.nick),
-            LeftOnTime(event.entry)))
+        (ctx.addFacts(joinActivities), joinActivities)
       }
     }
 
-  */
+  def handleLeaving: LeftArea => State[Storage, List[Fact]] =
+    leaving => State {
+      ctx => {
+        val leaveActivities =
+          for {
+            event <- ctx.entriesList.filter(s => s.time.abouts(Instant.now()) && (s.area contains leaving.area))
+          } yield LeftActivity(leaving.player, event)
+
+        (ctx.addFacts(leaveActivities), leaveActivities)
+      }
+    }
+
+
+  def handleStart: Started => State[Storage, List[Fact]] =
+    started => State { ctx =>
+      val joinedFacts =
+        ctx.players
+          .filter(_.movements.headOption.exists(lu => lu.area === started.entry.area))
+          .map(player => JoinedOnTime(player, started.entry))
+
+      (ctx.addFacts(joinedFacts), joinedFacts)
+    }
+
+
+  def handleEnd: Ended => State[Storage, List[Fact]] =
+    ended => State { ctx =>
+      val endedfacts =
+        ctx.players
+          .filter(_.movements.headOption.exists(lu => lu.area === ended.entry.area))
+          .map(player => LeftOnTime(player, ended.entry))
+
+      (ctx.addFacts(endedfacts), endedfacts)
+    }
+
 }

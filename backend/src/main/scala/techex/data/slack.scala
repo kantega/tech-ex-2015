@@ -12,9 +12,13 @@ import scala.concurrent.ExecutionContext
 import scalaz.\/-
 import scalaz.concurrent.Task
 import scalaz.stream._
+
 object slack {
-  implicit val executor =
-    ExecutionContext.fromExecutor(Executors.newFixedThreadPool(1))
+  val executor =
+    techex.namedSingleThreadExecutor("Slacknotifier")
+
+  implicit val execContext =
+    ExecutionContext.fromExecutor(executor)
 
   lazy val h =
     url("https://hooks.slack.com/services/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").POST
@@ -44,12 +48,10 @@ object slack {
         "attachments" -> attachments
       )
 
-    Task.async(register => {
-      Http(h.setBody(json.nospaces)).onComplete(resp => {
-        println("result from call: " + resp.get.getStatusCode + " " + resp.get.getResponseBody)
-        register(\/-(Unit))
+      Task.async(register => {
+        Http(h.setBody(json.nospaces)).onComplete(resp => {
+          register(\/-(()))
+        })
       })
-
-    })
   }
 }

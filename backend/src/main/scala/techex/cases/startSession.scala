@@ -15,7 +15,7 @@ object startSession {
   def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "sessions" / "start" / sessionId => {
       for {
-        exists <- ScheduleStore.run(State.gets(sch => sch.entries.get(ScId(sessionId)).isDefined))
+        exists <- Storage.run(State.gets(sch => sch.schedule.get(ScId(sessionId)).isDefined))
         result <- if(exists) topic.publishOne(StartEntry(ScId(sessionId))) *> Ok() else NotFound()
       } yield result
     }

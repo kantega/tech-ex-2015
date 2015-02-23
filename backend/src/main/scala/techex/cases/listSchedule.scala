@@ -31,7 +31,7 @@ object listSchedule {
   def restApi: WebHandler = {
     case req@GET -> Root / "sessions" => {
       for {
-        entries <- ScheduleStore.run(State.gets(sch => sch.entriesList))
+        entries <- Storage.run(State.gets(sch => sch.entriesList))
         result <- Ok(entries.asJson)
       } yield result
     }

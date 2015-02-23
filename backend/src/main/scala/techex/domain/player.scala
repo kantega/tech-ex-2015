@@ -13,14 +13,14 @@ object Nick {
     Equal.equalA[String].contramap(_.value)
 }
 case class Email(value: String)
-case class Player(id: PlayerId, nick: Nick, preference: PlayerPreference, privateQuests: List[QuestId])
+case class Player(id: PlayerId, nick: Nick, preference: PlayerPreference, privateQuests: List[Quest])
 case class QuestId(value: String)
 
 object Player {
-  def apply(data: (PlayerId, Nick, Drink, Eat, List[QuestId])): Player =
+  def apply(data: (PlayerId, Nick, Drink, Eat, List[Quest])): Player =
     Player(data._1, data._2, data._3, data._4, data._5)
 
-  def apply(id: PlayerId, nick: Nick, drink: Drink, eat: Eat, quests: List[QuestId]): Player =
+  def apply(id: PlayerId, nick: Nick, drink: Drink, eat: Eat, quests: List[Quest]): Player =
     Player(id, nick, PlayerPreference(drink, eat), quests)
 }
 

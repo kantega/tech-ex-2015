@@ -1,3 +1,5 @@
+import java.util.concurrent.{ThreadFactory, Executors}
+
 import org.http4s.{Request, Response}
 import org.joda.time.{Interval, ReadableInstant}
 
@@ -43,5 +45,11 @@ package object techex {
   def prln(txt:String) = Task{
     println(txt)
   }
+
+  def namedSingleThreadExecutor(name:String) = Executors.newSingleThreadExecutor(new ThreadFactory {
+    override def newThread(r: Runnable): Thread = {
+      new Thread(r,name)
+    }
+  })
 
 }

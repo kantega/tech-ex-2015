@@ -1,27 +1,20 @@
 package techex.cases
 
 import org.joda.time.DateTime
-import techex.data.{InputMessage, Schedule}
+import techex.data.{Storage, InputMessage}
 import techex.domain._
 
 import scalaz.State
-import scalaz._, Scalaz._
-import scalaz.stream.{process1, Process1}
 
 object updateSchedule {
 
-  type SchedS = State[Schedule, List[ScheduleEvent]]
+  type SchedS = State[Storage, List[Fact]]
 
-  def handleSchedulingProcess1: Process1[InputMessage, State[Schedule, List[ScheduleEvent]]] = {
-    process1.lift(handleScheduling)
-  }
-
-  def handleScheduling: InputMessage => State[Schedule, List[ScheduleEvent]] = {
+  def handleScheduling: PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
     case AddEntry(entry)      => addEntry(entry)
     case RemoveEntry(entryId) => removeEntry(entryId)
     case StartEntry(entryId)  => startEntry(entryId)
     case EndEntry(entryId)    => endEntry(entryId)
-    case _                    => State.state(nil)
   }
 
 
@@ -33,7 +26,7 @@ object updateSchedule {
   def removeEntry(entryId: ScId): SchedS =
     State { sch =>
       val maybeEntry =
-        sch.entries.get(entryId)
+        sch.schedule.get(entryId)
 
       maybeEntry match {
         case None        => (sch, Nil)
@@ -45,7 +38,7 @@ object updateSchedule {
     State { sch =>
 
       val maybeEntry =
-        sch.entries.get(entryId)
+        sch.schedule.get(entryId)
 
       maybeEntry match {
         case None        => (sch, Nil)
@@ -59,7 +52,7 @@ object updateSchedule {
     State { sch =>
 
       val maybeEntry =
-        sch.entries.get(entryId)
+        sch.schedule.get(entryId)
 
       maybeEntry match {
         case None        => (sch, Nil)
