@@ -83,7 +83,7 @@ class QuestTableViewController: UITableViewController {
 
     
     func configureLabel(label: UILabel?, text: String) {
-        label?.text = text + text + text
+        label?.text = text
         label?.textColor = UIColor.whiteColor()
         label?.numberOfLines = 0;
         label?.lineBreakMode = NSLineBreakMode.ByWordWrapping
