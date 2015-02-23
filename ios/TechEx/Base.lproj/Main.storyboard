@@ -135,14 +135,14 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
                                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fXf-0z-Mp3" customClass="BadgeListView" customModule="TechEx" customModuleProvider="target">
-                                            <rect key="frame" x="451" y="16" width="100" height="11"/>
+                                            <rect key="frame" x="459" y="16" width="100" height="11"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="100" id="JL7-6K-IdZ"/>
                                             </constraints>
                                         </view>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t3a-1y-nZf">
-                                            <rect key="frame" x="16" y="8" width="427" height="27"/>
+                                            <rect key="frame" x="16" y="8" width="435" height="27"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                             <nil key="highlightedColor"/>
@@ -151,7 +151,7 @@
                                     <constraints>
                                         <constraint firstItem="fXf-0z-Mp3" firstAttribute="top" secondItem="20E-6f-eaI" secondAttribute="topMargin" constant="8" id="DXk-Bi-oGj"/>
                                         <constraint firstAttribute="bottomMargin" secondItem="fXf-0z-Mp3" secondAttribute="bottom" constant="8" id="Hri-lS-4IR"/>
-                                        <constraint firstAttribute="trailingMargin" secondItem="fXf-0z-Mp3" secondAttribute="trailing" constant="8" id="fMi-Ay-ZYO"/>
+                                        <constraint firstAttribute="trailingMargin" secondItem="fXf-0z-Mp3" secondAttribute="trailing" id="fMi-Ay-ZYO"/>
                                         <constraint firstItem="t3a-1y-nZf" firstAttribute="leading" secondItem="20E-6f-eaI" secondAttribute="leadingMargin" constant="8" id="jNJ-kJ-9qe"/>
                                         <constraint firstItem="fXf-0z-Mp3" firstAttribute="leading" secondItem="t3a-1y-nZf" secondAttribute="trailing" constant="8" id="k0u-nx-aqt"/>
                                         <constraint firstAttribute="bottomMargin" secondItem="t3a-1y-nZf" secondAttribute="bottom" id="mEk-9k-cSB"/>
