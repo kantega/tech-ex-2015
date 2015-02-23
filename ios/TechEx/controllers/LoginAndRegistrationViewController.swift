@@ -12,7 +12,6 @@ class LoginAndRegistrationViewController: UIViewController {
 
    
 
-    let baseApiUrl = Config.get("ServerUrl")
     var nick:String!
     var id:String!
 
@@ -67,6 +66,7 @@ class LoginAndRegistrationViewController: UIViewController {
                 "deviceToken": deviceToken
             ]
         ]
+        let baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
         request(.PUT, "\(baseApiUrl)/player/\(nick)", parameters: parameters, encoding: .JSON)
             .responseJSON { (req, resp, j, error) in
                 if error != nil {

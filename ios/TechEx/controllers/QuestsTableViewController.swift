@@ -12,13 +12,18 @@ class QuestsTableViewController: UITableViewController{
     
 
     let questCellIdentifier = "QuestPrototypeCell"
-    let baseApiUrl = Config.get("ServerUrl")
     var quests = Array<Quest>()
     
+    
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+    }
     
     override func viewDidLoad() {
         loadInitialData()
         self.startDetectingBeacons()
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("loadInitialData"), name: "badgeReceived", object: nil)
         
         self.refreshControl = UIRefreshControl()
         //self.refreshControl!.attributedTitle = NSAttributedString(string: "Pull to refersh")
@@ -26,10 +31,11 @@ class QuestsTableViewController: UITableViewController{
         self.tableView.addSubview(refreshControl!)
         
         self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
-        self.tableView.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
         // Hide empty table rows
         self.tableView.tableFooterView = UIView(frame: CGRectZero)
 
+        self.navigationController?.view.backgroundColor = UIColor.clearColor()
         super.viewDidLoad()
     }
 
@@ -37,6 +43,7 @@ class QuestsTableViewController: UITableViewController{
     func loadInitialData() {
         LoadingOverlay.shared.showOverlay(self.view)
         let playerId = KeychainService.load(.PlayerId)!;
+        let baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
         
         request(.GET, "\(baseApiUrl)/quests/player/\(playerId)")
             .responseJSON { (req, resp, j, error) in
@@ -61,9 +68,8 @@ class QuestsTableViewController: UITableViewController{
                             q.achievements.append(ach)
                         }
                         self.quests.append(q)
-                        self.tableView!.reloadData()
-
                     }
+                    self.tableView!.reloadData()
                 }
                 self.refreshControl?.endRefreshing()
                 LoadingOverlay.shared.hideOverlayView();
@@ -92,8 +98,8 @@ class QuestsTableViewController: UITableViewController{
 
     func configureTableCell(cell: QuestTableViewCell, indexPath: NSIndexPath) -> UITableViewCell {
         let quest = self.quests[indexPath.row]
-        cell.textLabel?.text = quest.title
-        cell.textLabel?.textColor = UIColor.whiteColor()
+        cell.titleLabel.text = quest.title
+        cell.titleLabel.textColor = UIColor.whiteColor()
         cell.backgroundColor = UIColor.clearColor()
         
         // Background colour for the active (selected) row
@@ -101,6 +107,8 @@ class QuestsTableViewController: UITableViewController{
         backgroundView.backgroundColor = UIColor(red: 0/255.0, green:0/255.0, blue:0/255.0, alpha: 0.1);
         cell.selectedBackgroundView = backgroundView;
         
+        cell.badgesView.totalBadges = quest.achievements.count
+        cell.badgesView.achievedBadges = quest.achievements.filter{ $0.achieved }.count
         return cell
     }
     

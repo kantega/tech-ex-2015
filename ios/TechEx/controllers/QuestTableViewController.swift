@@ -18,18 +18,28 @@ class QuestTableViewController: UITableViewController {
         self.tableView.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
         // Hide empty table rows
         self.tableView.tableFooterView = UIView(frame: CGRectZero)
-
+        
+        self.tableView.estimatedRowHeight = 100
+        self.tableView.rowHeight = UITableViewAutomaticDimension
+        
         super.viewDidLoad()
     }
 
     override func viewDidAppear(animated: Bool) {
-        tableView.estimatedRowHeight = 20
-        tableView.rowHeight = UITableViewAutomaticDimension
-        //tableView.reloadData()
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("reloadView"), name: "badgeReceived", object: nil)
+    }
+    
+    override func viewDidDisappear(animated: Bool) {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
     }
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         return 1
+    }
+    
+    func reloadView () {
+        self.tableView!.reloadData()
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -56,8 +66,8 @@ class QuestTableViewController: UITableViewController {
 
         cell.backgroundColor = UIColor.clearColor()
         var badge = achievement.achieved ? "BadgeCompleted": "BadgeUncompleted"
-        let badgeView = UIImageView(image: UIImage(named: badge));
-        cell.accessoryView = badgeView;
+//        let badgeView = UIImageView(image: UIImage(named: badge));
+        cell.badgeImage.image = UIImage(named: badge);
         return cell
     }
 //    
@@ -73,7 +83,7 @@ class QuestTableViewController: UITableViewController {
 
     
     func configureLabel(label: UILabel?, text: String) {
-        label?.text = text
+        label?.text = text + text + text
         label?.textColor = UIColor.whiteColor()
         label?.numberOfLines = 0;
         label?.lineBreakMode = NSLineBreakMode.ByWordWrapping

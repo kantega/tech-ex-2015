@@ -11,7 +11,7 @@ import CoreLocation
 
 class LocationService: NSObject, CLLocationManagerDelegate {
     
-    let baseApiUrl = Config.get("ServerUrl")
+    var baseApiUrl = ""
     var playerId = "";
     let locationManager = CLLocationManager()
     let region = CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "f7826da6-4fa2-4e98-8024-bc5b71e0893e"), identifier: "kontakt.io")
@@ -19,6 +19,8 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     var lastProximity: CLProximity?
   
     func startDetectingBeacons() {
+        baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
+        
         locationManager.delegate = self
         playerId = KeychainService.load(.PlayerId)!
         if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.Authorized) {
@@ -28,9 +30,22 @@ class LocationService: NSObject, CLLocationManagerDelegate {
             locationManager.requestAlwaysAuthorization()
         }
         println("Start ranging beacons")
-        locationManager.startRangingBeaconsInRegion(region)
+        locationManager.startMonitoringForRegion(region)
      }
     
+    
+    func startRangingBeaconsInRegion() {
+        locationManager.startRangingBeaconsInRegion(region)
+    }
+    
+    func locationManager(manager: CLLocationManager!, didEnterRegion region: CLRegion!) {
+        NSLog("Device entered region \(region.description)")
+        locationManager.startRangingBeaconsInRegion(region as CLBeaconRegion)
+    }
+    
+    func locationManager(manager: CLLocationManager!, didExitRegion region: CLRegion!) {
+        
+    }
     
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
 
@@ -46,12 +61,12 @@ class LocationService: NSObject, CLLocationManagerDelegate {
                     "beaconId": "\(closestBeacon.major):\(closestBeacon.minor)",
                     "proximity": "\(closestBeacon.proximity.rawValue)"
                 ];
-                println("Sending beacon data to server. Parameters: \(parameters)")
+                NSLog("Sending beacon data to server. Parameters: \(parameters)")
                 
                 request(.POST, "\(baseApiUrl)/location/\(playerId)", parameters: parameters, encoding: .JSON)
                    .responseString { (req, resp, s, error) in
                         if error != nil {                            
-                            println("Error when reporting location: \(error)");
+                            NSLog("Error when reporting location: \(error)");
                         } else {
                             println(s)
                     }
@@ -59,6 +74,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
             }
         }
     }
+
     
     
 }

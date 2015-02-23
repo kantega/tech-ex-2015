@@ -29,7 +29,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         
         //Transparent navigation bar
-//        UINavigationBar.appearance().backgroundColor = UIColor(red: 0/255.0, green:0/255.0, blue:0/255.0, alpha: 0.1);
         UINavigationBar.appearance().setBackgroundImage(UIImage(), forBarMetrics: UIBarMetrics.Default)
         UINavigationBar.appearance().shadowImage = UIImage()
         UINavigationBar.appearance().translucent = true
@@ -48,24 +47,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
-        NSUserDefaults.standardUserDefaults().setValue(deviceToken, forKey: "deviceToken")
-        println("Device token for notifications: \(deviceToken)")
+        let token = tokenAsString(deviceToken)
+        NSUserDefaults.standardUserDefaults().setValue(token, forKey: "deviceToken")
+        NSLog("Device token for notifications: \(token)")
     }
     
     func application(application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: NSError) {
-        println("Failed to register for notifications. Error: \(error)")
+        NSLog("Failed to register for notifications. Error: \(error)")
+    }
+    
+    func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject]) {
+        NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: "badgeReceived", object: nil))
     }
 
-//    func tokenAsString(token: NSData) -> String{
-//        let tokenChars = UnsafePointer<CChar>(token.bytes)
-//        var tokenString = NSMutableString()
-//        
-//        for var i = 0; i < token.length; i++ {
-//            tokenString.appendFormat("%02.2hhx", tokenChars[i])
-//        }
-//        
-//        return tokenString
-//    }
+    func tokenAsString(token: NSData) -> String{
+        let tokenChars = UnsafePointer<CChar>(token.bytes)
+        var tokenString = NSMutableString()
+        
+        for var i = 0; i < token.length; i++ {
+            tokenString.appendFormat("%02.2hhx", tokenChars[i])
+        }
+        
+        return tokenString
+    }
 
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
@@ -78,7 +82,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
-        // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+        NSLog("applicationWillEnterForeground: Start ranging beacons in region")
+        locationService.startRangingBeaconsInRegion()
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
