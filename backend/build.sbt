@@ -23,7 +23,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= {
   val lensVersion = "1.0.1"
-  val http4sVersion = "0.5.1"
+  val http4sVersion = "0.6.1"
   val phantomVersion = "1.2.2"
   // "com.github.julien-truffaut" %% "monocle-core" % lensVersion,
   Seq(

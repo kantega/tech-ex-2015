@@ -14,23 +14,23 @@ object quests {
     fact { case j: JoinedOnTime => true}
 
   val leftSameOnTime =
-    ctx({ case (LeftOnTime(_, entry), matches) if matches.exists(matched({ case LeftActivity(_, e) => entry === e})) => true})
+    ctx({ case (LeftOnTime(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
 
 
   val leftActivity =
-    fact({ case LeftActivity(_, entry) => true})
+    fact({ case LeftActivityEarly(_, entry) => true})
 
   val joinedActivity =
-    fact({ case JoinedActivity(_, entry) => true})
+    fact({ case JoinedActivityLate(_, entry) => true})
 
   val joinedSameActivity =
-    ctx({ case (JoinedActivity(_, entry), matches) if matches.exists(matched({ case LeftActivity(_, e) => entry === e})) => true})
+    ctx({ case (JoinedActivityLate(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
 
   val joinedActivityAtSameArea =
-    ctx({ case (JoinedActivity(_, entry), matches) if matches.exists(matched({ case ArrivedAtArea(_, e) => entry.area === e})) => true})
+    ctx({ case (JoinedActivityLate(_, entry), matches) if matches.exists(matched({ case ArrivedAtArea(_, e) => entry.area === e})) => true})
 
   val leftSameActivity =
-    ctx({ case (LeftActivity(_, entry), matches) if matches.exists(matched({ case JoinedActivity(_, e) => entry === e})) => true})
+    ctx({ case (LeftActivityEarly(_, entry), matches) if matches.exists(matched({ case JoinedActivityLate(_, e) => entry === e})) => true})
 
   val coffee =
     visited(areas.coffeeStand)

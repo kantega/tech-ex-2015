@@ -11,8 +11,8 @@ trait Fact
 trait FactAboutPlayer extends Fact {
   val player: PlayerData
 }
-case class JoinedActivity(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class LeftActivity(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
+case class JoinedActivityLate(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
+case class LeftActivityEarly(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
 case class JoinedOnTime(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
 case class LeftOnTime(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
 case class ArrivedAtArea(player: PlayerData, area: Area) extends FactAboutPlayer
@@ -25,7 +25,7 @@ case class LeftFor(player: PlayerData, event: ScheduleEntry, activity: String, d
 case class MetPlayer(player: PlayerData, otherPlayer: PlayerData) extends FactAboutPlayer
 case class EarnedAchievemnt(player: PlayerData, achievemnt:Achievement) extends FactAboutPlayer
 case class AwardedBadge(player: PlayerData, badge:Badge) extends FactAboutPlayer
-
+case class PlayerCreated(player:PlayerData) extends FactAboutPlayer
 trait ScheduleEvent extends Fact
 case class Started(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
 case class Ended(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent

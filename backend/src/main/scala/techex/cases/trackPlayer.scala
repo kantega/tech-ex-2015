@@ -13,7 +13,7 @@ import techex.domain._
 
 import _root_.argonaut._
 import Argonaut._
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 
 import scalaz.Scalaz._
 import scalaz._
@@ -122,7 +122,7 @@ object trackPlayer {
   def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "location" / playerId =>
 
-      EntityDecoder.text(req)(body => {
+      req.decode[String]{body => {
         //notifyAboutUpdates.sendMessageToSlack("Request received: "+body.toString).run
         val maybeObservation =
           toJsonQuotes(body)
@@ -137,7 +137,7 @@ object trackPlayer {
               _ <- eventstreams.events.publishOne(observation)
               response <- Ok()
             } yield response)
-      })
+      }}
   }
 
 }

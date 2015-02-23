@@ -10,13 +10,21 @@ import scalaz._
 object locateOnSessionTimeBoundaries {
 
 
+  def handleTimeBoundsFacts: Fact => State[Storage, List[Fact]] = {
+    case a: ArrivedAtArea => handleJoining(a)
+    case l: LeftArea      => handleLeaving(l)
+    case s: Started       => handleStart(s)
+    case e: Ended         => handleEnd(e)
+    case a@_              => State.state(nil)
+  }
+
   def handleJoining: ArrivedAtArea => State[Storage, List[Fact]] =
     arrival => State {
       ctx => {
         val joinActivities =
           for {
-            event <- ctx.entriesList.filter(s => s.time.abouts(Instant.now()) && (s.area contains arrival.area))
-          } yield JoinedActivity(arrival.player, event)
+            event <- ctx.entriesList.filter(s => s.started && (s.area contains arrival.area))
+          } yield JoinedActivityLate(arrival.player, event)
 
         (ctx.addFacts(joinActivities), joinActivities)
       }
@@ -28,7 +36,7 @@ object locateOnSessionTimeBoundaries {
         val leaveActivities =
           for {
             event <- ctx.entriesList.filter(s => s.time.abouts(Instant.now()) && (s.area contains leaving.area))
-          } yield LeftActivity(leaving.player, event)
+          } yield LeftActivityEarly(leaving.player, event)
 
         (ctx.addFacts(leaveActivities), leaveActivities)
       }

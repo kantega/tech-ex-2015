@@ -3,7 +3,7 @@ package techex.cases
 import org.http4s.{Response, Status}
 import org.http4s.dsl._
 import _root_.argonaut._, Argonaut._
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 import techex.WebHandler
 import techex.data.{codecJson, Storage}
 import techex.domain._
