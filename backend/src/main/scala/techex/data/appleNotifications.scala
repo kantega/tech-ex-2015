@@ -9,7 +9,7 @@ object appleNotifications {
 
   lazy val service =
     APNS.newService()
-      .withCert(getClass.getClassLoader.getResourceAsStream("TexhEx.p12"), "balle")
+      .withCert(getClass.getClassLoader.getResourceAsStream("iphone_dev.p12"), "balle")
       .withSandboxDestination()
       .build()
 
@@ -19,7 +19,7 @@ object appleNotifications {
       val payload =
         APNS
           .newPayload()
-          .alertBody("Can't be simpler than this!")
+          .alertBody(msg)
           .build()
 
       service.push(token.value, payload)

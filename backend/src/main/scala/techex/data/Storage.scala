@@ -122,7 +122,7 @@ case class PlayerData(
     copy(activities = activity +: activities)
 
   override def toString =
-    "Player("+player.nick.value+")"
+    "Player(" + player.nick.value + ", " + platform + ")"
 }
 
 object PlayerData {

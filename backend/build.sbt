@@ -23,7 +23,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= {
   val lensVersion = "1.0.1"
-  val http4sVersion = "0.5.1"
+  val http4sVersion = "0.6.1"
   val phantomVersion = "1.2.2"
   // "com.github.julien-truffaut" %% "monocle-core" % lensVersion,
   Seq(
@@ -36,6 +36,8 @@ libraryDependencies ++= {
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.1", //httpclient
     "org.http4s" % "http4s-server_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-servlet_2.11" % http4sVersion withSources() withJavadoc(),
+    "org.http4s" % "http4s-blazecore_2.11" % http4sVersion withSources() withJavadoc(),
+    "org.http4s" % "http4s-blazeserver_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-dsl_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-argonaut_2.11" % http4sVersion withSources() withJavadoc(),
     "org.http4s" % "http4s-jetty_2.11" % http4sVersion % "test" withSources() withJavadoc() ,

@@ -1,12 +1,12 @@
 package techex.web
 
-import org.http4s.Header.{`Content-Type`, `Transfer-Encoding`}
 import org.http4s.MediaType._
 import org.http4s._
 import _root_.argonaut._
 import Argonaut._
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 import org.http4s.dsl._
+import org.http4s.headers.`Content-Type`
 import org.http4s.server._
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits.{Text, WebSocketFrame}
@@ -44,10 +44,6 @@ object test {
     case GET -> Root / "future" =>
       // EntityEncoder allows rendering asynchronous results as well
       Ok(Future("Hello from the future!"))
-
-    case GET -> Root / "streaming" =>
-      // Its also easy to stream responses to clients
-      Ok(dataStream(100)).withHeaders(`Transfer-Encoding`(TransferCoding.chunked))
 
     case req@GET -> Root / "ip" =>
       // Its possible to define an EntityEncoder anywhere so you're not limited to built in types

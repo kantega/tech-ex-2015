@@ -1,23 +1,16 @@
 package techex.cases
 
-import java.util.UUID
-
-import org.http4s.EntityDecoder
+import _root_.argonaut._
+import argonaut.Argonaut._
 import org.http4s.dsl._
 import org.joda.time.Instant
 import techex._
 import techex.data._
-import codecJson._
-import techex.data._
+import techex.data.codecJson._
 import techex.domain._
-
-import _root_.argonaut._
-import Argonaut._
-import org.http4s.argonaut.ArgonautSupport._
 
 import scalaz.Scalaz._
 import scalaz._
-import scalaz.stream._
 import scalaz.stream.async.mutable.Topic
 
 object trackPlayer {
@@ -122,7 +115,7 @@ object trackPlayer {
   def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "location" / playerId =>
 
-      EntityDecoder.text(req)(body => {
+      req.decode[String]{body => {
         //notifyAboutUpdates.sendMessageToSlack("Request received: "+body.toString).run
         val maybeObservation =
           toJsonQuotes(body)
@@ -137,7 +130,7 @@ object trackPlayer {
               _ <- eventstreams.events.publishOne(observation)
               response <- Ok()
             } yield response)
-      })
+      }}
   }
 
 }

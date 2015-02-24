@@ -3,15 +3,24 @@ package techex
 import javax.servlet._
 import javax.servlet.annotation.WebListener
 
+import org.http4s.server.HttpService
+import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.servlet.Http4sServlet
-import techex.cases.{notifyAboutUpdates, startup}
-import techex.domain.{Good, Notification, Slack, Alert}
+import techex.cases.{updateStream, startup}
+import techex.data.slack
+import techex.domain.{Alert, Good, Notification, Slack}
 
 @WebListener
 class Bootstrap extends ServletContextListener {
 
   override def contextInitialized(sce: ServletContextEvent): Unit = {
     println("Starting up app")
+
+
+    /*BlazeBuilder.bindHttp(8090)
+      .mountService(HttpService(updateStream.wsApi), "/stream")
+      .run.awaitShutdown()
+    */
 
     val ctx =
       sce.getServletContext
@@ -25,7 +34,7 @@ class Bootstrap extends ServletContextListener {
 
   override def contextDestroyed(sce: ServletContextEvent): Unit = {
     println("Shutting down app")
-    notifyAboutUpdates.print("Server shutting down").run
+    slack.sendMessage("Server shutting down").run
   }
 }
 
@@ -58,9 +67,9 @@ class InitingServlet extends Servlet {
       startup.setup(Map())
         .onFinish(maybeErr =>
         if (maybeErr.isDefined)
-          notifyAboutUpdates.sendNotification(Notification(Slack(), "Server failed to start: " + maybeErr.get.getMessage, Alert))
+          slack.sendMessage("Server failed to start: " + maybeErr.get.getMessage, Alert)
         else
-          notifyAboutUpdates.sendNotification(Notification(Slack(), "Server started", Good))
+          slack.sendMessage("Server started", Good)
         ).run
 
     wrapped = Some(new Http4sServlet(service))

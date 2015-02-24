@@ -7,7 +7,7 @@ import org.http4s.dsl._
 
 import _root_.argonaut._
 import Argonaut._
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 import techex._
 import techex.data.{codecJson, Storage}
 import techex.domain._

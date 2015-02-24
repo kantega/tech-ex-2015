@@ -14,7 +14,7 @@ import techex.domain._
 import scalaz._, Scalaz._
 
 import scalaz.concurrent.Task
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 
 object listPersonalQuests {
 

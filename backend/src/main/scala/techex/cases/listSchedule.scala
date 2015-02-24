@@ -2,7 +2,7 @@ package techex.cases
 
 import argonaut.Argonaut._
 import argonaut.CodecJson
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 import org.http4s.dsl._
 import org.joda.time.{Duration, DateTime}
 import techex._

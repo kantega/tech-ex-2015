@@ -7,6 +7,7 @@ import argonaut.Argonaut._
 import argonaut.Json
 import dispatch.{Http, url}
 import doobie.util.process
+import techex.domain.{Info, AttentionLevel}
 
 import scala.concurrent.ExecutionContext
 import scalaz.\/-
@@ -29,14 +30,15 @@ object slack {
   lazy val slack: Sink[Task, String] =
     process.sink((msg: String) => sendMessage(msg))
 
-  def sendMessage(txt: String, color: String = "#439FE0"): Task[Unit] = {
+  def sendMessage(txt: String, color: AttentionLevel = Info): Task[Unit] = {
 
 
     val attachments: Json =
       Json.array(Json(
         "fallback" -> jString(txt),
-        "color" -> jString(color),
-        "text" -> jString(txt)
+        "color" -> jString(color.asColor),
+        "text" -> jString(txt),
+        "mrkdwn_in" -> jArray(List(jString("text"), jString("pretext")))
       ))
 
 
@@ -48,10 +50,10 @@ object slack {
         "attachments" -> attachments
       )
 
-      Task.async(register => {
-        Http(h.setBody(json.nospaces)).onComplete(resp => {
-          register(\/-(()))
-        })
+    Task.async(register => {
+      Http(h.setBody(json.nospaces)).onComplete(resp => {
+        register(\/-(()))
       })
+    })
   }
 }

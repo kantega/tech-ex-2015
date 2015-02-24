@@ -7,7 +7,7 @@ import org.http4s.dsl._
 
 import _root_.argonaut._
 import Argonaut._
-import org.http4s.argonaut.ArgonautSupport._
+import org.http4s.argonaut._
 import techex.data._
 import techex.domain._
 
@@ -58,6 +58,10 @@ object playerSignup {
   sealed trait Signupresult
   case class SignupOk(player: PlayerData) extends Signupresult
   case class NickTaken(nick: Nick) extends Signupresult
+
+  val toFact: PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
+    case CreatePlayer(data) => State.state(List(PlayerCreated(data)))
+  }
 
   val getNick: String => Task[Nick] =
     jsonString =>
@@ -126,7 +130,7 @@ object playerSignup {
 
   def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@PUT -> Root / "player" / nick =>
-      EntityDecoder.text(req)(body => {
+      req.decode[String]{body => {
         val maybeCreatePlayerData =
           toJsonQuotes(body).decodeValidation[CreatePlayerData]
 
@@ -139,8 +143,8 @@ object playerSignup {
               _ <- result match {
                 case ok@SignupOk(playerData) =>
                   Storage.run(updateContext(playerData)) *>
-                    topic.publishOne(CreatePlayer(playerData)) *>
-                    notifyAboutUpdates.sendNotification(Notification(Slack(), ":thumbsup: Player " + nick + " just signed up with quests '" + playerData.player.privateQuests.map(_.name).mkString("' and '") + "'", Good))
+                    topic.publishOne(CreatePlayer(playerData))
+
                 case _                       => Task {}
               }
               response <- toResponse(result)
@@ -148,7 +152,7 @@ object playerSignup {
           }
         )
 
-      })
+      }}
   }
 
   case class PlatformData(plattformType: String, deviceToken: Option[String]) {

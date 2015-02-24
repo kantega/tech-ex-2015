@@ -2,6 +2,7 @@ package techex.cases
 
 import java.util.concurrent.Executors
 
+import doobie.util.process
 import org.http4s.server._
 import techex._
 import streams._
@@ -12,6 +13,7 @@ import techex.web.test
 import scalaz._, Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream._
+import scalaz.stream.async.mutable.Topic
 
 object startup {
   val streamRunner =
@@ -22,36 +24,31 @@ object startup {
     val handleInputQueue =
       async.unboundedQueue[InputMessage]
 
-    val notificationQueue =
-      async.unboundedQueue[Notification]
-
-
     val enqueueInputProcess =
       eventstreams.events.subscribe to handleInputQueue.enqueue
 
     val handleInputProcess =
       handleInputQueue.dequeue pipe
-        process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse noOp) pipe
+        process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse playerSignup.toFact) pipe
+        appendAccumP1(locateOnSessionTimeBoundaries.handleTimeBoundsFacts) pipe
         appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges) through
         Storage.updates[List[Fact]] pipe
-        process1.unchunk[Fact] pipe
-        notifyAboutUpdates.factNotifcationProcess1 pipe
-        process1.unchunk[Notification] to notificationQueue.enqueue
-
-    val notificationProcess =
-      notificationQueue.dequeue to notifyAboutUpdates.notificationSink
+        process1.unchunk[Fact] to eventstreams.factUdpates.publish
 
 
     Task {
+      notifySlack.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
+      printFactsToLog.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
+      notifyAPNS.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       enqueueInputProcess.handle(streams.printAndReset(enqueueInputProcess)).run.runAsync(_.toString)
       handleInputProcess.handle(streams.printAndReset(handleInputProcess)).run.runAsync(_.toString)
-      notificationProcess.handle(streams.printAndReset(notificationProcess)).run.runAsync(_.toString)
+
       println("Streams set up")
     }
   }
 
-  def noOp:PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
-    case _=> State.state(List())
+  def noOp: PartialFunction[InputMessage, State[Storage, List[Fact]]] = {
+    case _ => State.state(List())
   }
 
   def setupSchedule: Task[Unit] = {
@@ -76,7 +73,7 @@ object startup {
         db.inMemConfig
 
     for {
-      _ <- notifyAboutUpdates.sendNotification(Notification(Slack(), "Starting up server", Attention))
+      _ <- slack.sendMessage("Starting up server", Attention)
       _ <- setupStream
       _ <- setupSchedule
     //ds <- db.ds(dbConfig)
@@ -97,6 +94,7 @@ object startup {
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events) orElse
         listSchedule.restApi
+
     )
 
   }
