@@ -31,13 +31,13 @@ object notifySlack {
     case AwardedBadge(player, badge)        =>
       slack.sendMessage(":star: *" + player.player.nick.value + "* was awarded the _" + badge.achievement.name + "_ badge", Good)
     case ArrivedAtArea(player, area) =>
-      slack.sendMessage("*" + player.player.nick.value + "* visited *" + area.id +"*")
+      slack.sendMessage("*" + player.player.nick.value + "* visited _" + area.id +"_")
     case PlayerCreated(player) =>
       slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* just signed up with quests _" + player.player.privateQuests.map(_.name).mkString("_ and _") + "_", Good)
     case JoinedActivityLate(player,event) =>
-      slack.sendMessage(":thumbsdown: *" + player.player.nick.value + "* came _late_ for *" + event.name+ "*")
+      slack.sendMessage(":thumbsdown: *" + player.player.nick.value + "* came _late_ for _" + event.name+ "_")
     case JoinedOnTime(player,event) =>
-      slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* came _early_ for *" + event.name+ "*")
+      slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* came _early_ for _" + event.name+ "_")
     case any: Fact                     => Task {}
   }
 }

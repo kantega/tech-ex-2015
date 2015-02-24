@@ -44,7 +44,7 @@ class RegisterUserSpec extends Specification {
 
     "yield a player id and 201 Created when a correct body is set" in {
       val putPlayerTask =
-        Http(((h / "player" / "fatlerr") << "{'platform':{'type':'web','deviceToken':''},'preferences':{'drink':'wine','eat':'meat'}}").PUT)
+        Http(((h / "player" / "fatlerr") << "{'platform':{'type':'ios','deviceToken':'balle'},'preferences':{'drink':'wine','eat':'meat'}}").PUT)
 
       val response = putPlayerTask()
       response.getResponseBody ! ((response.getStatusCode mustEqual 201) and (response.getResponseBody.length must beGreaterThan(0)))

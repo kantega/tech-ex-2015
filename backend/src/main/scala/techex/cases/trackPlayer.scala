@@ -1,23 +1,16 @@
 package techex.cases
 
-import java.util.UUID
-
-import org.http4s.EntityDecoder
+import _root_.argonaut._
+import argonaut.Argonaut._
 import org.http4s.dsl._
 import org.joda.time.Instant
 import techex._
 import techex.data._
-import codecJson._
-import techex.data._
+import techex.data.codecJson._
 import techex.domain._
-
-import _root_.argonaut._
-import Argonaut._
-import org.http4s.argonaut._
 
 import scalaz.Scalaz._
 import scalaz._
-import scalaz.stream._
 import scalaz.stream.async.mutable.Topic
 
 object trackPlayer {

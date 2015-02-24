@@ -84,3 +84,6 @@ hs_err_pid*
 
 # dont share the credentials for AWS
 .aws-credentials
+
+#Dont share certificates
+*.pem

@@ -1,6 +1,5 @@
 package techex
 
-import argonaut.Parse
 import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._

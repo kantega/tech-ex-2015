@@ -3,8 +3,10 @@ package techex
 import javax.servlet._
 import javax.servlet.annotation.WebListener
 
+import org.http4s.server.HttpService
+import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.servlet.Http4sServlet
-import techex.cases.startup
+import techex.cases.{updateStream, startup}
 import techex.data.slack
 import techex.domain.{Alert, Good, Notification, Slack}
 
@@ -13,6 +15,12 @@ class Bootstrap extends ServletContextListener {
 
   override def contextInitialized(sce: ServletContextEvent): Unit = {
     println("Starting up app")
+
+
+    /*BlazeBuilder.bindHttp(8090)
+      .mountService(HttpService(updateStream.wsApi), "/stream")
+      .run.awaitShutdown()
+    */
 
     val ctx =
       sce.getServletContext

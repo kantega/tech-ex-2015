@@ -1,6 +1,7 @@
 package techex.cases
 
 import doobie.util.process
+import techex.data.appleNotifications
 import techex.domain._
 import techex.streams
 
@@ -11,7 +12,7 @@ object notifyAPNS {
   val notificationQueue =
     scalaz.stream.async.unboundedQueue[Fact]
 
-  def setup(facts:Process[Task,Fact]): Task[Unit] =
+  def setup(facts: Process[Task, Fact]): Task[Unit] =
     Task {
       (facts to notificationQueue.enqueue).run.runAsync(println(_))
       (notificationQueue.dequeue to sender)
@@ -24,12 +25,12 @@ object notifyAPNS {
 
 
   def handleFact: Fact => Task[Unit] = {
-    case AwardedBadge(playerData, badge) => playerData.platform match{
-      case iOS(Some(token)) => Task{println("Egentlig push til APNS: "+ "You have been awarded the "+badge.achievement.name+" badge")}
-      //appleNotifications.sendNotification(token, "You have been awarded the "+badge.achievement.name+" badge")
-      case _ => Task{}
+    case AwardedBadge(playerData, badge) => playerData.platform match {
+      case iOS(Some(token)) => // Task{println("Egentlig push til APNS: "+ "You have been awarded the "+badge.achievement.name+" badge")}
+        appleNotifications.sendNotification(token, "You have been awarded the " + badge.achievement.name + " badge")
+      case _                => Task {}
     }
 
-    case any: Fact          => Task {}
+    case any: Fact => Task {}
   }
 }

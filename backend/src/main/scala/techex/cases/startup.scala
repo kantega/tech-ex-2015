@@ -24,8 +24,6 @@ object startup {
     val handleInputQueue =
       async.unboundedQueue[InputMessage]
 
-
-
     val enqueueInputProcess =
       eventstreams.events.subscribe to handleInputQueue.enqueue
 
@@ -96,6 +94,7 @@ object startup {
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events) orElse
         listSchedule.restApi
+
     )
 
   }
