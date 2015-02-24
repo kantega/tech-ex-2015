@@ -52,11 +52,6 @@ class QuestTableViewController: UITableViewController {
         return configureTableCell(cell, indexPath: indexPath)
     }
 
-//    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
-//        let sizingCell = tableView.dequeueReusableCellWithIdentifier(badgeCellIdentifier) as UITableViewCell
-//        configureTableCell(sizingCell, indexPath: indexPath)
-//        return calculateHeightForCell(sizingCell)        
-//    }
     
     func configureTableCell(cell: BadgeTableViewCell, indexPath: NSIndexPath) -> BadgeTableViewCell {
         let achievement = quest.achievements[indexPath.row]
@@ -66,20 +61,9 @@ class QuestTableViewController: UITableViewController {
 
         cell.backgroundColor = UIColor.clearColor()
         var badge = achievement.achieved ? "BadgeCompleted": "BadgeUncompleted"
-//        let badgeView = UIImageView(image: UIImage(named: badge));
         cell.badgeImage.image = UIImage(named: badge);
         return cell
     }
-//    
-//    func calculateHeightForCell(sizingCell: UITableViewCell) -> CGFloat {
-//        sizingCell.bounds = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(sizingCell.bounds));
-//    
-//        sizingCell.setNeedsLayout();
-//        sizingCell.layoutIfNeeded();
-//    
-//        let size = sizingCell.contentView.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize);
-//        return size.height + 1 // Add 1 for the cell separator height
-//    }
 
     
     func configureLabel(label: UILabel?, text: String) {

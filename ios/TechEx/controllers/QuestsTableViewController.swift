@@ -20,18 +20,20 @@ class QuestsTableViewController: UITableViewController{
     }
     
     override func viewDidLoad() {
+        self.setTechExBackgroundImage()
+        
         loadInitialData()
         self.startDetectingBeacons()
-        
+
         NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("loadInitialData"), name: "badgeReceived", object: nil)
         
         self.refreshControl = UIRefreshControl()
-        //self.refreshControl!.attributedTitle = NSAttributedString(string: "Pull to refersh")
+        self.refreshControl?.tintColor = UIColor.whiteColor()
         self.refreshControl!.addTarget(self, action: "loadInitialData", forControlEvents: UIControlEvents.ValueChanged)
         self.tableView.addSubview(refreshControl!)
         
         self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
-        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
+        
         // Hide empty table rows
         self.tableView.tableFooterView = UIView(frame: CGRectZero)
 
@@ -47,7 +49,7 @@ class QuestsTableViewController: UITableViewController{
         
         request(.GET, "\(baseApiUrl)/quests/player/\(playerId)")
             .responseJSON { (req, resp, j, error) in
-                if error != nil {
+                if resp == nil || resp?.statusCode != 200 {
                     Alert.shared.showAlert("Unable to load quests. Please try again later.", title: "Error", buttonText: "OK", parent: self);
                     println("Error when loading quests: \(error)");
                 } else {
