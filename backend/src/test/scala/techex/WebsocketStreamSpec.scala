@@ -1,15 +1,14 @@
 package techex
 
-import argonaut.Parse
 import com.ning.http.client.AsyncHttpClient
-import com.ning.http.client.websocket.{WebSocketTextListener, WebSocket, WebSocketByteListener, WebSocketUpgradeHandler}
+import com.ning.http.client.websocket.{WebSocket, WebSocketTextListener, WebSocketUpgradeHandler}
 import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
 import techex.domain.{Near, Nick}
 
-class WebsocketSteamSpec  extends Specification {
+class WebsocketStreamSpec  extends Specification {
 
 
   try {
@@ -20,9 +19,9 @@ class WebsocketSteamSpec  extends Specification {
       "yield a stream of events through the websocket api" in {
 
         val  c = new AsyncHttpClient()
-        val websocket = c.prepareGet("ws://localhost:8080/observations")
+        val websocket = c.prepareGet("ws://localhost:8080/ws/observations")
           .execute(
-            new WebSocketUpgradeHandler.Builder().addWebSocketListener(
+            new WebSocketUpgradeHandler.Builder().setProtocol("text").addWebSocketListener(
               new WebSocketTextListener() {
 
                 def onOpen(ws:WebSocket): Unit = {

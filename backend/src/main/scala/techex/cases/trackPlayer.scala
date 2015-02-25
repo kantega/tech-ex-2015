@@ -116,7 +116,6 @@ object trackPlayer {
     case req@POST -> Root / "location" / playerId =>
 
       req.decode[String]{body => {
-        //notifyAboutUpdates.sendMessageToSlack("Request received: "+body.toString).run
         val maybeObservation =
           toJsonQuotes(body)
             .decodeValidation[ObservationData]

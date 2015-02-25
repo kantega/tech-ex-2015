@@ -2,6 +2,7 @@ package techex.cases
 
 import java.util.concurrent.Executors
 
+import com.typesafe.config.Config
 import doobie.util.process
 import org.http4s.server._
 import techex._
@@ -64,11 +65,11 @@ object startup {
     tt.run
   }
 
-  def setup(cfg: Map[String, String]): Task[HttpService] = {
+  def setup(cfg: Config): Task[(HttpService,WSHandler)] = {
 
     val dbConfig =
-      if (cfg.getOrElse("db", "mem") == "mysql")
-        db.mysqlConfig(cfg.getOrElse("db.username", ""), cfg.getOrElse("db.password", ""))
+      if (getStringOr(cfg,"db.type", "mem") == "mysql")
+        db.mysqlConfig(cfg.getString("db.username"), cfg.getString("db.password"))
       else
         db.inMemConfig
 
@@ -76,13 +77,10 @@ object startup {
       _ <- slack.sendMessage("Starting up server", Attention)
       _ <- setupStream
       _ <- setupSchedule
-    //ds <- db.ds(dbConfig)
-    //_ <- ds.transact(PlayerDAO.create)
-    //_ <- Task.delay(println("Created player table"))
-    //_ <- ds.transact(ObservationDAO.createObservationtable)
-    //_ <- Task.delay(println("Created observation table"))
+      ds <- db.ds(dbConfig)
+      _ <- ds.transact(InputMessageDAO.createObservationtable)
 
-    } yield HttpService(
+    } yield (HttpService(
       playerSignup.restApi(eventstreams.events) orElse
         test.testApi orElse
         listPersonalAchievements.restApi orElse
@@ -94,8 +92,7 @@ object startup {
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events) orElse
         listSchedule.restApi
-
-    )
+    ),updateStream.wsApi(eventstreams.factUdpates))
 
   }
 }

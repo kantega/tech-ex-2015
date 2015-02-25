@@ -1,26 +1,28 @@
 package techex.cases
 
-import java.util.concurrent.{ScheduledExecutorService, Executors}
+import java.util.concurrent.{Executors, ScheduledExecutorService}
 
+import argonaut.Argonaut._
+import argonaut._
 import doobie.util.process
 import org.http4s.dsl._
-import org.http4s.server.websocket
 import org.http4s.websocket.WebsocketBits.{Text, WebSocketFrame}
 import techex._
+import techex.data.codecJson
+import techex.domain.Fact
+import techex.web.WebSocket
 
-import scala.concurrent.duration._
 import scalaz.concurrent.Task
 import scalaz.stream._
-
+import scalaz.stream.async.mutable.Topic
+import codecJson._
 object updateStream {
 
   implicit val executor: ScheduledExecutorService =
     Executors.newSingleThreadScheduledExecutor()
 
-  def wsApi: WebHandler = {
-    case req@GET -> Root / "observations" =>
-      // Send a Text message with payload 'Ping!' every second
-      val src = Process.awakeEvery(10.seconds).map { d => Text("{\"ping\":\"ping\"}")}
+  def wsApi(factUdpates: Topic[Fact]): WSHandler = {
+    case req@GET -> Root / "ws" / "observations" =>
 
       // Print received Text frames, and, on completion, notify the console
       val sink: Sink[Task, WebSocketFrame] = process.sink[Task, WebSocketFrame] {
@@ -28,9 +30,10 @@ object updateStream {
         case f             => Task.delay(println(s"Unknown type: $f"))
       }.onComplete(Process.eval(Task {println("Terminated!")}).drain)
 
-      // Use the WS helper to make the Task[Response] carrying the info
-      // needed for the backend to upgrade to a WebSocket connection
-      websocket.WS(src, sink)
+
+      val src = factUdpates.subscribe.map(fact => Text(fact.asJson.spaces4))
+
+      Task{WebSocket(src,sink)}
 
   }
 }

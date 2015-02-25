@@ -2,6 +2,7 @@ package techex
 
 import argonaut.Argonaut._
 import argonaut.{Json, Parse}
+import com.typesafe.config.ConfigFactory
 import dispatch.Defaults._
 import dispatch.{host, _}
 import org.http4s.server.jetty.JettyBuilder
@@ -20,9 +21,10 @@ object TestServer {
   implicit val ec: ExecutionContext =
     ExecutionContext.fromExecutor(pool)*/
 
+
   val server = JettyBuilder
     .bindHttp(8080)
-    .mountService(startup.setup(Map()).run, "")
+    .mountServlet(new InitingServlet(),"/*")
 
   val h = host("localhost", 8080)
 

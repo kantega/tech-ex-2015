@@ -1,7 +1,7 @@
 package techex.cases
 
 import org.joda.time.DateTime
-import techex.data.{Storage, InputMessage}
+import techex.data._
 import techex.domain._
 
 import scalaz.State

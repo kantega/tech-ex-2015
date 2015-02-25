@@ -3,7 +3,7 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.{Duration, DateTime, Instant}
-import techex.data.InputMessage
+import techex.data.{Observation, InputMessage}
 import scalaz._, Scalaz._
 import scalaz.Tree
 
@@ -26,7 +26,13 @@ object areas {
   val technoport2015  = Area("Technoport 2015")
   val auditoriumExit  = Area("Auditorium exit")
   val coffeeStand     = Area("Coffee stand")
-
+  val storhubben      = Area("Storhubben")
+  val mrtTuring       = Area("Turing")
+  val mrtTesla        = Area("Tesla")
+  val mrtEngelbart    = Area("Engelbart")
+  val mrtAda          = Area("Ada")
+  val mrtHopper       = Area("Hopper")
+  val mrtCurie       = Area("Curie")
   val testArea1     = Area("Stand1")
   val testArea2     = Area("Stand2")
   val testArea3     = Area("Stand3")
@@ -46,9 +52,15 @@ object areas {
       Beacon("58796:18570") ->(Near, testArea1),
       Beacon("51194:16395") ->(Near, testArea2),
       Beacon("54803:59488") ->(Near, testArea3),
-      Beacon("j") ->(Near, kantegaCoffee),
+      Beacon("64915:4698") ->(Near, kantegaCoffee),
       Beacon("k") ->(Near, coffeeStand),
       Beacon("l") ->(Near, meetingPoint),
+      Beacon("40647:50232") ->(Near, mrtTuring),
+      Beacon("11910:28667") ->(Near, mrtTesla),
+      Beacon("33505:43782") ->(Near, mrtEngelbart),
+      Beacon("23114:24160") ->(Near, mrtAda),
+      Beacon("27012:1190") ->(Near, mrtHopper),
+      Beacon("31470: 23971") ->(Near, mrtCurie),
       Beacon("m") ->(Far, auditorium))
 
   val locationHierarcy: Tree[Area] =
@@ -133,6 +145,13 @@ trait Proximity {
       case (Far, Far)         => true
       case _                  => false
     }
+
+  def asString = this match {
+    case Immediate => "immediate"
+    case Near      => "near"
+    case Far       => "far"
+  }
+
 }
 
 object Proximity {
@@ -151,7 +170,7 @@ case class ObservationData(beacon: Beacon, proximity: Proximity) {
   def toObservation(playerId: PlayerId, instant: Instant) =
     Observation(beacon, playerId, instant, proximity)
 }
-case class Observation(beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage
+
 case class Timed[A](timestamp: Instant, value: A)
 case class LocationUpdate(playerId: PlayerId, area: Area, instant: Instant)
 case class UpdateMeta(playerId: PlayerId, instant: Instant)
