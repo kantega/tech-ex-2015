@@ -25,7 +25,7 @@ object notifyAPNS {
 
 
   def handleFact: Fact => Task[Unit] = {
-    case AwardedBadge(playerData, badge) => playerData.platform match {
+    case AwardedBadge(playerData, badge,_) => playerData.platform match {
       case iOS(Some(token)) => // Task{println("Egentlig push til APNS: "+ "You have been awarded the "+badge.achievement.name+" badge")}
         appleNotifications.sendNotification(token, "You have been awarded the " + badge.achievement.name + " badge")
       case _                => Task {}

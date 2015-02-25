@@ -24,7 +24,7 @@ object calculatAchievements {
         matcher(fap)
 
       val facts =
-        updates.map(b => EarnedAchievemnt(fap.player, b))
+        updates.map(b => EarnedAchievemnt(fap.player, b, fap.instant))
 
       val nextCtx =
         ctx
@@ -42,8 +42,8 @@ object calculatAchievements {
     case ab: EarnedAchievemnt => State { ctx =>
 
       val facts =
-        if (ab.player.player.privateQuests.exists( _.containsAchievement(ab.achievemnt)))
-          List(AwardedBadge(ab.player, Badge(ab.achievemnt)))
+        if (ab.player.player.privateQuests.exists(_.containsAchievement(ab.achievemnt)))
+          List(AwardedBadge(ab.player, Badge(ab.achievemnt),ab.instant))
         else
           List()
 

@@ -1,23 +1,21 @@
 package techex.cases
 
-import doobie.imports._
-import techex._
-import org.http4s._
-import org.http4s.dsl._
-
 import _root_.argonaut._
-import Argonaut._
+import org.http4s._
+import argonaut._,Argonaut._
 import org.http4s.argonaut._
+import org.http4s.dsl._
+import org.joda.time.Instant
+import techex._
 import techex.data._
+import techex.data.codecJson._
 import techex.domain._
 
 import scala.util.Random
-import scalaz._, Scalaz._
-
+import scalaz.Scalaz._
+import scalaz._
 import scalaz.concurrent.Task
-import scalaz.stream.Sink
 import scalaz.stream.async.mutable.Topic
-import codecJson._
 
 object playerSignup {
 
@@ -33,7 +31,7 @@ object playerSignup {
       val playerData =
         ctx.players.find(entry => entry.player.nick === data.nick)
 
-      (ctx,List(PlayerCreated(playerData.get)))}
+      (ctx,List(PlayerCreated(playerData.get,Instant.now())))}
   }
 
   val getNick: String => Task[Nick] =

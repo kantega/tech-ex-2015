@@ -14,23 +14,23 @@ object quests {
     fact { case j: JoinedOnStart => true}
 
   val leftSameOnTime =
-    ctx({ case (LeftOnEnd(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
+    ctx({ case (LeftOnEnd(_, entry,_), matches) if matches.exists(matched({ case LeftActivityEarly(_, e,_) => entry === e})) => true})
 
 
   val leftActivity =
-    fact({ case LeftActivityEarly(_, entry) => true})
+    fact({ case LeftActivityEarly(_, entry,_) => true})
 
   val joinedAnActivityLate =
-    fact({ case JoinedActivityLate(_, entry) => true})
+    fact({ case JoinedActivityLate(_, entry,_) => true})
 
   val joinedSameActivityLate =
-    ctx({ case (JoinedActivityLate(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
+    ctx({ case (JoinedActivityLate(_, entry,_), matches) if matches.exists(matched({ case LeftActivityEarly(_, e,_) => entry === e})) => true})
 
   val joinedActivityAtSameArea =
-    ctx({ case (JoinedActivityLate(_, entry), matches) if matches.exists(matched({ case ArrivedAtArea(_, e) => entry.area === e})) => true})
+    ctx({ case (JoinedActivityLate(_, entry,_), matches) if matches.exists(matched({ case ArrivedAtArea(_, e,_) => entry.area === e})) => true})
 
   val leftSameActivity =
-    ctx({ case (LeftActivityEarly(_, entry), matches) if matches.exists(matched({ case JoinedActivityLate(_, e) => entry === e})) => true})
+    ctx({ case (LeftActivityEarly(_, entry,_), matches) if matches.exists(matched({ case JoinedActivityLate(_, e,_) => entry === e})) => true})
 
   val coffee =
     visited(areas.coffeeStand)
@@ -46,9 +46,9 @@ object quests {
 
   val leftArea =
     fact({ case entered: LeftArea => true})
-  
+
   val leftSameArea =
-    ctx({ case (LeftArea(_, area), matches) if matches.exists(matched({ case ArrivedAtArea(_, areaToMatch) => area === areaToMatch})) => true})
+    ctx({ case (LeftArea(_, area,_), matches) if matches.exists(matched({ case ArrivedAtArea(_, areaToMatch,_) => area === areaToMatch})) => true})
 
 
   val metOtherPlayer =
@@ -194,7 +194,7 @@ object quests {
     )
 
   val ontimePred =
-    fact{ case arr:ArrivedAtArea if DateTime.now().getHourOfDay < 9 => true}
+    fact { case arr: ArrivedAtArea if DateTime.now().getHourOfDay < 9 => true}
 
   //val onTimeDayTwo =
 

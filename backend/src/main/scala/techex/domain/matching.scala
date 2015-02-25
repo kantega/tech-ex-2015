@@ -62,7 +62,7 @@ object predicates {
 
 
   def visited(area: Area) =
-    fact({ case ArrivedAtArea(_, a) if a === area => true})
+    fact({ case ArrivedAtArea(_, a,_) if a === area => true})
 
 
   def ctx(f: PartialFunction[(Fact, List[Fact]), Boolean]) =
@@ -140,13 +140,7 @@ sealed trait EventPattern {
         }
       }
     }
-    //println("")
-    //println(">>>  " + s.fact.fact)
-    val result = go(this)
-    //println("    " + result._1)
-    //println("<<< " + result._2)
-
-    result
+    go(this)
   }
 
   def ++(p: EventPattern): EventPattern =
@@ -193,9 +187,9 @@ sealed trait EventPattern {
 
   def accum(history: List[Token]): EventPattern = {
     this match {
-      case Halted()        => Halted()
+      case Halted()              => Halted()
       case Matched(tokens, next) => Matched(Token.append(tokens, history), next)
-      case w@Waiting(f)          => Matched(history, Waiting(Accumulate(w,history)))
+      case w@Waiting(f)          => Matched(history, Waiting(Accumulate(w, history)))
     }
   }
 }
@@ -214,8 +208,8 @@ trait WaitFunc {
 }
 
 
-case class Accumulate(p:Waiting,history:List[Token]) extends WaitFunc{
-  def apply(t:Token) =
+case class Accumulate(p: Waiting, history: List[Token]) extends WaitFunc {
+  def apply(t: Token) =
     p.f(t).accum(history)
 
 }

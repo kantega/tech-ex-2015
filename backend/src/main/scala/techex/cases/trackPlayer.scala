@@ -75,11 +75,11 @@ object trackPlayer {
 
         val left =
           lastLocation
-            .map(area => LeftArea(player, area))
+            .map(area => LeftArea(player, area,locationUpdate.instant))
 
         val arrived =
           nextLocation
-            .map(area => ArrivedAtArea(player, area))
+            .map(area => ArrivedAtArea(player, area,locationUpdate.instant))
 
         val updates =
           left ::: arrived
@@ -100,8 +100,8 @@ object trackPlayer {
           ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
             .flatMap(other =>
             List(
-              MetPlayer(playerData, other),
-              MetPlayer(other, playerData)))
+              MetPlayer(playerData, other,location.instant),
+              MetPlayer(other, playerData,location.instant)))
 
 
         val nextState =
