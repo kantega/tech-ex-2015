@@ -97,7 +97,7 @@ object playerSignup {
 
 
   val toResponse: Signupresult => Task[Response] = {
-    case SignupOk(player) => Created(player.player.asJson)
+    case SignupOk(player) => Ok(player.player.asJson)
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
