@@ -17,42 +17,11 @@ import scalaz._, Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream.Sink
 import scalaz.stream.async.mutable.Topic
-
+import codecJson._
 
 object playerSignup {
 
-  implicit def playerCodecJson: CodecJson[Player] =
-    CodecJson(
-      (p: Player) =>
-        ("nick" := p.nick.value) ->:
-          ("id" := p.id.value) ->:
-          ("preferences" := p.preference) ->:
-          ("quests" := p.privateQuests.map(_.id.value)) ->:
-          jEmptyObject,
-      c => for {
-        id <- (c --\ "id").as[String]
-        nick <- (c --\ "nick").as[String]
-        preference <- (c --\ "preferences").as[Option[PlayerPreference]]
-        privateQuests <- (c --\ "quests").as[List[String]]
-      } yield
-        Player(
-          PlayerId(id),
-          Nick(nick),
-          preference.getOrElse(PlayerPreference(Coke(), Salad())),
-          privateQuests.map(str => quests.questMap(Qid(str))))
-    )
 
-  implicit val platformDecode: CodecJson[PlatformData] =
-    casecodec2(PlatformData, PlatformData.unapply)("type", "deviceToken")
-
-  implicit def playerPreferenceCode: CodecJson[PlayerPreference] =
-    casecodec2(
-      (drinkS: String, eatS: String) => PlayerPreference(Drink(drinkS), Eat(eatS)),
-      (preference: PlayerPreference) => Some(preference.drink.asString, preference.eat.asString)
-    )("drink", "eat")
-
-  implicit val createPlayerDataDecode: CodecJson[CreatePlayerData] =
-    casecodec2(CreatePlayerData, CreatePlayerData.unapply)("platform", "preferences")
 
 
   sealed trait Signupresult
@@ -60,9 +29,9 @@ object playerSignup {
   case class NickTaken(nick: Nick) extends Signupresult
 
   val toFact: PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
-    case CreatePlayer(nick,data) => State{ctx =>
+    case CreatePlayer(data) => State{ctx =>
       val playerData =
-        ctx.players.find(entry => entry.player.nick === nick)
+        ctx.players.find(entry => entry.player.nick === data.nick)
 
       (ctx,List(PlayerCreated(playerData.get)))}
   }
@@ -105,14 +74,14 @@ object playerSignup {
         (ctx.putPlayerData(playerData.player.id, playerData), playerData))
 
 
-  val createPlayerIfNickAvailable: (Nick, CreatePlayerData) => State[Storage, Signupresult] =
-    (nick, createData) =>
+  val createPlayerIfNickAvailable: CreatePlayerData => State[Storage, Signupresult] =
+     createData =>
       for {
-        taken <- checkNickTaken(nick)
-        randomPersonQuests <- State.state(selectPersonalQuests(nick))
-        player <- State.state(createPlayer(nick, createData.preferences.getOrElse(PlayerPreference.default), randomPersonQuests))
+        taken <- checkNickTaken(createData.nick)
+        randomPersonQuests <- State.state(selectPersonalQuests(createData.nick))
+        player <- State.state(createPlayer(createData.nick, createData.preferences.getOrElse(PlayerPreference.default), randomPersonQuests))
         rsult <- State.state(
-          if (taken) NickTaken(nick)
+          if (taken) NickTaken(createData.nick)
           else SignupOk(PlayerData(
             player,
             Set(),
@@ -133,7 +102,7 @@ object playerSignup {
   }
 
   def restApi(topic: Topic[InputMessage]): WebHandler = {
-    case req@PUT -> Root / "player" / nick =>
+    case req@POST -> Root / "player"  =>
       req.decode[String]{body => {
         val maybeCreatePlayerData =
           toJsonQuotes(body).decodeValidation[CreatePlayerData]
@@ -143,11 +112,11 @@ object playerSignup {
           createPlayerData => {
 
             for {
-              result <- Storage.run(createPlayerIfNickAvailable(Nick(nick), createPlayerData))
+              result <- Storage.run(createPlayerIfNickAvailable(createPlayerData))
               _ <- result match {
                 case ok@SignupOk(playerData) =>
                   Storage.run(updateContext(playerData)) *>
-                    topic.publishOne(CreatePlayer(Nick(nick),createPlayerData))
+                    topic.publishOne(CreatePlayer(createPlayerData))
 
                 case _                       => Task {}
               }
@@ -167,6 +136,6 @@ object playerSignup {
         case _         => Web()
       }
   }
-  case class CreatePlayerData(platform: PlatformData, preferences: Option[PlayerPreference])
+  case class CreatePlayerData(nick:Nick, platform: PlatformData, preferences: Option[PlayerPreference])
 
 }

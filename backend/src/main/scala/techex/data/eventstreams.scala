@@ -25,7 +25,7 @@ trait Command extends InputMessage
 case class Observation(beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage{
   val msgType = "Observation"
 }
-case class CreatePlayer(nick:Nick,data:CreatePlayerData) extends Command{
+case class CreatePlayer(data:CreatePlayerData) extends Command{
   val msgType = "CreatePlayer"
 }
 

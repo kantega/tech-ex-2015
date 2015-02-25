@@ -36,7 +36,7 @@ object notifySlack {
       slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* just signed up with quests _" + player.player.privateQuests.map(_.name).mkString("_ and _") + "_", Good)
     case JoinedActivityLate(player,event) =>
       slack.sendMessage(":thumbsdown: *" + player.player.nick.value + "* came _late_ for _" + event.name+ "_")
-    case JoinedOnTime(player,event) =>
+    case JoinedOnStart(player,event) =>
       slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* came _early_ for _" + event.name+ "_")
     case any: Fact                     => Task {}
   }

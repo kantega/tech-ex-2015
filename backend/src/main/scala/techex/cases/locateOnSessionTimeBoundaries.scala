@@ -48,7 +48,7 @@ object locateOnSessionTimeBoundaries {
       val joinedFacts =
         ctx.players
           .filter(_.movements.headOption.exists(lu => lu.area === started.entry.area))
-          .map(player => JoinedOnTime(player, started.entry))
+          .map(player => JoinedOnStart(player, started.entry))
 
       (ctx.addFacts(joinedFacts), joinedFacts)
     }
@@ -59,7 +59,7 @@ object locateOnSessionTimeBoundaries {
       val endedfacts =
         ctx.players
           .filter(_.movements.headOption.exists(lu => lu.area === ended.entry.area))
-          .map(player => LeftOnTime(player, ended.entry))
+          .map(player => LeftOnEnd(player, ended.entry))
 
       (ctx.addFacts(endedfacts), endedfacts)
     }

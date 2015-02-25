@@ -2,7 +2,7 @@ package techex.domain
 
 import java.util.UUID
 
-import org.joda.time.Instant
+import org.joda.time.{DateTime, Instant}
 import techex.domain.predicates._
 import matching._
 import scalaz._, Scalaz._
@@ -10,20 +10,20 @@ import scalaz._, Scalaz._
 object quests {
 
   //Patterns
-  val joinedActivityOnTime =
-    fact { case j: JoinedOnTime => true}
+  val joinedAnActivityOnTime =
+    fact { case j: JoinedOnStart => true}
 
   val leftSameOnTime =
-    ctx({ case (LeftOnTime(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
+    ctx({ case (LeftOnEnd(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
 
 
   val leftActivity =
     fact({ case LeftActivityEarly(_, entry) => true})
 
-  val joinedActivity =
+  val joinedAnActivityLate =
     fact({ case JoinedActivityLate(_, entry) => true})
 
-  val joinedSameActivity =
+  val joinedSameActivityLate =
     ctx({ case (JoinedActivityLate(_, entry), matches) if matches.exists(matched({ case LeftActivityEarly(_, e) => entry === e})) => true})
 
   val joinedActivityAtSameArea =
@@ -39,19 +39,24 @@ object quests {
     visited(areas.toiletAtSamf) or visited(areas.toiletAtSeminar)
 
   val attendedWholeSession =
-    joinedActivityOnTime ~> notExists(leftSameActivity) ~>< leftSameOnTime
+    joinedAnActivityOnTime ~> notExists(leftSameActivity) ~>< leftSameOnTime
 
   val enteredArea =
     fact({ case entered: ArrivedAtArea => true})
 
   val leftArea =
     fact({ case entered: LeftArea => true})
+  
+  val leftSameArea =
+    ctx({ case (LeftArea(_, area), matches) if matches.exists(matched({ case ArrivedAtArea(_, areaToMatch) => area === areaToMatch})) => true})
+
 
   val metOtherPlayer =
     fact({ case met: MetPlayer => true})
 
 
   //Badges
+  val seetalksiron          = Achievement(Bid("seetalksiron"), "First talk attended", "Attending one talks")
   val seetalksbronze        = Achievement(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
   val seetalkssilver        = Achievement(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
   val seetalksgold          = Achievement(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
@@ -85,6 +90,8 @@ object quests {
       )
     )
 
+  val attendASessionPred =
+    visited(areas.mrtTuring) or visited(areas.mrtTesla) or visited(areas.mrtHopper) or visited(areas.mrtCurie)
 
   val attendAllSessions =
     Quest(
@@ -98,6 +105,32 @@ object quests {
         fundingsession
       )
     )
+
+  val TEMPattendAllSessionsProgressTracker =
+    StatefulTracker[Set[Area], Achievement](exists(attendASessionPred), Set()) { token => State { set =>
+      val entered =
+        token.fact.asInstanceOf[ArrivedAtArea]
+
+      val newSet =
+        set + entered.area
+
+      val isIncrease =
+        set.size != newSet.size
+
+      val badge =
+        if (isIncrease)
+          newSet.size match {
+            case 1 => seetalksiron.some
+            case 2 => seetalksbronze.some
+            case 3 => seetalkssilver.some
+            case 4 => seetalksgold.some
+            case _ => none
+          }
+        else none
+
+      (newSet, badge)
+    }
+    }
 
   val attendAllSessionsProgressTracker =
     CountingTracker(0, 6, attendedWholeSession) {
@@ -160,6 +193,11 @@ object quests {
         ontime)
     )
 
+  val ontimePred =
+    fact{ case arr:ArrivedAtArea if DateTime.now().getHourOfDay < 9 => true}
+
+  //val onTimeDayTwo =
+
 
   val networking =
     Quest(
@@ -214,7 +252,8 @@ object quests {
       visitAllStands,
       seeAllTalks,
       networking,
-      antihero
+      antihero,
+      eagerNess
     )
 
   val questPermutations =
@@ -231,6 +270,7 @@ object quests {
 
   val badges =
     List(
+      seetalksiron,
       seetalksbronze,
       seetalksgold,
       seetalkssilver,
@@ -254,7 +294,8 @@ object quests {
   val trackerForQuest: Map[Qid, PatternOutput[Achievement]] =
     Map(
       visitAllStands.id -> visitAllStandsTracker,
-      networking.id -> networkingTracker
+      networking.id -> networkingTracker,
+      seeAllTalks.id -> TEMPattendAllSessionsProgressTracker
     )
 
   val zeroTracker =

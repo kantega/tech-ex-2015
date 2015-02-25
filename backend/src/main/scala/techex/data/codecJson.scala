@@ -3,6 +3,7 @@ package techex.data
 import argonaut.Argonaut._
 import argonaut.{CodecJson, DecodeJson, EncodeJson, JsonLong}
 import org.joda.time.Instant
+import techex.cases.playerSignup.{CreatePlayerData, PlatformData}
 import techex.domain._
 
 object codecJson {
@@ -68,9 +69,44 @@ object codecJson {
           jEmptyObject
     )
 
-  implicit val nickCodec: CodecJson[Nick] =
-    casecodec1(Nick.apply, Nick.unapply)("value")
+  implicit val nickDecode: DecodeJson[Nick] =
+    jdecode1((str: String) => Nick(str))
 
+  implicit val nickEncode: EncodeJson[Nick] =
+    jencode1((nick: Nick) => nick.value)
+
+  implicit def playerCodecJson: CodecJson[Player] =
+    CodecJson(
+      (p: Player) =>
+        ("nick" := p.nick.value) ->:
+          ("id" := p.id.value) ->:
+          ("preferences" := p.preference) ->:
+          ("quests" := p.privateQuests.map(_.id.value)) ->:
+          jEmptyObject,
+      c => for {
+        id <- (c --\ "id").as[String]
+        nick <- (c --\ "nick").as[String]
+        preference <- (c --\ "preferences").as[Option[PlayerPreference]]
+        privateQuests <- (c --\ "quests").as[List[String]]
+      } yield
+        Player(
+          PlayerId(id),
+          Nick(nick),
+          preference.getOrElse(PlayerPreference(Coke(), Salad())),
+          privateQuests.map(str => quests.questMap(Qid(str))))
+    )
+
+  implicit val platformDecode: CodecJson[PlatformData] =
+    casecodec2(PlatformData, PlatformData.unapply)("type", "deviceToken")
+
+  implicit def playerPreferenceCode: CodecJson[PlayerPreference] =
+    casecodec2(
+      (drinkS: String, eatS: String) => PlayerPreference(Drink(drinkS), Eat(eatS)),
+      (preference: PlayerPreference) => Some(preference.drink.asString, preference.eat.asString)
+    )("drink", "eat")
+
+  implicit val createPlayerDataDecode: CodecJson[CreatePlayerData] =
+    casecodec3(CreatePlayerData, CreatePlayerData.unapply)("nick", "platform", "preferences")
 
   implicit val codecBeacon: CodecJson[Beacon] =
     casecodec1(Beacon.apply, Beacon.unapply)("value")
@@ -82,7 +118,7 @@ object codecJson {
     CodecJson((instant: Instant) => JsonLong(instant.getMillis).asJsonOrNull, c => c.as[Long].map(l => new Instant(l)))
 
   implicit val codecCrateUser: CodecJson[CreatePlayer] =
-    casecodec2(CreatePlayer.apply, CreatePlayer.unapply)("nick", "data")
+    casecodec1(CreatePlayer.apply, CreatePlayer.unapply)("data")
 
   implicit val codecObservation: CodecJson[Observation] =
     casecodec4(Observation.apply, Observation.unapply)("beacon", "playerId", "instant", "proximity")
@@ -98,21 +134,21 @@ object codecJson {
 
   implicit val encodeFact: EncodeJson[Fact] =
     EncodeJson((fact: Fact) => fact match {
-      case JoinedActivityLate(player, event)          => Map("activity"->"joinedLate","event"->event.id.value,"area"->event.area.id).asJson
-      case LeftActivityEarly(player, event)           => Map("activity"->"leftEarly","event"->event.id.value,"area"->event.area.id).asJson
-      case JoinedOnTime(player, event)                => Map("activity"->"arrivedOnTime","event"->event.id.value,"area"->event.area.id).asJson
-      case LeftOnTime(player, event)                  => Map("activity"->"leftOnTime","event"->event.id.value,"area"->event.area.id).asJson
-      case ArrivedAtArea(player, area)                => Map("activity"->"arrivedAtArea","area"->area.id).asJson
-      case LeftArea(player, area)                     => Map("activity"->"leftFromArea","area"->area.id).asJson
-      case MetPlayer(player, otherPlayer)             => Map("activity"->"metOther","player"->player.player.nick.value,"other"->otherPlayer.player.nick.value).asJson
-      case EarnedAchievemnt(player, achievemnt)       => Map("activity"->"earnedAchievement","player"->player.player.nick.value,"badge"->achievemnt.id.value).asJson
-      case AwardedBadge(player, badge)                => Map("activity"->"earnedBadge","player"->player.player.nick.value,"badge"->badge.achievement.id.value).asJson
-      case PlayerCreated(player)                      => Map("activity"->"playerCreated","player"->player.player.nick.value).asJson
-      case Started(instant, entry)                    => Map("activity"->"eventStarted","event"->entry.id.value,"area"->entry.area.id).asJson
-      case Ended(instant, entry)                      => Map("activity"->"eventEnded","event"->entry.id.value,"area"->entry.area.id).asJson
-      case Added(entry)                               => Map("activity"->"eventAdded","event"->entry.id.value,"area"->entry.area.id).asJson
-      case Removed(entry)                             => Map("activity"->"eventRemoved","event"->entry.id.value,"area"->entry.area.id).asJson
-      case _                                          => jEmptyObject
+      case JoinedActivityLate(player, event)    => Map("activity" -> "joinedLate", "event" -> event.id.value, "area" -> event.area.id).asJson
+      case LeftActivityEarly(player, event)     => Map("activity" -> "leftEarly", "event" -> event.id.value, "area" -> event.area.id).asJson
+      case JoinedOnStart(player, event)         => Map("activity" -> "arrivedOnTime", "event" -> event.id.value, "area" -> event.area.id).asJson
+      case LeftOnEnd(player, event)             => Map("activity" -> "leftOnTime", "event" -> event.id.value, "area" -> event.area.id).asJson
+      case ArrivedAtArea(player, area)          => Map("activity" -> "arrivedAtArea", "area" -> area.id).asJson
+      case LeftArea(player, area)               => Map("activity" -> "leftFromArea", "area" -> area.id).asJson
+      case MetPlayer(player, otherPlayer)       => Map("activity" -> "metOther", "player" -> player.player.nick.value, "other" -> otherPlayer.player.nick.value).asJson
+      case EarnedAchievemnt(player, achievemnt) => Map("activity" -> "earnedAchievement", "player" -> player.player.nick.value, "badge" -> achievemnt.id.value).asJson
+      case AwardedBadge(player, badge)          => Map("activity" -> "earnedBadge", "player" -> player.player.nick.value, "badge" -> badge.achievement.id.value).asJson
+      case PlayerCreated(player)                => Map("activity" -> "playerCreated", "player" -> player.player.nick.value).asJson
+      case Started(instant, entry)              => Map("activity" -> "eventStarted", "event" -> entry.id.value, "area" -> entry.area.id).asJson
+      case Ended(instant, entry)                => Map("activity" -> "eventEnded", "event" -> entry.id.value, "area" -> entry.area.id).asJson
+      case Added(entry)                         => Map("activity" -> "eventAdded", "event" -> entry.id.value, "area" -> entry.area.id).asJson
+      case Removed(entry)                       => Map("activity" -> "eventRemoved", "event" -> entry.id.value, "area" -> entry.area.id).asJson
+      case _                                    => jEmptyObject
     }
 
 

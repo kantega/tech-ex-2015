@@ -57,6 +57,9 @@ object InputMessageDAO {
   import codecJson._
 
 
+  //val storeInputProcess =
+  //  Process.re(InputMessageDAO.storeObservation))
+
   def createObservationtable: ConnectionIO[Int] = {
     sql"""
           CREATE TABLE IF NOT EXISTS observations (
