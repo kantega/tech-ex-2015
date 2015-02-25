@@ -23,7 +23,7 @@
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fbX-71-Wiy" userLabel="Welcome view">
                                 <rect key="frame" x="150" y="150" width="300" height="300"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -412,23 +412,6 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
             </objects>
             <point key="canvasLocation" x="342" y="178"/>
         </scene>
-        <!--View Controller-->
-        <scene sceneID="g72-ml-nYg">
-            <objects>
-                <viewController id="pz7-Cl-JgG" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="wUR-eU-FWS"/>
-                        <viewControllerLayoutGuide type="bottom" id="VHJ-b3-TAU"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="xIm-eC-soy">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                    </view>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="LH3-UF-auZ" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-        </scene>
     </scenes>
     <resources>
         <image name="BadgeCompletedLarge" width="99" height="146"/>
@@ -438,6 +421,6 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
         <image name="Text field background" width="5" height="5"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="iIe-dz-Lqz"/>
+        <segue reference="FmP-Lx-66l"/>
     </inferredMetricsTieBreakers>
 </document>
