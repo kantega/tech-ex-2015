@@ -35,7 +35,7 @@ object TestServer {
 
   def putPlayer(nick: Nick): Future[PlayerId] = {
     val putPlayerTask =
-      Http(((h / "player") << s"{'nick':'${nick.value}','platform':{'type':'web'},'preferences':{'drink':'wine','eat':'meat'}}").POST)
+      Http(((h / "players") << s"{'nick':'${nick.value}','platform':{'type':'web'},'preferences':{'drink':'wine','eat':'meat'}}").POST)
 
     val response =
       putPlayerTask.map(response => {

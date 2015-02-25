@@ -102,7 +102,7 @@ object playerSignup {
   }
 
   def restApi(topic: Topic[InputMessage]): WebHandler = {
-    case req@POST -> Root / "player"  =>
+    case req@POST -> Root / "players"  =>
       req.decode[String]{body => {
         val maybeCreatePlayerData =
           toJsonQuotes(body).decodeValidation[CreatePlayerData]
