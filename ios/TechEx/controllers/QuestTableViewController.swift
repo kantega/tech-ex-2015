@@ -26,8 +26,7 @@ class QuestTableViewController: UITableViewController {
     }
 
     override func viewDidAppear(animated: Bool) {
-        
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("reloadView"), name: "badgeReceived", object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("showAwardView"), name: "badgeReceived", object: nil)
     }
     
     override func viewDidDisappear(animated: Bool) {

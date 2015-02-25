@@ -23,7 +23,7 @@
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fbX-71-Wiy" userLabel="Welcome view">
                                 <rect key="frame" x="150" y="150" width="300" height="300"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -301,6 +301,78 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
             </objects>
             <point key="canvasLocation" x="1910" y="173"/>
         </scene>
+        <!--Badge Award View Controller-->
+        <scene sceneID="IMU-Tf-nzm">
+            <objects>
+                <viewController storyboardIdentifier="awardViewController" id="Tfe-F9-aYl" customClass="BadgeAwardViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="aWb-9R-3YW"/>
+                        <viewControllerLayoutGuide type="bottom" id="RGR-K4-J8I"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="gtk-Hb-Tr0">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d2q-VB-WLH">
+                                <rect key="frame" x="16" y="60" width="568" height="24"/>
+                                <attributedString key="attributedText">
+                                    <fragment content="Congratuations!">
+                                        <attributes>
+                                            <color key="NSColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                            <font key="NSFont" size="20" name="HelveticaNeue"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                        </attributes>
+                                    </fragment>
+                                </attributedString>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="BadgeCompletedLarge" translatesAutoresizingMaskIntoConstraints="NO" id="3v3-m7-I5a">
+                                <rect key="frame" x="251" y="124" width="99" height="146"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="146" id="YN3-tk-riO"/>
+                                    <constraint firstAttribute="width" constant="99" id="cBe-yf-FJX"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="You have been awarded the &quot;x&quot; badge" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zjQ-ZY-0L5">
+                                <rect key="frame" x="16" y="319" width="568" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0wI-Mz-U8e">
+                                <rect key="frame" x="16" y="383" width="568" height="30"/>
+                                <state key="normal" title="OK">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <segue destination="1lV-H3-scL" kind="show" id="FmP-Lx-66l"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="zjQ-ZY-0L5" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="0Mi-Jq-aw2"/>
+                            <constraint firstItem="3v3-m7-I5a" firstAttribute="top" secondItem="d2q-VB-WLH" secondAttribute="bottom" constant="40" id="1uo-K4-3y6"/>
+                            <constraint firstItem="0wI-Mz-U8e" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="2YG-Af-DVi"/>
+                            <constraint firstItem="d2q-VB-WLH" firstAttribute="top" secondItem="aWb-9R-3YW" secondAttribute="bottom" constant="40" id="4g5-jS-nsx"/>
+                            <constraint firstAttribute="centerX" secondItem="3v3-m7-I5a" secondAttribute="centerX" id="Bgg-nr-MmB"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="zjQ-ZY-0L5" secondAttribute="trailing" id="FHj-U9-RQM"/>
+                            <constraint firstItem="d2q-VB-WLH" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="G0R-dz-x3v"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="d2q-VB-WLH" secondAttribute="trailing" id="ORo-4D-o2w"/>
+                            <constraint firstItem="zjQ-ZY-0L5" firstAttribute="top" secondItem="3v3-m7-I5a" secondAttribute="bottom" constant="49" id="Ogy-oN-gv2"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="0wI-Mz-U8e" secondAttribute="trailing" id="a1p-Aj-VNc"/>
+                            <constraint firstItem="0wI-Mz-U8e" firstAttribute="top" secondItem="zjQ-ZY-0L5" secondAttribute="bottom" constant="43" id="fGD-KR-pL0"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="awardText" destination="zjQ-ZY-0L5" id="jjv-TX-UMY"/>
+                        <outlet property="okButton" destination="0wI-Mz-U8e" id="6R7-8e-wda"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="aoA-kR-iX3" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="342" y="-569"/>
+        </scene>
         <!--Navigation Controller-->
         <scene sceneID="1Ri-jA-tYa">
             <objects>
@@ -321,9 +393,13 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
         </scene>
     </scenes>
     <resources>
+        <image name="BadgeCompletedLarge" width="99" height="146"/>
         <image name="Button background" width="300" height="40"/>
         <image name="Help" width="28" height="28"/>
         <image name="LogoWithTitle" width="238" height="66"/>
         <image name="Text field background" width="5" height="5"/>
     </resources>
+    <inferredMetricsTieBreakers>
+        <segue reference="FmP-Lx-66l"/>
+    </inferredMetricsTieBreakers>
 </document>
