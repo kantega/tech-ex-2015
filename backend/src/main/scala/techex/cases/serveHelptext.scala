@@ -24,6 +24,6 @@ object serveHelptext {
     case req@GET -> Root / "text" / "help" / "ios" =>
       Ok(iosTxt).withHeaders(`Content-Type`(`text/html`))
     case req@GET -> Root / "text" / "help" / "android" =>
-      Ok(iosTxt).withHeaders(`Content-Type`(`text/html`))
+      Ok(androidTxt).withHeaders(`Content-Type`(`text/html`))
   }
 }
