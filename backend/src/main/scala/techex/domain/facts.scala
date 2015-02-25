@@ -1,28 +1,30 @@
 package techex.domain
 
-import org.joda.time.{DateTime, Duration}
+import org.joda.time.{Instant, DateTime, Duration}
 import techex.data.{Command, PlayerData}
 
 object facts {
 
 }
 
-trait Fact
+trait Fact {
+}
 trait FactAboutPlayer extends Fact {
   val player: PlayerData
+  val instant: Instant
 }
-case class JoinedActivityLate(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class LeftActivityEarly(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class JoinedOnStart(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class LeftOnEnd(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class ArrivedAtArea(player: PlayerData, area: Area) extends FactAboutPlayer
-case class LeftArea(player: PlayerData, area: Area) extends FactAboutPlayer
-case class MetPlayer(player: PlayerData, otherPlayer: PlayerData) extends FactAboutPlayer
-case class EarnedAchievemnt(player: PlayerData, achievemnt:Achievement) extends FactAboutPlayer
-case class AwardedBadge(player: PlayerData, badge:Badge) extends FactAboutPlayer
-case class PlayerCreated(player:PlayerData) extends FactAboutPlayer
+case class JoinedActivityLate(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
+case class LeftActivityEarly(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
+case class JoinedOnStart(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
+case class LeftOnEnd(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
+case class ArrivedAtArea(player: PlayerData, area: Area, instant: Instant) extends FactAboutPlayer
+case class LeftArea(player: PlayerData, area: Area, instant: Instant) extends FactAboutPlayer
+case class MetPlayer(player: PlayerData, otherPlayer: PlayerData, instant: Instant) extends FactAboutPlayer
+case class EarnedAchievemnt(player: PlayerData, achievemnt: Achievement, instant: Instant) extends FactAboutPlayer
+case class AwardedBadge(player: PlayerData, badge: Badge, instant: Instant) extends FactAboutPlayer
+case class PlayerCreated(player: PlayerData, instant: Instant) extends FactAboutPlayer
 trait ScheduleEvent extends Fact
-case class Started(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
-case class Ended(instant: DateTime, entry: ScheduleEntry) extends ScheduleEvent
-case class Added(entry: ScheduleEntry) extends ScheduleEvent
-case class Removed(entry: ScheduleEntry) extends ScheduleEvent
+case class Started(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
+case class Ended(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
+case class Added(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
+case class Removed(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent

@@ -1,6 +1,6 @@
 package techex.cases
 
-import org.joda.time.DateTime
+import org.joda.time.{Instant, DateTime}
 import techex.data._
 import techex.domain._
 
@@ -20,7 +20,7 @@ object updateSchedule {
 
   def addEntry(entry: ScheduleEntry): SchedS =
     State { sch =>
-      (sch.addEntry(entry), List(Added(entry)))
+      (sch.addEntry(entry), List(Added(entry,Instant.now())))
     }
 
   def removeEntry(entryId: ScId): SchedS =
@@ -30,7 +30,7 @@ object updateSchedule {
 
       maybeEntry match {
         case None        => (sch, Nil)
-        case Some(entry) => (sch.removeEntry(entryId), List(Removed(entry)))
+        case Some(entry) => (sch.removeEntry(entryId), List(Removed(entry,Instant.now())))
       }
     }
 
@@ -42,7 +42,7 @@ object updateSchedule {
 
       maybeEntry match {
         case None        => (sch, Nil)
-        case Some(entry) => (sch.updateEntry(entryId, _.start), List(Started(DateTime.now, entry.start)))
+        case Some(entry) => (sch.updateEntry(entryId, _.start), List(Started(entry.start,Instant.now())))
       }
 
     }
@@ -56,7 +56,7 @@ object updateSchedule {
 
       maybeEntry match {
         case None        => (sch, Nil)
-        case Some(entry) => (sch.updateEntry(entryId, _.stop), List(Ended(DateTime.now, entry)))
+        case Some(entry) => (sch.updateEntry(entryId, _.stop), List(Ended(entry,Instant.now())))
       }
 
     }

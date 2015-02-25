@@ -134,21 +134,21 @@ object codecJson {
 
   implicit val encodeFact: EncodeJson[Fact] =
     EncodeJson((fact: Fact) => fact match {
-      case JoinedActivityLate(player, event)    => Map("activity" -> "joinedLate", "event" -> event.id.value, "area" -> event.area.id).asJson
-      case LeftActivityEarly(player, event)     => Map("activity" -> "leftEarly", "event" -> event.id.value, "area" -> event.area.id).asJson
-      case JoinedOnStart(player, event)         => Map("activity" -> "arrivedOnTime", "event" -> event.id.value, "area" -> event.area.id).asJson
-      case LeftOnEnd(player, event)             => Map("activity" -> "leftOnTime", "event" -> event.id.value, "area" -> event.area.id).asJson
-      case ArrivedAtArea(player, area)          => Map("activity" -> "arrivedAtArea", "area" -> area.id).asJson
-      case LeftArea(player, area)               => Map("activity" -> "leftFromArea", "area" -> area.id).asJson
-      case MetPlayer(player, otherPlayer)       => Map("activity" -> "metOther", "player" -> player.player.nick.value, "other" -> otherPlayer.player.nick.value).asJson
-      case EarnedAchievemnt(player, achievemnt) => Map("activity" -> "earnedAchievement", "player" -> player.player.nick.value, "badge" -> achievemnt.id.value).asJson
-      case AwardedBadge(player, badge)          => Map("activity" -> "earnedBadge", "player" -> player.player.nick.value, "badge" -> badge.achievement.id.value).asJson
-      case PlayerCreated(player)                => Map("activity" -> "playerCreated", "player" -> player.player.nick.value).asJson
-      case Started(instant, entry)              => Map("activity" -> "eventStarted", "event" -> entry.id.value, "area" -> entry.area.id).asJson
-      case Ended(instant, entry)                => Map("activity" -> "eventEnded", "event" -> entry.id.value, "area" -> entry.area.id).asJson
-      case Added(entry)                         => Map("activity" -> "eventAdded", "event" -> entry.id.value, "area" -> entry.area.id).asJson
-      case Removed(entry)                       => Map("activity" -> "eventRemoved", "event" -> entry.id.value, "area" -> entry.area.id).asJson
-      case _                                    => jEmptyObject
+      case JoinedActivityLate(player, event, instant)    => ("activity" := "joinedLate") ->: ("event" := event.id.value) ->: ("area" := event.area.id) ->: ("instant" := instant) ->: jEmptyObject
+      case LeftActivityEarly(player, event, instant)     => ("activity" := "leftEarly") ->: ("event" := event.id.value) ->:("area" := event.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case JoinedOnStart(player, event, instant)         => ("activity" := "arrivedOnTime") ->: ("event" := event.id.value) ->:("area" := event.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case LeftOnEnd(player, event, instant)             => ("activity" := "leftOnTime") ->: ("event" := event.id.value) ->:("area" := event.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case ArrivedAtArea(player, area, instant)          => ("activity" := "arrivedAtArea") ->: ("area" := area.id) ->: ("instant" := instant) ->: jEmptyObject
+      case LeftArea(player, area, instant)               => ("activity" := "leftFromArea") ->: ("area" := area.id) ->: ("instant" := instant) ->: jEmptyObject
+      case MetPlayer(player, otherPlayer, instant)       => ("activity" := "metOther") ->: ("player" := player.player.nick.value) ->: ("other" := otherPlayer.player.nick.value) ->: ("instant" := instant) ->: jEmptyObject
+      case EarnedAchievemnt(player, achievemnt, instant) => ("activity" := "earnedAchievement") ->: ("player" := player.player.nick.value) ->: ("badge" := achievemnt.id.value) ->: ("instant" := instant) ->: jEmptyObject
+      case AwardedBadge(player, badge, instant)          => ("activity" := "earnedBadge") ->: ("player" := player.player.nick.value) ->: ("badge" := badge.achievement.id.value) ->: ("instant" := instant) ->: jEmptyObject
+      case PlayerCreated(player, instant)                => ("activity" := "playerCreated") ->: ("player" := player.player.nick.value) ->: ("instant" := instant) ->: jEmptyObject
+      case Started(entry, instant)                       => ("activity" := "eventStarted") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case Ended(entry, instant)                         => ("activity" := "eventEnded") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case Added(entry, instant)                         => ("activity" := "eventAdded") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case Removed(entry, instant)                       => ("activity" := "eventRemoved") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case _                                             => jEmptyObject
     }
 
 

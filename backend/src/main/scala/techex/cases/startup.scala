@@ -108,7 +108,8 @@ object startup {
         unregisterPlayer.restApi orElse
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events) orElse
-        listSchedule.restApi
+        listSchedule.restApi orElse
+        serveHelptext.restApi
     ), updateStream.wsApi(eventstreams.factUdpates))
 
   }

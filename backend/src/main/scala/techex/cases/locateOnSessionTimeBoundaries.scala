@@ -24,7 +24,7 @@ object locateOnSessionTimeBoundaries {
         val joinActivities =
           for {
             event <- ctx.entriesList.filter(s => s.started && (s.area contains arrival.area))
-          } yield JoinedActivityLate(arrival.player, event)
+          } yield JoinedActivityLate(arrival.player, event,arrival.instant)
 
         (ctx.addFacts(joinActivities), joinActivities)
       }
@@ -36,7 +36,7 @@ object locateOnSessionTimeBoundaries {
         val leaveActivities =
           for {
             event <- ctx.entriesList.filter(s => s.time.abouts(Instant.now()) && (s.area contains leaving.area))
-          } yield LeftActivityEarly(leaving.player, event)
+          } yield LeftActivityEarly(leaving.player, event,leaving.instant)
 
         (ctx.addFacts(leaveActivities), leaveActivities)
       }
@@ -48,7 +48,7 @@ object locateOnSessionTimeBoundaries {
       val joinedFacts =
         ctx.players
           .filter(_.movements.headOption.exists(lu => lu.area === started.entry.area))
-          .map(player => JoinedOnStart(player, started.entry))
+          .map(player => JoinedOnStart(player, started.entry,started.instant))
 
       (ctx.addFacts(joinedFacts), joinedFacts)
     }
@@ -59,7 +59,7 @@ object locateOnSessionTimeBoundaries {
       val endedfacts =
         ctx.players
           .filter(_.movements.headOption.exists(lu => lu.area === ended.entry.area))
-          .map(player => LeftOnEnd(player, ended.entry))
+          .map(player => LeftOnEnd(player, ended.entry,ended.instant))
 
       (ctx.addFacts(endedfacts), endedfacts)
     }
