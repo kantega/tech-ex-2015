@@ -30,3 +30,5 @@ ios/.DS_Store
 mockbackend/.idea
 mockbackend/node_modules
 /.project
+
+*.p12

@@ -2,10 +2,12 @@ package techex.data
 
 import java.util.UUID
 
+import doobie.hi
 import doobie.imports._
 import org.joda.time.Instant
-import techex._
 import techex.domain._
+import argonaut._
+import Argonaut._
 
 import scalaz.stream.Process
 
@@ -48,110 +50,37 @@ object sqlmappers {
 
 }
 
-object PlayerDAO {
+
+object InputMessageDAO {
 
   import sqlmappers._
+  import codecJson._
 
-
-
-  def insertPlayer(p: Player): ConnectionIO[Int] = {
-    val drink = p.preference.drink
-    val eat = p.preference.eat
-    sql"""
-          INSERT INTO players
-          VALUES (${p.id.value}, ${p.nick.value}, $drink, $eat)
-    """.update.run
-  }
-/*
-  def getPlayerById(id: PlayerId): ConnectionIO[Option[Player]] = {
-    val value = id.value
-    sql"""
-        SELECT * FROM players WHERE id = $value
-      """.query[(PlayerId, Nick, Drink, Eat, List[QuestId])].map(Player(_)).list.map(_.headOption)
-  }
-
-  def getPlayerByNick(id: Nick): ConnectionIO[Option[Player]] = {
-    sql"""
-        SELECT * FROM players WHERE nick = ${id.value}
-      """.query[(PlayerId, Nick, Drink, Eat, List[QuestId])].map(Player(_)).list.map(_.headOption)
-  }
-
-  def getPlayers: ConnectionIO[List[Player]] = {
-    sql"""
-          SELECT * FROM players
-       """.query[(PlayerId, Nick, Drink, Eat, List[QuestId])].map(Player(_)).list
-  }
-*/
-  def create: ConnectionIO[Int] =
-    sql"""
-         CREATE TABLE players (
-           id VARCHAR(255) NOT NULL,
-           nick VARCHAR(255) NOT NULL,
-           drink VARCHAR(100) NOT NULL,
-           eat VARCHAR(100) NOT NULL,
-           PRIMARY KEY (id)
-         );
-    """.update.run
-}
-
-
-object ObservationDAO {
-
-  import sqlmappers._
 
   def createObservationtable: ConnectionIO[Int] = {
     sql"""
-          CREATE TABLE observations (
+          CREATE TABLE IF NOT EXISTS observations (
             id BIGINT AUTO_INCREMENT NOT NULL,
-            beaconId VARCHAR(200) NOT NULL ,
-            playerId VARCHAR(200) NOT NULL,
             instant BIGINT NOT NULL,
+            type VARCHAR(200) NOT NULL,
+            payload TEXT NOT NULL,
             PRIMARY KEY (id)
           );
           """.update.run
   }
 
-  def storeObservation(observation: Observation): ConnectionIO[Int] = {
+  def storeObservation(input: InputMessage): ConnectionIO[Int] = {
     sql"""
           INSERT INTO observations
-          VALUES (${observation.beacon},${observation.playerId},${observation.instant}  )
+          VALUES (${Instant.now().getMillis},${input.msgType},${input.asJson.nospaces}  )
     """.update.run
   }
 
-  def loadObservationForPlayer(playerId: PlayerId, max: Int): ConnectionIO[List[Observation]] = {
+  def loadObservationForPlayer(playerId: PlayerId): Process[ConnectionIO, (Long, Long, String, String)] = {
     sql"""
-          SELECT * FROM PLAYERS WHERE playerId = ${playerId} ORDER BY instant LIMIT $max
-    """.query[Observation].list
+          SELECT * FROM PLAYERS WHERE playerId = ${playerId} ORDER BY instant
+    """.query[(Long, Long, String, String)].process
   }
 }
 
-object LocationDao {
 
-  import sqlmappers._
-
-  def createLocationTable: ConnectionIO[Int] = {
-    sql"""
-          CREATE TABLE movements(
-            id  BIGINT AUTO_INCREMENT NOT NULL,
-            playerId VARCHAR(200) NOT NULL,
-            direction VARCHAR(200) NOT NULL,
-            locationId VARCHAR(200) NOT NULL,
-            instant BIGINT NOT NULL,
-            PRIMARY KEY (id)
-          );
-    """.update.run
-  }
-
-  def loadLocationsForPlayer(playerId: PlayerId, max: Int): ConnectionIO[List[LocationUpdate]] = {
-    sql"""
-          SELECT * FROM movement WHERE playerId = $playerId ORDER BY instant LIMIT $max
-    """.query[LocationUpdate].list
-  }
-
-  def storeLocation(movement: LocationUpdate): ConnectionIO[Int] = {
-    sql"""
-          INSERT INTO movement
-          VALUES (${movement.playerId},${movement.area},${movement.instant});
-    """.update.run
-  }
-}

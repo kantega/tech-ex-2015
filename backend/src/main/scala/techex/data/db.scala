@@ -38,7 +38,7 @@ object db {
     config.addDataSourceProperty("prepStmtCacheSize", "250")
     config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
     config.addDataSourceProperty("useServerPrepStmts", "true")
-    config.setDriverClassName("org.mysql.Driver")
+    config.setDriverClassName("com.mysql.jdbc.Driver")
     config.setJdbcUrl("jdbc:mysql://mysql.kantega.no/technoport_experiments_2015")
     config
   }
@@ -52,7 +52,7 @@ object db {
     config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
     config.addDataSourceProperty("useServerPrepStmts", "true")
     config.setDriverClassName("org.h2.Driver") //"org.mysql.Driver")
-    config.setJdbcUrl("jdbc:h2:mem:test") //"jdbc:mysql://mysql.kantega.no/technoport_experiments_2015")
+    config.setJdbcUrl("jdbc:h2:mem:technoport_experiments_2015;DB_CLOSE_DELAY=-1") //"jdbc:mysql://mysql.kantega.no/technoport_experiments_2015")
     config
   }
   def ds(config:HikariConfig) =

@@ -76,39 +76,7 @@ object test {
 
 }
 
-object websockets {
 
-  import scalaz.concurrent._
-  import scalaz.stream._
-
-  implicit def defaultSecheduler = DefaultTimeoutScheduler
-
-  val sink = io.stdOutLines.onComplete(Process.eval_(Task(println("END"))))
-
-  val route = HttpService {
-    case req@GET -> Root / "ws" =>
-      // Send a Text message with payload 'Ping!' every second
-      val src = Process.awakeEvery(1.seconds).map { d => Text(s"Ping! $d")}
-      val sink: Sink[Task, WebSocketFrame] = Process.constant {
-        case Text(t, x) => Task.delay(println(t))
-        case f => Task.delay(println(s"Unknown type: $f"))
-      }
-
-      val sinkWithComplete:Sink[Task, WebSocketFrame] = sink.onComplete(Process.eval_(Task {println("Terminated!")}))
-
-      // Use the WS helper to make the Task[Response] carrying the info
-      // needed for the backend to upgrade to a WebSocket connection
-      WS(src, sinkWithComplete)
-    /*
-        case req @ GET -> Root / "wsecho" =>
-          // a scalaz topic acts as a hub to publish and subscribe to messages safely
-          val t = topic[WebSocketFrame]
-          val src = t.subscribe.collect{ case Text(msg) => Text("You sent the server: " + msg) }
-          server.websocket.WS(src, t.publish)
-          */
-  }
-
-}
 
 
 

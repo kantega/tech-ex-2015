@@ -21,9 +21,9 @@ class MetOtherPlayerSpec extends Specification {
             playerKalleId <- putPlayer(Nick("kalle"))
             response1 <- putObservation(playerBalleId, "58796:18570", Near)
             response2 <- putObservation(playerFalleId, "58796:18570", Near)
-            response3 <- putObservation(playerBalleId, "j", Near)
-            response4 <- putObservation(playerFalleId, "j", Near)
-            response6 <- putObservation(playerKalleId, "j", Near)
+            response3 <- putObservation(playerBalleId, "64915:4698", Near)
+            response4 <- putObservation(playerFalleId, "64915:4698", Near)
+            response6 <- putObservation(playerKalleId, "64915:4698", Near)
           } yield response1 // + response2// + response3 + response4
 
 
