@@ -73,17 +73,18 @@ class LoginAndRegistrationViewController: UIViewController {
         
         request(.POST, "\(baseApiUrl)/players", parameters: parameters, encoding: .JSON)
             .responseJSON { (req, resp, j, error) in
+                NSLog("Register user response received.")
                 if error != nil || resp == nil || resp?.statusCode != 200 {
                     Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
-                    println("Error when registering user: \(error)");
+                    NSLog("Error when registering user: \(error)");
                 } else {
                     let d = JSON(j!);
                     let playerId = d["id"].string!
                     let nick = d["nick"].string!
-                    println("PlayerId: \(playerId), nick: \(nick)")
-                
+                    
                     KeychainService.save(.Username, value: nick)
                     KeychainService.save(.PlayerId, value: playerId)
+                    NSLog("Successfully registered player with playerId: \(playerId), nick: \(nick)")
                     self.showQuests()
                 }
                 LoadingOverlay.shared.hideOverlayView();
@@ -128,7 +129,7 @@ class LoginAndRegistrationViewController: UIViewController {
     }
     
     func showQuests() {
-        println("ShowingQuests, i.e. performing segue with identifier ShowQuests");
+        NSLog("ShowingQuests, i.e. performing segue with identifier ShowQuests");
         self.performSegueWithIdentifier("ShowQuests", sender: nil);
     }
     

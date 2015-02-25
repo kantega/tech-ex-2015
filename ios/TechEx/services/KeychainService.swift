@@ -46,17 +46,19 @@ class KeychainService: NSObject {
     * Internal methods for querying the keychain.
     */
     private class func save(service: NSString, key: KeychainKey, value: NSString) {
+        NSLog("About to save \(key) in Keychain")
         let valueData: NSData = value.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
         let keyData: NSData = keyAsString(key).dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
         
         // Instantiate a new default keychain query
         var keychainQuery: NSMutableDictionary = NSMutableDictionary(objects: [kSecClassGenericPasswordValue, service, keyData, valueData], forKeys: [kSecClassValue, kSecAttrServiceValue, kSecAttrAccountValue, kSecValueDataValue])
-        
+        NSLog("Deleting exising items in Keychain")
         // Delete any existing items
         SecItemDelete(keychainQuery as CFDictionaryRef)
         
         // Add the new keychain item
         var status: OSStatus = SecItemAdd(keychainQuery as CFDictionaryRef, nil)
+        NSLog("Item \(key) saved in Keychain. Status: \(status)")
     }
     
     private class func load(service: NSString, key: KeychainKey) -> NSString? {
@@ -64,13 +66,14 @@ class KeychainService: NSObject {
         // Tell the query to return a result
         // Limit our results to one item
         let keyString = keyAsString(key) as String;
+        NSLog("Loading \(keyString) from Keychain")
         let keychainQuery: NSMutableDictionary = NSMutableDictionary(objects: [kSecClassGenericPasswordValue, service, keyString, kCFBooleanTrue, kSecMatchLimitOneValue], forKeys: [kSecClassValue, kSecAttrServiceValue, kSecAttrAccountValue, kSecReturnDataValue, kSecMatchLimitValue])
         
         var dataTypeRef :Unmanaged<AnyObject>?
-        
+        NSLog("About to call SecItemCopyMatching with key chain query \(keychainQuery)")
         // Search for the keychain items
         let status: OSStatus = SecItemCopyMatching(keychainQuery, &dataTypeRef)
-        
+        NSLog("SecItemCopyMatching completed. Status: \(status)")
         let opaque = dataTypeRef?.toOpaque()
         
         var contentsOfKeychain: NSString?

@@ -15,7 +15,6 @@
 		574652671A8A281300D70F9F /* LoginAndRegistrationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652561A8A281300D70F9F /* LoginAndRegistrationViewController.swift */; };
 		574652681A8A281300D70F9F /* QuestsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652571A8A281300D70F9F /* QuestsTableViewController.swift */; };
 		574652691A8A281300D70F9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 574652581A8A281300D70F9F /* Images.xcassets */; };
-		5746526A1A8A281300D70F9F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 574652591A8A281300D70F9F /* Info.plist */; };
 		5746526B1A8A281300D70F9F /* Almofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525B1A8A281300D70F9F /* Almofire.swift */; };
 		5746526C1A8A281300D70F9F /* SwiftyJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525C1A8A281300D70F9F /* SwiftyJSON.swift */; };
 		5746526D1A8A281300D70F9F /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525D1A8A281300D70F9F /* LoadingOverlay.swift */; };
@@ -291,7 +290,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5746526A1A8A281300D70F9F /* Info.plist in Resources */,
 				574652691A8A281300D70F9F /* Images.xcassets in Resources */,
 				574652C41A971EDB00D70F9F /* LaunchScreen.storyboard in Resources */,
 				574652651A8A281300D70F9F /* Main.storyboard in Resources */,
@@ -449,13 +447,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				INFOPLIST_FILE = TechEx/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "238423d6-9f28-452b-959f-623f98665278";
+				PROVISIONING_PROFILE = "8dbb37b9-8a5f-48ce-b79d-0ca1b2a99dbd";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -464,13 +462,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				INFOPLIST_FILE = TechEx/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "238423d6-9f28-452b-959f-623f98665278";
+				PROVISIONING_PROFILE = "8dbb37b9-8a5f-48ce-b79d-0ca1b2a99dbd";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

@@ -13,6 +13,7 @@ class QuestsTableViewController: UITableViewController{
 
     let questCellIdentifier = "QuestPrototypeCell"
     var quests = Array<Quest>()
+    var baseApiUrl = ""
     
     
     deinit {
@@ -20,10 +21,10 @@ class QuestsTableViewController: UITableViewController{
     }
     
     override func viewDidLoad() {
-        self.setTechExBackgroundImage()
+        NSLog("Entered QuestsTableViewController.viewDidLoad()")
+        self.baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
         
-        loadInitialData()
-        self.startDetectingBeacons()
+        self.setTechExBackgroundImage()
 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("showAwardView:"), name: "badgeReceived", object: nil)
         
@@ -36,18 +37,25 @@ class QuestsTableViewController: UITableViewController{
         
         // Hide empty table rows
         self.tableView.tableFooterView = UIView(frame: CGRectZero)
-
         self.navigationController?.view.backgroundColor = UIColor.clearColor()
+        
+        NSLog("QuestsTableViewController.viewDidLoad() bootstrapping complete. About to load initial data.")
+        self.loadInitialData()
+        self.startDetectingBeacons()
+        
         super.viewDidLoad()
     }
 
     
     func loadInitialData() {
         LoadingOverlay.shared.showOverlay(self.view)
+        NSLog("Loading playerId from KeyChain")
         let playerId = KeychainService.load(.PlayerId)!;
-        let baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
+        NSLog("PlayerId is \(playerId)")
+        let requestUrl = "\(baseApiUrl)/quests/player/\(playerId)"
+        NSLog("About to load quests for player from resource \(requestUrl)")
         
-        request(.GET, "\(baseApiUrl)/quests/player/\(playerId)")
+        request(.GET, requestUrl)
             .responseJSON { (req, resp, j, error) in
                 if resp == nil || resp?.statusCode != 200 {
                     Alert.shared.showAlert("Unable to load quests. Please try again later.", title: "Error", buttonText: "OK", parent: self);
