@@ -57,10 +57,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject]) {
-//        let data = userInfo["aps"] as NSDictionary
-//        let badgeText = data["alert"] as String
-//        NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: "badgeReceived", object: badgeText))
-        NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: "badgeReceived", object: nil))
+        NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: "badgeReceived", object: nil, userInfo: userInfo))
     }
 
     func tokenAsString(token: NSData) -> String{

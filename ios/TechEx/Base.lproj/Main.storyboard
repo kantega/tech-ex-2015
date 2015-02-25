@@ -23,7 +23,7 @@
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fbX-71-Wiy" userLabel="Welcome view">
                                 <rect key="frame" x="150" y="150" width="300" height="300"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -313,59 +313,71 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d2q-VB-WLH">
-                                <rect key="frame" x="16" y="60" width="568" height="24"/>
-                                <attributedString key="attributedText">
-                                    <fragment content="Congratuations!">
-                                        <attributes>
-                                            <color key="NSColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                            <font key="NSFont" size="20" name="HelveticaNeue"/>
-                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
-                                        </attributes>
-                                    </fragment>
-                                </attributedString>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="BadgeCompletedLarge" translatesAutoresizingMaskIntoConstraints="NO" id="3v3-m7-I5a">
-                                <rect key="frame" x="251" y="124" width="99" height="146"/>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DUf-hN-JeH">
+                                <rect key="frame" x="16" y="50" width="568" height="500"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d2q-VB-WLH">
+                                        <rect key="frame" x="0.0" y="186" width="568" height="24"/>
+                                        <attributedString key="attributedText">
+                                            <fragment content="Congratuations!">
+                                                <attributes>
+                                                    <color key="NSColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                                    <font key="NSFont" size="20" name="HelveticaNeue"/>
+                                                    <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                                </attributes>
+                                            </fragment>
+                                        </attributedString>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="You have been awarded the &quot;x&quot; badge" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zjQ-ZY-0L5">
+                                        <rect key="frame" x="0.0" y="250" width="568" height="21"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="BadgeCompletedLarge" translatesAutoresizingMaskIntoConstraints="NO" id="3v3-m7-I5a">
+                                        <rect key="frame" x="234" y="0.0" width="99" height="146"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="146" id="YN3-tk-riO"/>
+                                            <constraint firstAttribute="width" constant="99" id="cBe-yf-FJX"/>
+                                        </constraints>
+                                    </imageView>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0wI-Mz-U8e">
+                                        <rect key="frame" x="0.0" y="311" width="568" height="30"/>
+                                        <state key="normal" title="OK">
+                                            <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                        </state>
+                                        <connections>
+                                            <segue destination="1lV-H3-scL" kind="show" id="FmP-Lx-66l"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="146" id="YN3-tk-riO"/>
-                                    <constraint firstAttribute="width" constant="99" id="cBe-yf-FJX"/>
+                                    <constraint firstItem="zjQ-ZY-0L5" firstAttribute="top" secondItem="d2q-VB-WLH" secondAttribute="bottom" constant="40" id="23i-uz-njY"/>
+                                    <constraint firstItem="3v3-m7-I5a" firstAttribute="top" secondItem="DUf-hN-JeH" secondAttribute="top" id="2ZJ-nk-fNn"/>
+                                    <constraint firstItem="zjQ-ZY-0L5" firstAttribute="leading" secondItem="DUf-hN-JeH" secondAttribute="leading" id="CDf-bJ-kAZ"/>
+                                    <constraint firstItem="0wI-Mz-U8e" firstAttribute="top" secondItem="zjQ-ZY-0L5" secondAttribute="bottom" constant="40" id="DFs-iI-2Zq"/>
+                                    <constraint firstAttribute="trailing" secondItem="zjQ-ZY-0L5" secondAttribute="trailing" id="DgH-Kn-Uyb"/>
+                                    <constraint firstAttribute="trailing" secondItem="d2q-VB-WLH" secondAttribute="trailing" id="EST-zv-bYK"/>
+                                    <constraint firstAttribute="centerX" secondItem="3v3-m7-I5a" secondAttribute="centerX" id="G02-yF-us2"/>
+                                    <constraint firstItem="d2q-VB-WLH" firstAttribute="top" secondItem="3v3-m7-I5a" secondAttribute="bottom" constant="40" id="KCA-mV-QIY"/>
+                                    <constraint firstAttribute="height" constant="500" id="Kze-9v-awV"/>
+                                    <constraint firstAttribute="trailing" secondItem="0wI-Mz-U8e" secondAttribute="trailing" id="eK8-cV-blc"/>
+                                    <constraint firstItem="d2q-VB-WLH" firstAttribute="leading" secondItem="DUf-hN-JeH" secondAttribute="leading" id="fra-cu-hcA"/>
+                                    <constraint firstItem="0wI-Mz-U8e" firstAttribute="leading" secondItem="DUf-hN-JeH" secondAttribute="leading" id="m1Y-yM-zQj"/>
                                 </constraints>
-                            </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="You have been awarded the &quot;x&quot; badge" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zjQ-ZY-0L5">
-                                <rect key="frame" x="16" y="319" width="568" height="21"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0wI-Mz-U8e">
-                                <rect key="frame" x="16" y="383" width="568" height="30"/>
-                                <state key="normal" title="OK">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <segue destination="1lV-H3-scL" kind="show" id="FmP-Lx-66l"/>
-                                </connections>
-                            </button>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="zjQ-ZY-0L5" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="0Mi-Jq-aw2"/>
-                            <constraint firstItem="3v3-m7-I5a" firstAttribute="top" secondItem="d2q-VB-WLH" secondAttribute="bottom" constant="40" id="1uo-K4-3y6"/>
-                            <constraint firstItem="0wI-Mz-U8e" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="2YG-Af-DVi"/>
-                            <constraint firstItem="d2q-VB-WLH" firstAttribute="top" secondItem="aWb-9R-3YW" secondAttribute="bottom" constant="40" id="4g5-jS-nsx"/>
-                            <constraint firstAttribute="centerX" secondItem="3v3-m7-I5a" secondAttribute="centerX" id="Bgg-nr-MmB"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="zjQ-ZY-0L5" secondAttribute="trailing" id="FHj-U9-RQM"/>
-                            <constraint firstItem="d2q-VB-WLH" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="G0R-dz-x3v"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="d2q-VB-WLH" secondAttribute="trailing" id="ORo-4D-o2w"/>
-                            <constraint firstItem="zjQ-ZY-0L5" firstAttribute="top" secondItem="3v3-m7-I5a" secondAttribute="bottom" constant="49" id="Ogy-oN-gv2"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="0wI-Mz-U8e" secondAttribute="trailing" id="a1p-Aj-VNc"/>
-                            <constraint firstItem="0wI-Mz-U8e" firstAttribute="top" secondItem="zjQ-ZY-0L5" secondAttribute="bottom" constant="43" id="fGD-KR-pL0"/>
+                            <constraint firstAttribute="centerY" secondItem="DUf-hN-JeH" secondAttribute="centerY" id="a8I-GC-RL4"/>
+                            <constraint firstItem="DUf-hN-JeH" firstAttribute="leading" secondItem="gtk-Hb-Tr0" secondAttribute="leadingMargin" id="ub1-YH-emi"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="DUf-hN-JeH" secondAttribute="trailing" id="zcC-Da-uTz"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="awardText" destination="zjQ-ZY-0L5" id="jjv-TX-UMY"/>
+                        <outlet property="awardLabel" destination="zjQ-ZY-0L5" id="orD-65-9pD"/>
+                        <outlet property="congratulationsLabel" destination="d2q-VB-WLH" id="2sf-q2-wmS"/>
                         <outlet property="okButton" destination="0wI-Mz-U8e" id="6R7-8e-wda"/>
                     </connections>
                 </viewController>
@@ -390,6 +402,23 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
                 <placeholder placeholderIdentifier="IBFirstResponder" id="OUW-c1-RhK" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="342" y="178"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="g72-ml-nYg">
+            <objects>
+                <viewController id="pz7-Cl-JgG" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="wUR-eU-FWS"/>
+                        <viewControllerLayoutGuide type="bottom" id="VHJ-b3-TAU"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="xIm-eC-soy">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="LH3-UF-auZ" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
         </scene>
     </scenes>
     <resources>

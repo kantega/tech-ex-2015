@@ -11,10 +11,14 @@ import UIKit
 
 extension UIViewController {
 
-    func showAwardView() {
+    func showAwardView(notification: NSNotification) {
+        NSLog("\(notification)")
+        var data = notification.userInfo?["aps"] as NSDictionary
+        let badgeText = data["alert"] as String
         let storyboard = UIStoryboard(name: "Main", bundle: nil);
         let awardVC = storyboard.instantiateViewControllerWithIdentifier("awardViewController") as BadgeAwardViewController
         awardVC.modalPresentationStyle = UIModalPresentationStyle.FullScreen
+        awardVC.badgeText = badgeText
         self.presentViewController(awardVC, animated: true, completion: nil)
     }
 }

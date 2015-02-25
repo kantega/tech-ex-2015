@@ -25,7 +25,7 @@ class QuestsTableViewController: UITableViewController{
         loadInitialData()
         self.startDetectingBeacons()
 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("showAwardView"), name: "badgeReceived", object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("showAwardView:"), name: "badgeReceived", object: nil)
         
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.tintColor = UIColor.whiteColor()
