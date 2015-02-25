@@ -21,7 +21,6 @@
 		5746526D1A8A281300D70F9F /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525D1A8A281300D70F9F /* LoadingOverlay.swift */; };
 		5746526E1A8A281300D70F9F /* Quest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525F1A8A281300D70F9F /* Quest.swift */; };
 		5746526F1A8A281300D70F9F /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652611A8A281300D70F9F /* KeychainService.swift */; };
-		574652741A8C8DCF00D70F9F /* config.plist in Resources */ = {isa = PBXBuildFile; fileRef = 574652731A8C8DCF00D70F9F /* config.plist */; };
 		574652761A8C8ED700D70F9F /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652751A8C8ED700D70F9F /* Config.swift */; };
 		574652781A8C93F900D70F9F /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652771A8C93F900D70F9F /* LocationService.swift */; };
 		574652B41A8CE12E00D70F9F /* QuestTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652B31A8CE12E00D70F9F /* QuestTableViewCell.swift */; };
@@ -64,7 +63,6 @@
 		5746525D1A8A281300D70F9F /* LoadingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingOverlay.swift; sourceTree = "<group>"; };
 		5746525F1A8A281300D70F9F /* Quest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Quest.swift; sourceTree = "<group>"; };
 		574652611A8A281300D70F9F /* KeychainService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
-		574652731A8C8DCF00D70F9F /* config.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
 		574652751A8C8ED700D70F9F /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		574652771A8C93F900D70F9F /* LocationService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		574652B31A8CE12E00D70F9F /* QuestTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QuestTableViewCell.swift; path = views/QuestTableViewCell.swift; sourceTree = "<group>"; };
@@ -195,7 +193,6 @@
 			isa = PBXGroup;
 			children = (
 				574652591A8A281300D70F9F /* Info.plist */,
-				574652731A8C8DCF00D70F9F /* config.plist */,
 			);
 			name = "Supporting files";
 			sourceTree = "<group>";
@@ -298,7 +295,6 @@
 				574652691A8A281300D70F9F /* Images.xcassets in Resources */,
 				574652C41A971EDB00D70F9F /* LaunchScreen.storyboard in Resources */,
 				574652651A8A281300D70F9F /* Main.storyboard in Resources */,
-				574652741A8C8DCF00D70F9F /* config.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
