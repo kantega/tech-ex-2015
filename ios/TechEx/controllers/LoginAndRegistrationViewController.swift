@@ -52,27 +52,28 @@ class LoginAndRegistrationViewController: UIViewController {
             Alert.shared.showAlert("Nick cannot be empty", title: nil, buttonText: "OK", parent: self);
             return
         }
+        //Trim input value
+        self.nick = nickTextField.text.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
 
-        
-        self.nick = nickTextField.text;
         let tokenData = NSUserDefaults.standardUserDefaults().objectForKey("deviceToken") as? String
         let deviceToken = (tokenData != nil) ? "\(tokenData!)" : ""
 
         LoadingOverlay.shared.showOverlay(self.view);
         
-        let parameters = [
+        let parameters:[String:AnyObject] = [
+            "nick": self.nick,
             "platform": [
                 "type": "ios",
                 "deviceToken": deviceToken
             ]
         ]
+
         let baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
-        let registrationUrl = "\(baseApiUrl)/player/\(nick)"
-        NSLog("PUTing player registration at \(registrationUrl) with parameters \(parameters)")
+        NSLog("POSTing player with parameters \(parameters)")
         
-        request(.PUT, registrationUrl, parameters: parameters, encoding: .JSON)
+        request(.POST, "\(baseApiUrl)/players", parameters: parameters, encoding: .JSON)
             .responseJSON { (req, resp, j, error) in
-                if error != nil || resp == nil || resp?.statusCode != 201 {
+                if error != nil || resp == nil || resp?.statusCode != 200 {
                     Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
                     println("Error when registering user: \(error)");
                 } else {
