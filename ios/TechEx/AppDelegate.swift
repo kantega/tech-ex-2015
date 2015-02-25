@@ -84,8 +84,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
-        NSLog("applicationWillEnterForeground: Start ranging beacons in region")
-        locationService.startRangingBeaconsInRegion()
+
     }
 
     func applicationDidBecomeActive(application: UIApplication) {

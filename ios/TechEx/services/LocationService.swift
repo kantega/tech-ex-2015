@@ -31,12 +31,9 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         }
         println("Start ranging beacons")
         locationManager.startMonitoringForRegion(region)
+        locationManager.startRangingBeaconsInRegion(region as CLBeaconRegion)
      }
-    
-    
-    func startRangingBeaconsInRegion() {
-        locationManager.startRangingBeaconsInRegion(region)
-    }
+
     
     func locationManager(manager: CLLocationManager!, didEnterRegion region: CLRegion!) {
         NSLog("Device entered region \(region.description)")
@@ -52,7 +49,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
         if (knownBeacons.count > 0) {
             let closestBeacon = knownBeacons[0] as CLBeacon
-            println("Beacon detected. Minor: \(closestBeacon.minor). Proximity: \(closestBeacon.proximity.rawValue). \(closestBeacon)")
+            //println("Beacon detected. Minor: \(closestBeacon.minor). Proximity: \(closestBeacon.proximity.rawValue). \(closestBeacon)")
             if closestBeacon.minor != lastBeacon?.minor || closestBeacon.proximity != lastProximity {
                 self.lastBeacon = closestBeacon
                 self.lastProximity = closestBeacon.proximity
