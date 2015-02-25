@@ -91,9 +91,17 @@ class LoginAndRegistrationViewController: UIViewController {
 
     }
 
-
+    // "Done" keyboard button is pressed
+    @IBAction func doneEnteringNick() {
+        self.resignFirstResponder()
+        registerUser()
+    }
     
-      
+    // Tap outside the keyboard when entering nick. Close the keyboard.
+    @IBAction func backgroundTap() {
+        nickTextField.resignFirstResponder()
+    }
+    
     func loadCredentialsFromKeychain() {
         self.id = KeychainService.load(.PlayerId)
         self.nick = KeychainService.load(.Username)

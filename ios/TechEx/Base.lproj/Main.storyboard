@@ -13,7 +13,7 @@
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="UIControl">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -23,7 +23,7 @@
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fbX-71-Wiy" userLabel="Welcome view">
                                 <rect key="frame" x="150" y="150" width="300" height="300"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -37,7 +37,7 @@
                                     <constraint firstAttribute="width" constant="300" id="vav-jK-O9T"/>
                                 </constraints>
                             </view>
-                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dUj-pu-2E2" userLabel="Registration view">
+                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dUj-pu-2E2" userLabel="Registration view" customClass="UIControl">
                                 <rect key="frame" x="150" y="170" width="300" height="400"/>
                                 <subviews>
                                     <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" minimumFontSize="17" background="Text field background" translatesAutoresizingMaskIntoConstraints="NO" id="2GF-0c-thu" customClass="TechexTextField" customModule="TechEx" customModuleProvider="target">
@@ -46,7 +46,10 @@
                                             <constraint firstAttribute="height" constant="40" id="Th5-vi-2Mx"/>
                                         </constraints>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                        <textInputTraits key="textInputTraits"/>
+                                        <textInputTraits key="textInputTraits" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
+                                        <connections>
+                                            <action selector="doneEnteringNick" destination="BYZ-38-t0r" eventType="editingDidEndOnExit" id="uXv-OQ-oar"/>
+                                        </connections>
                                     </textField>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Q2V-EP-OTm">
                                         <rect key="frame" x="10" y="68" width="280" height="40"/>
@@ -107,6 +110,9 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
                                     <constraint firstItem="2GF-0c-thu" firstAttribute="top" secondItem="dUj-pu-2E2" secondAttribute="top" constant="10" id="szp-dj-8B9"/>
                                     <constraint firstAttribute="trailing" secondItem="2GF-0c-thu" secondAttribute="trailing" constant="10" id="zeW-4M-CX1"/>
                                 </constraints>
+                                <connections>
+                                    <action selector="backgroundTap" destination="BYZ-38-t0r" eventType="touchDown" id="Vk8-d6-ivq"/>
+                                </connections>
                             </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -119,6 +125,9 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
                             <constraint firstItem="dUj-pu-2E2" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="150" id="oCR-cT-wWb"/>
                             <constraint firstAttribute="centerX" secondItem="uU0-5J-Ysc" secondAttribute="centerX" id="syT-cg-Kcw"/>
                         </constraints>
+                        <connections>
+                            <action selector="backgroundTap" destination="BYZ-38-t0r" eventType="touchDown" id="Dc9-VH-sJT"/>
+                        </connections>
                     </view>
                     <connections>
                         <outlet property="disclaimer" destination="Z9x-RL-FhM" id="WjQ-E5-TEq"/>
@@ -429,6 +438,6 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
         <image name="Text field background" width="5" height="5"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="FmP-Lx-66l"/>
+        <segue reference="iIe-dz-Lqz"/>
     </inferredMetricsTieBreakers>
 </document>
