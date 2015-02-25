@@ -21,9 +21,9 @@ object serveHelptext {
     """.stripMargin
 
   def restApi: WebHandler = {
-    case req@POST -> Root / "text" / "help" / "ios" =>
+    case req@GET -> Root / "text" / "help" / "ios" =>
       Ok(iosTxt).withHeaders(`Content-Type`(`text/html`))
-    case req@POST -> Root / "text" / "help" / "android" =>
+    case req@GET -> Root / "text" / "help" / "android" =>
       Ok(iosTxt).withHeaders(`Content-Type`(`text/html`))
   }
 }
