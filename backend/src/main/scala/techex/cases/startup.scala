@@ -4,6 +4,7 @@ import java.util.concurrent.Executors
 
 import com.typesafe.config.Config
 import doobie.util.process
+import doobie.util.transactor.Transactor
 import org.http4s.server._
 import techex._
 import streams._
@@ -20,19 +21,34 @@ object startup {
   val streamRunner =
     namedSingleThreadExecutor("Streamsetup")
 
-  def setupStream: Task[Unit] = {
+  val messagehandlerPipe =
+    process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse playerSignup.toFact) pipe
+      appendAccumP1(locateOnSessionTimeBoundaries.handleTimeBoundsFacts) pipe
+      appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges)
 
-    val handleInputQueue =
+  def setupStream(txor:Transactor[Task]): Task[Unit] = {
+
+    val inputHandlerQueue =
       async.unboundedQueue[InputMessage]
 
-    val enqueueInputProcess =
-      eventstreams.events.subscribe to handleInputQueue.enqueue
+    val storeToDatabaseQueue =
+      async.unboundedQueue[InputMessage]
 
-    val handleInputProcess =
-      handleInputQueue.dequeue pipe
-        process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse playerSignup.toFact) pipe
-        appendAccumP1(locateOnSessionTimeBoundaries.handleTimeBoundsFacts) pipe
-        appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges) through
+    val enqueueToInputHandlerProcess =
+      eventstreams.events.subscribe to inputHandlerQueue.enqueue
+
+    val enqeueToDatabaseQueueProcess =
+      eventstreams.events.subscribe to storeToDatabaseQueue.enqueue
+
+
+
+    //val handleStoreToDatabase =
+    //    (storeToDatabaseQueue.dequeue pipe txor.transact()
+
+
+    val handleInputStream =
+      inputHandlerQueue.dequeue pipe
+        messagehandlerPipe through
         Storage.updates[List[Fact]] pipe
         process1.unchunk[Fact] to eventstreams.factUdpates.publish
 
@@ -41,8 +57,8 @@ object startup {
       notifySlack.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       printFactsToLog.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       notifyAPNS.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
-      enqueueInputProcess.handle(streams.printAndReset(enqueueInputProcess)).run.runAsync(_.toString)
-      handleInputProcess.handle(streams.printAndReset(handleInputProcess)).run.runAsync(_.toString)
+      enqueueToInputHandlerProcess.handle(streams.printAndReset(enqueueToInputHandlerProcess)).run.runAsync(_.toString)
+      handleInputStream.handle(streams.printAndReset(handleInputStream)).run.runAsync(_.toString)
 
       println("Streams set up")
     }
@@ -65,19 +81,20 @@ object startup {
     tt.run
   }
 
-  def setup(cfg: Config): Task[(HttpService,WSHandler)] = {
+  def setup(cfg: Config): Task[(HttpService, WSHandler)] = {
 
     val dbConfig =
-      if (getStringOr(cfg,"db.type", "mem") == "mysql")
+      if (getStringOr(cfg, "db.type", "mem") == "mysql")
         db.mysqlConfig(cfg.getString("db.username"), cfg.getString("db.password"))
       else
         db.inMemConfig
 
     for {
       _ <- slack.sendMessage("Starting up server", Attention)
-      _ <- setupStream
-      _ <- setupSchedule
       ds <- db.ds(dbConfig)
+      _ <- setupStream(ds)
+      _ <- setupSchedule
+
       _ <- ds.transact(InputMessageDAO.createObservationtable)
 
     } yield (HttpService(
@@ -92,7 +109,7 @@ object startup {
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events) orElse
         listSchedule.restApi
-    ),updateStream.wsApi(eventstreams.factUdpates))
+    ), updateStream.wsApi(eventstreams.factUdpates))
 
   }
 }

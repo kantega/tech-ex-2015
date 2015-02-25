@@ -13,8 +13,8 @@ trait FactAboutPlayer extends Fact {
 }
 case class JoinedActivityLate(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
 case class LeftActivityEarly(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class JoinedOnTime(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
-case class LeftOnTime(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
+case class JoinedOnStart(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
+case class LeftOnEnd(player: PlayerData, event: ScheduleEntry) extends FactAboutPlayer
 case class ArrivedAtArea(player: PlayerData, area: Area) extends FactAboutPlayer
 case class LeftArea(player: PlayerData, area: Area) extends FactAboutPlayer
 case class MetPlayer(player: PlayerData, otherPlayer: PlayerData) extends FactAboutPlayer

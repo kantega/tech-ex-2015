@@ -32,13 +32,13 @@ object areas {
   val mrtEngelbart    = Area("Engelbart")
   val mrtAda          = Area("Ada")
   val mrtHopper       = Area("Hopper")
-  val mrtCurie       = Area("Curie")
-  val testArea1     = Area("Stand1")
-  val testArea2     = Area("Stand2")
-  val testArea3     = Area("Stand3")
-  val kantegaCoffee = Area("kantegaCoffee")
-  val kantegaOffice = Area("KantegaOffice")
-  val meetingPoint  = Area("Meetingpoint")
+  val mrtCurie        = Area("Curie")
+  val testArea1       = Area("Stand1")
+  val testArea2       = Area("Stand2")
+  val testArea3       = Area("Stand3")
+  val kantegaCoffee   = Area("kantegaCoffee")
+  val kantegaOffice   = Area("KantegaOffice")
+  val meetingPoint    = Area("Meetingpoint")
 
   val beaconPlacement: Map[Beacon, (Proximity, Area)] =
     Map(
@@ -81,6 +81,11 @@ object areas {
           coffeeStand.leaf,
           meetingPoint.leaf)),
       kantegaOffice.node(
+        mrtTuring.leaf,
+        mrtTesla.leaf,
+        mrtAda.leaf,
+        mrtHopper.leaf,
+        mrtCurie.leaf,
         testArea1.leaf,
         testArea2.leaf,
         testArea3.leaf,
