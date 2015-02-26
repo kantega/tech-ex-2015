@@ -76,8 +76,12 @@ class LoginAndRegistrationViewController: UIViewController {
             .responseJSON { (req, resp, j, error) in
                 NSLog("Register user response received.")
                 if error != nil || resp == nil || resp?.statusCode != 200 {
-                    Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
-                    NSLog("Error when registering user: \(error)");
+                    if resp?.statusCode == 409 {
+                        Alert.shared.showAlert("A player with nick '\(self.nick)' already exists. Please select a different nick.", title: "Nick exists", buttonText: "OK", parent: self);
+                    } else {
+                        Alert.shared.showAlert("Unable to register user. Please try again later.", title: "Error", buttonText: "OK", parent: self);
+                        NSLog("Error when registering user: \(error)");
+                    }
                 } else {
                     let d = JSON(j!);
                     let playerId = d["id"].string!
