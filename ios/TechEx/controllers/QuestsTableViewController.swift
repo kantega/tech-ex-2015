@@ -21,7 +21,7 @@ class QuestsTableViewController: UITableViewController{
     }
     
     override func viewDidLoad() {
-        NSLog("Entered QuestsTableViewController.viewDidLoad()")
+        super.viewDidLoad()
         self.baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
         
         self.setTechExBackgroundImage()
@@ -43,7 +43,6 @@ class QuestsTableViewController: UITableViewController{
         self.loadInitialData()
         self.startDetectingBeacons()
         
-        super.viewDidLoad()
     }
 
     

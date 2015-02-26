@@ -14,6 +14,8 @@ class QuestTableViewController: UITableViewController {
     var quest = Quest()
     
     override func viewDidLoad() {
+        super.viewDidLoad()
+        
         self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
         self.tableView.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
         // Hide empty table rows
@@ -21,16 +23,16 @@ class QuestTableViewController: UITableViewController {
         
         self.tableView.estimatedRowHeight = 100
         self.tableView.rowHeight = UITableViewAutomaticDimension
-        
-        super.viewDidLoad()
     }
 
     override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "showAwardView:", name: "badgeReceived", object: nil)
     }
     
     override func viewDidDisappear(animated: Bool) {
         NSNotificationCenter.defaultCenter().removeObserver(self)
+        super.viewWillDisappear(animated)
     }
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {

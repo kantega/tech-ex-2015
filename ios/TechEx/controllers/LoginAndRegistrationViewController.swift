@@ -24,10 +24,12 @@ class LoginAndRegistrationViewController: UIViewController {
 
     
     override func viewDidLoad() {
+        super.viewDidLoad()
         self.view.backgroundColor = UIColor(patternImage: UIImage(named: "Background")!)
     }
     
     override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated);
         loadCredentialsFromKeychain();
         if (isLoggedIn()) {
             println("User is logged in as \(nick). Displaying welcome message.");
@@ -36,13 +38,12 @@ class LoginAndRegistrationViewController: UIViewController {
             println("User is not logged in. Displaying registration form.");
             showRegistrationView();
         }
-        super.viewWillAppear(animated);
     }
     
     override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
         if (!welcomeView.hidden) {
-            sleep(2)
-            showQuests();
+            NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: Selector("showQuests"), userInfo: nil, repeats: false)
         }
     }
     

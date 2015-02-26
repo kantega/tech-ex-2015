@@ -34,9 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().translucent = true
         // Link and title text color
         UINavigationBar.appearance().tintColor = UIColor.whiteColor()
-        
-        //TODO: Ta vekk!! Kun for testing
-        sleep(2);
+
         return true
     }
     
