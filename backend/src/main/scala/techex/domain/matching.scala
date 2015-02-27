@@ -1,90 +1,69 @@
 package techex.domain
 
-
-import org.joda.time.Hours
-
 import scalaz._, Scalaz._
+
+import preds._
 import matching._
 
 object matching {
 
-
-  implicit val defaultExpireDuration =
-    Hours.THREE.toStandardDuration
-
-  def exists(pred: Pred): EventPattern =
-    Waiting(AwaitOccurence(pred))
-
-  def notExists(pred: Pred): EventPattern = {
-    Matched(Nil, Waiting(HaltOnOccurence(pred)))
+  def await(f: Match => PatternMatcher) = {
+    Await(GenAwaitFun(f))
   }
-
 }
 
-case class Pred(p: Token => Boolean, desc: String) {
-  def apply(t: Token) = p(t)
-}
 
-object predicates {
+object preds {
+  type Pred = Match => Boolean
+
+  def exists(pred: Pred) =
+    Await(Exists(pred))
 
   case class PredOps(pred: Pred) {
     def and(other: Pred) =
-      predicates.and(pred, other)
+      preds.and(pred, other)
 
     def or(other: Pred) =
-      predicates.or(pred, other)
-
-    def ~>(other: Pred) =
-      exists(pred) ~> exists(other)
-
-    def ~>(other: EventPattern) =
-      exists(pred) ~> other
-
-    def ~><(other: Pred) =
-      exists(pred) ~>< exists(other)
-
-    def ~><(other: EventPattern) =
-      exists(pred) ~>< other
+      preds.or(pred, other)
 
   }
 
   implicit def toInfixOps(pred: Pred): PredOps =
     PredOps(pred)
 
+  implicit def toExists(pred: Pred): PatternMatcher =
+    Await(Exists(pred))
+
   def not(pred: Pred): Pred =
-    Pred(ctx => !pred(ctx), "not " + pred.desc)
+    ctx => !pred(ctx)
 
   def and(one: Pred, other: Pred): Pred =
-    Pred(ctx => one(ctx) && other(ctx), one.desc + " and " + other.desc)
+    ctx => one(ctx) && other(ctx)
 
   def or(one: Pred, other: Pred): Pred =
-    Pred(ctx => one(ctx) || other(ctx), one.desc + " or " + other.desc)
+    ctx => one(ctx) || other(ctx)
 
 
   def visited(area: Area) =
-    fact({ case ArrivedAtArea(_, a,_) if a === area => true})
+    fact({ case ArrivedAtArea(_, a, _) if a === area => true})
 
 
-  def ctx(f: PartialFunction[(Fact, List[Fact]), Boolean]) =
-    Pred(
-      ctx => {
-        if (f.isDefinedAt((ctx.fact, ctx.matches)))
-          f((ctx.fact, ctx.matches))
-        else
-          false
-      }, "Match pattern"
-    )
+  def ctx(f: PartialFunction[(List[Fact]), Boolean]): Pred =
+    ctx => {
+      if (f.isDefinedAt(ctx.pattern))
+        f(ctx.pattern)
+      else
+        false
+    }
 
 
-  def fact(f: PartialFunction[Fact, Boolean]) =
-    Pred(
-      ctx => {
-        if (f.isDefinedAt(ctx.fact))
-          f(ctx.fact)
-        else
-          false
-      }, "Match by fact"
-    )
+  def fact(f: PartialFunction[Fact, Boolean]): Pred =
+    ctx => {
+      if (f.isDefinedAt(ctx.pattern.head))
+        f(ctx.pattern.head)
+      else
+        false
+    }
 
 
   def matched(f: PartialFunction[Fact, Boolean]): Fact => Boolean = {
@@ -96,245 +75,189 @@ object predicates {
   }
 }
 
+sealed trait PatternMatcher {
 
-case class Token(fact: Fact, matches: List[Fact]) {
+  def parse(fact: Fact): (PatternMatcher, List[Match]) = {
+    val nxt = apply(Match(List(fact)))
 
-  def add(t: Fact): Token = copy(matches = t :: matches)
-
-  def addToken = add(fact)
-
-  def appendMatchesFrom(other: Token) =
-    Token(fact, matches ::: other.matches)
-
-  def appendHistory(history: List[Fact]): Unit = {
-    Token(fact, matches ::: history)
+    nxt match {
+      case Halt()                  => (Halt(), nil)
+      case Continue(matches, next) => (next, matches)
+      case Await(f)                => (Await(f), nil)
+    }
   }
 
-  override def toString: String =
-    "Token(fact:" + fact + " - matches: [" + matches.reverse.mkString(" ~> ") + "])"
-}
-
-object Token {
-
-  def append(last: List[Token], prev: List[Token]): List[Token] = {
-    for {
-      t1 <- last
-      t2 <- prev
-    } yield t1.appendMatchesFrom(t2)
-  }
-
-}
-
-sealed trait EventPattern {
-
-  def parse(s: Token): (EventPattern, List[Token]) = {
-    def go(p: EventPattern): (EventPattern, List[Token]) = {
-
+  def apply(fact: Match): PatternMatcher = {
+    def go(p: PatternMatcher): PatternMatcher = {
       p match {
-        case Halted()              => (Halted(), Nil)
-        case Matched(tokens, next) => go(next).bimap(x => x, _ ::: tokens)
-        case Waiting(f)            => f(s) match {
-          case Halted()              => (Halted(), Nil)
-          case Matched(tokens, next) => (next, tokens)
-          case a@Waiting(f)          => (a, Nil)
+        case Halt()                  => Halt()
+        case Continue(matches, next) => next(fact) match {
+          case Continue(m2, n2) => go(Continue(m2 ::: matches, n2))
+          case _                => Continue(matches, next)
         }
+        case Await(f)                => f(fact)
       }
     }
+
     go(this)
   }
 
-  def ++(p: EventPattern): EventPattern =
-    (this, p) match {
-      case (Halted(), Halted())                               => Halted()
-      case (Halted(), other)                                  => other
-      case (one, Halted())                                    => one
-      case (Matched(tokens1, next1), Matched(tokens2, next2)) => Matched(tokens1 ::: tokens2, next1 ++ next2)
-      case (m@Matched(tokens, next), waiting: Waiting)        => Matched(tokens, next ++ waiting) //Waiting(WaitingAndEmit(waiting,m))//
-      case (waiting: Waiting, m@Matched(tokens, next))        => Matched(tokens, next ++ waiting) //Waiting(WaitingAndEmit(waiting,m))//
-      case (first: Waiting, second: Waiting)                  => Waiting(AndWaiting(first, second))
-    }
-
-  def ~>(p: EventPattern): EventPattern = {
-    (this, p) match {
-      case (Halted(), _)                                      => Halted()
-      case (_, Halted())                                      => Halted()
-      case (Matched(tokens1, next1), Matched(tokens2, next2)) => Matched(tokens2, Halted())
-      case (first: Matched, second: Waiting)                  => Waiting(AwaitSecond(first, second))
-      case (first: Waiting, second: Matched)                  => Waiting(AwaitFirst(first, second))
-      case (first: Waiting, second: Waiting)                  => Waiting(AwaitFirst(first, second))
-    }
-  }
-
-  def ~>(pred: Pred): EventPattern = {
-    this ~> exists(pred)
-  }
-
-  def ~><(until: EventPattern): EventPattern = {
-    (this, until) match {
-      case (Halted(), _)                      => Halted()
-      case (_, Halted())                      => Halted()
-      case (Waiting(pf), Matched(ut, un))     => Halted()
-      case (Matched(pt, pn), Matched(ut, un)) => Matched(Token.append(ut, pt), pn ~>< un)
-      case (Matched(pt, pn), Waiting(uf))     => pn.accum(pt) ~>< Waiting(uf)
-      case (pw: Waiting, uw: Waiting)         => Waiting(Until(pw, uw))
-
-    }
-  }
-
-  def ~><(pred: Pred): EventPattern = {
-    this ~>< exists(pred)
-  }
-
-  def accum(history: List[Token]): EventPattern = {
+  def append(matched: Match): PatternMatcher = {
     this match {
-      case Halted()              => Halted()
-      case Matched(tokens, next) => Matched(Token.append(tokens, history), next)
-      case w@Waiting(f)          => Matched(history, Waiting(Accumulate(w, history)))
-    }
-  }
-}
-
-case class Matched(tokens: List[Token], next: EventPattern) extends EventPattern {
-  override def toString() =
-    "[" + tokens.map(x => x.fact).mkString(",") + "]"
-}
-case class Waiting(f: WaitFunc) extends EventPattern {
-  override def toString() =
-    "" + f + ""
-}
-case class Halted() extends EventPattern
-trait WaitFunc {
-  def apply(t: Token): EventPattern
-}
-
-
-case class Accumulate(p: Waiting, history: List[Token]) extends WaitFunc {
-  def apply(t: Token) =
-    p.f(t).accum(history)
-
-}
-case class AwaitSecond(first: Matched, second: Waiting) extends WaitFunc {
-  def apply(t: Token) = {
-    val next =
-      first.tokens
-        .map(prevMatch => second.f(t.appendMatchesFrom(prevMatch)))
-        .foldLeft1Opt(_ ++ _).getOrElse(Halted())
-
-    next match {
-      case m: Matched => (first ~> next) ++ (first ~> second)
-      case _          => first ~> second
+      case Halt()               => Halt()
+      case Continue(emit, next) => Continue(matched.appendToAll(emit), next)
+      case Await(f)             => await(m => f(m :: matched))
     }
   }
 
-  override def toString() =
-    first + " ~> " + second
-}
+  def ++(p: PatternMatcher): PatternMatcher =
+    (this, p) match {
+      case (Halt(), Halt())                                     => Halt()
+      case (Halt(), other)                                      => other
+      case (one, Halt())                                        => one
+      case (Continue(tokens1, next1), Continue(tokens2, next2)) => Continue(tokens1 ::: tokens2, next1 ++ next2)
+      case (m@Continue(tokens, next), waiting: Await)           => Continue(tokens, next ++ waiting)
+      case (waiting: Await, m@Continue(tokens, next))           => Continue(tokens, next ++ waiting)
+      case (first: Await, second: Await)                        => Await(AndWaiting(first, second))
+    }
 
-case class AwaitFirst(first: Waiting, second: EventPattern) extends WaitFunc {
-  def apply(t: Token) = {
-    val next =
-      first.f(t)
+  def ~>(p: PatternMatcher): PatternMatcher =
+    Await(FBy(this, p, Nil))
 
-    next match {
-      case m: Matched => (next ~> second) ++ (first ~> second)
-      case _          => first ~> second
+  def ~><(p: PatternMatcher): PatternMatcher =
+    Await(FBy(this, p, Nil))
+
+  def never: PatternMatcher = {
+    this match {
+      case Halt()      => Halt()
+      case c: Continue => Halt()
+      case Await(f)    => await(m => f(m).never)
     }
   }
 
-  override def toString() =
-    first + " ~> " + second
-}
-
-case class AwaitOccurence(pred: Pred) extends WaitFunc {
-  def apply(t: Token) = {
-    if (pred(t))
-      Matched(List(t.addToken), Waiting(this))
-    else
-      Waiting(this)
+  def once: PatternMatcher = {
+    this match {
+      case Halt()               => Halt()
+      case Continue(Nil, next)  => Continue(Nil, next.once)
+      case Continue(emit, next) => Continue(emit, Halt())
+      case Await(f)             => await(m => f(m).once)
+    }
   }
 
-  override def toString() = "[?]"
 }
 
-case class HaltOnOccurence(pred: Pred) extends WaitFunc {
-  def apply(t: Token) = {
-    if (pred(t))
-      Halted()
-    else
-      Matched(List(), Waiting(this))
-  }
+case class Match(pattern: List[Fact]) {
+  def ::(m: Match) = Match(m.pattern ::: pattern)
 
-  override def toString() = "X"
+  def appendToAll(list: List[Match]) =
+    list.map(m => Match(m.pattern ::: pattern))
+
+}
+case class Await(f: AwaitFun) extends PatternMatcher
+case class Continue(matches: List[Match], next: PatternMatcher) extends PatternMatcher
+case class Halt() extends PatternMatcher
+
+trait AwaitFun{
+  def apply(t:Match):PatternMatcher
 }
 
-
-case class Until(pattern: Waiting, until: Waiting) extends WaitFunc {
-  def apply(t: Token) = {
-    val wnext =
-      until.f(t)
-
-    val patternNext =
-      pattern.f(t)
-    patternNext ~>< wnext
-  }
-
-  override def toString =
-    pattern + " ~>< " + until
-}
-
-
-case class AndWaiting(one: Waiting, other: Waiting) extends WaitFunc {
-  def apply(t: Token) =
+case class AndWaiting(one: Await, other: Await) extends AwaitFun {
+  def apply(t: Match) =
     one.f(t) ++ other.f(t)
 
   override def toString =
     " ( " + one.toString + " AND " + other.toString + " ) "
 }
 
-case class WaitingAndEmit(one: Waiting, other: Matched) extends WaitFunc {
-  def apply(t: Token) =
-    one.f(t) ++ other
+
+case class FBy(
+  one: PatternMatcher,
+  other: PatternMatcher,
+  window: List[PatternMatcher]) extends AwaitFun {
+
+  def apply(fact: Match): PatternMatcher = {
+
+    val (output, keepInWindow) =
+      window.map(a => a(fact)).foldLeft((nil[Match], nil[PatternMatcher])) { (lists, pm) =>
+        pm match {
+          case Halt()                 => lists
+          case Continue(Nil, next) => (lists._1, next :: lists._2)
+          case Continue(tokens, _) => (tokens ::: lists._1, lists._2)
+          case a: Await               => (lists._1, a :: lists._2)
+        }
+      }
+
+    one(fact) match {
+      case Halt()                                     => Halt()
+      case Continue(Nil, next) if output.nonEmpty     =>
+        Continue(output, Await(FBy(next, other, keepInWindow)))
+      case Continue(Nil, next) if output.isEmpty      =>
+        Await(FBy(one, other, output.map(other.append) ::: keepInWindow))
+      case Continue(matches, next) if output.nonEmpty =>
+        Continue(output, Await(FBy(one, other, matches.map(other.append) ::: keepInWindow)))
+      case Continue(matches, next) if output.isEmpty  =>
+        Await(FBy(one, other, matches.map(other.append) ::: keepInWindow))
+      case a: Await if output.nonEmpty                =>
+        Continue(output, Await(FBy(one, other, Await(FBy(a, other, Nil)) :: keepInWindow)))
+      case a: Await if output.isEmpty                 =>
+        Await(FBy(one, other, Await(FBy(a, other, Nil)) :: keepInWindow))
+    }
+  }
+}
+case class GenAwaitFun(f: Match => PatternMatcher) extends AwaitFun {
+  def apply(m: Match) = f(m)
+}
+
+case class Exists(pred: Pred) extends AwaitFun {
+  def apply(t: Match) = {
+    if (pred(t))
+      Continue(List(t), Await(this))
+    else
+      Continue(nil, Await(this))
+  }
+
+  override def toString() = "[?]"
 }
 
 
-trait PatternOutput[A] {
-  def apply(t: FactAboutPlayer): (PatternOutput[A], List[A])
+trait PatternTracker[A] {
+  def apply(t: Fact): (PatternTracker[A], List[A])
 
-  def and(other: PatternOutput[A]): PatternOutput[A] =
+  def and(other: PatternTracker[A]): PatternTracker[A] =
     (this, other) match {
-      case (ZeroMatcher(), other) => other
-      case (first, ZeroMatcher()) => first
-      case (first, second)        => AndMatcher(first, other)
+      case (ZeroTracker(), other) => other
+      case (first, ZeroTracker()) => first
+      case (first, second)        => AndTracker(first, other)
     }
 
 }
 
-object PatternOutput {
-  implicit def matcherMonoid[A]: Monoid[PatternOutput[A]] =
-    Monoid.instance({ case (m1: PatternOutput[A], m2: PatternOutput[A]) => AndMatcher(m1, m2)}, ZeroMatcher[A]())
+object PatternTracker {
+  implicit def matcherMonoid[A]: Monoid[PatternTracker[A]] =
+    Monoid.instance({ case (m1: PatternTracker[A], m2: PatternTracker[A]) => AndTracker(m1, m2)}, ZeroTracker[A]())
 
-  def zero[A]: PatternOutput[A] =
-    ZeroMatcher[A]()
+  def zero[A]: PatternTracker[A] =
+    ZeroTracker[A]()
 }
 
-case class ZeroMatcher[A]() extends PatternOutput[A] {
-  def apply(t: FactAboutPlayer) = (this, Nil)
+case class ZeroTracker[A]() extends PatternTracker[A] {
+  def apply(t: Fact) = (this, Nil)
 }
 
 
-case class AndMatcher[A](one: PatternOutput[A], other: PatternOutput[A]) extends PatternOutput[A] {
-  def apply(t: FactAboutPlayer) = {
+case class AndTracker[A](one: PatternTracker[A], other: PatternTracker[A]) extends PatternTracker[A] {
+  def apply(t: Fact) = {
     val (next1, tokens1) = one(t)
     val (next2, tokens2) = other(t)
 
-    (AndMatcher(next1, next2), tokens1 ::: tokens2)
+    (AndTracker(next1, next2), tokens1 ::: tokens2)
   }
 }
 
-case class CountingTracker[A](current: Int, max: Int, pattern: EventPattern)(f: Int => Option[A]) extends PatternOutput[A] {
-  def apply(t: FactAboutPlayer): (PatternOutput[A], List[A]) = {
+case class CountingTracker[A](current: Int, max: Int, pattern: PatternMatcher)(f: Int => Option[A]) extends PatternTracker[A] {
+  def apply(t: Fact): (PatternTracker[A], List[A]) = {
     val (next, tokens) =
-      pattern.parse(Token(t, Nil))
+      pattern.parse(t)
 
     val output =
       tokens.zipWithIndex
@@ -342,11 +265,11 @@ case class CountingTracker[A](current: Int, max: Int, pattern: EventPattern)(f: 
         .collect { case Some(x) => x}
 
     if (current == max)
-      (ZeroMatcher(), output)
+      (ZeroTracker(), output)
     else {
       next match {
-        case Halted() => (ZeroMatcher(), output)
-        case _        => (CountingTracker(current + tokens.length, max, next)(f), output)
+        case Halt() => (ZeroTracker(), output)
+        case _      => (CountingTracker(current + tokens.length, max, next)(f), output)
       }
 
     }
@@ -354,13 +277,13 @@ case class CountingTracker[A](current: Int, max: Int, pattern: EventPattern)(f: 
   }
 }
 
-case class StatefulTracker[S, A](pattern: EventPattern, s: S)(f: Token => State[S, Option[A]]) extends PatternOutput[A] {
+case class StatefulTracker[S, A](pattern: PatternMatcher, s: S)(f: Match => State[S, Option[A]]) extends PatternTracker[A] {
 
   type StateS[x] = State[S, x]
 
-  def apply(t: FactAboutPlayer): (PatternOutput[A], List[A]) = {
+  def apply(t: Fact): (PatternTracker[A], List[A]) = {
     val (next, matches) =
-      pattern.parse(Token(t, Nil))
+      pattern.parse(t)
 
     val changes =
       matches
@@ -374,5 +297,39 @@ case class StatefulTracker[S, A](pattern: EventPattern, s: S)(f: Token => State[
   }
 }
 
+case class PredStatefulTracker[S, A](pred: Pred, s: S)(f: Fact => State[S, List[A]]) extends PatternTracker[A] {
+
+
+  def apply(t: Fact): (PatternTracker[A], List[A]) = {
+
+    val changes:State[S, List[A]] =
+      if(pred(Match(List(t))))
+        f(t)
+      else
+        State.state(nil)
+
+    val output =
+      changes.run(s)
+
+    (PredStatefulTracker(pred, output._1)(f), output._2)
+  }
+}
+
+case class CasedStatefulTracker[S, A](s: S)(f: PartialFunction[Fact, State[S, List[A]]]) extends PatternTracker[A] {
+
+  def apply(t: Fact): (PatternTracker[A], List[A]) = {
+
+    val state:State[S, List[A]] =
+      if(f.isDefinedAt(t))
+        f(t)
+    else
+        State.state(nil)
+
+    val output =
+      state.run(s)
+
+    (CasedStatefulTracker(output._1)(f), output._2)
+  }
+}
 
 

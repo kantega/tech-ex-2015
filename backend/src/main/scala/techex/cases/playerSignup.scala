@@ -88,7 +88,7 @@ object playerSignup {
             player.privateQuests
               .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
-              .foldLeft(PatternOutput.zero[Achievement])(_ and _),
+              .foldLeft(PatternTracker.zero[Achievement])(_ and _),
             createData.platform.toPlatform
           )))
       } yield rsult

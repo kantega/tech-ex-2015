@@ -98,7 +98,7 @@ case class PlayerData(
   achievements: Set[Achievement],
   movements: Vector[LocationUpdate],
   activities: Vector[FactAboutPlayer],
-  progress: PatternOutput[Achievement],
+  progress: PatternTracker[Achievement],
   platform: NotificationTarget) {
 
   def addAchievement(achievemnt: Achievement): PlayerData =
@@ -130,7 +130,7 @@ object PlayerData {
   implicit val playerDataEqual: Equal[PlayerData] =
     Equal.equalA[String].contramap((pd: PlayerData) => pd.player.id.value)
 
-  def updateProgess: PatternOutput[Achievement] => PlayerData => PlayerData =
+  def updateProgess: PatternTracker[Achievement] => PlayerData => PlayerData =
     progress => data => data.copy(progress = progress)
 
 }
