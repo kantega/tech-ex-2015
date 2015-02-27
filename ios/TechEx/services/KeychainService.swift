@@ -26,14 +26,16 @@ class KeychainService: NSObject {
     * Exposed methods to perform queries.
     */
     internal class func save(key: KeychainKey, value: NSString) {
-        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
-        self.save(serviceIdentifier, key: key, value: value)
+        NSUserDefaults.standardUserDefaults().setValue(value, forKey: keyAsString(key))
+//        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
+//        self.save(serviceIdentifier, key: key, value: value)
     }
     
     internal class func load(key: KeychainKey) -> NSString? {
-        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
-        var token = self.load(serviceIdentifier, key: key)
-        return token
+        return NSUserDefaults.standardUserDefaults().objectForKey(keyAsString(key)) as? String
+//        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
+//        var token = self.load(serviceIdentifier, key: key)
+//        return token
     }
     
     internal class func deleteAll() {
