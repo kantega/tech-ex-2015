@@ -29,9 +29,9 @@ class LocationService: NSObject, CLLocationManagerDelegate {
             // whereas the 'always' authorization lets you access location services at any time, even waking up and starting the app in response to some event
             locationManager.requestAlwaysAuthorization()
         }
-        println("Start ranging beacons")
+        NSLog("Start ranging beacons")
         locationManager.startMonitoringForRegion(region)
-        locationManager.startRangingBeaconsInRegion(region as CLBeaconRegion)
+        locationManager.startRangingBeaconsInRegion(region)
      }
 
     
@@ -41,7 +41,8 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(manager: CLLocationManager!, didExitRegion region: CLRegion!) {
-        
+        NSLog("Device left region \(region.description)")
+        locationManager.stopRangingBeaconsInRegion(region as CLBeaconRegion)
     }
     
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
@@ -49,7 +50,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
         if (knownBeacons.count > 0) {
             let closestBeacon = knownBeacons[0] as CLBeacon
-            //println("Beacon detected. Minor: \(closestBeacon.minor). Proximity: \(closestBeacon.proximity.rawValue). \(closestBeacon)")
+//            println("Beacon detected. Minor: \(closestBeacon.minor). Proximity: \(closestBeacon.proximity.rawValue). \(closestBeacon)")
             if closestBeacon.minor != lastBeacon?.minor || closestBeacon.proximity != lastProximity {
                 self.lastBeacon = closestBeacon
                 self.lastProximity = closestBeacon.proximity
