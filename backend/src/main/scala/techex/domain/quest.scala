@@ -86,17 +86,17 @@ object quests {
     val prettyearlyatwork = Achievement(Bid("kprettyearlyatwork"), "Came on time today", "Have coffee before 09:00")
     val earlyenough       = Achievement(Bid("kearlyenough"), "Came on time this week", "Have coffee before 09:00 for a week")
     val prettylateatwork  = Achievement(Bid("kprettylateatwork"), "Had some stuff to do.", "Have coffee after 16:00")
-    val prettylateatworks = Achievement(Bid("kprettylateatworks"), "Had some stuff to do.", "Have coffee after 16:00 for a week")
+    val prettylateatworks = Achievement(Bid("kprettylateatworks"), "Had a lot of stuff to do.", "Have coffee after 16:00 for a week")
     val lateatwork        = Achievement(Bid("klateatwork"), "Had some more stuff to do.", "Have coffee after 17:00")
-    val lateatworks       = Achievement(Bid("klateatworks"), "Had some more stuff to do.", "Have coffee after 17:00 for a week")
+    val lateatworks       = Achievement(Bid("klateatworks"), "I like staying at work.", "Have coffee after 17:00 for a week")
     val earlyatworks      = Achievement(Bid("kearlybird"), "The early bird", "Have coffee before 08:00 for a week")
     val latebird          = Achievement(Bid("klatebird"), "The late bird", "Have coffee after 17:00 for a week")
     val koffehero         = Achievement(Bid("kkoffehero"), "I like coffee", "Get coffee five times in a day")
-    val koffeexperimenter = Achievement(Bid("kkoffeexperimenter"), "I like to alternate", "Have coffe from both areas in a day")
+    val koffeexperimenter = Achievement(Bid("kkoffeexperimenter"), "I like to experiment", "Have coffe from both areas in a day")
     val koffeeconnector   = Achievement(Bid("kcoffeeconnector"), "I like coffeedrinkers", "Meet with three others at the coffeemachine")
     val koffeaddict       = Achievement(Bid("Kcoffeaddicted"), "Coffeeaddicted", "Get coffee ten times a day")
 
-    val coffeeHero  = Quest(Qid("kcoffeehero"), "Coffee hero", "Drink coffe, the more the better", Public, List(koffehero, koffeeconnector, koffeaddict))
+    val coffeeHero  = Quest(Qid("kcoffeehero"), "Coffee hero", "Drink coffe, the more the better", Public, List(koffehero, koffeexperimenter,koffeeconnector, koffeaddict))
     val earlybird   = Quest(Qid("kearlybird"), "The early bird", "Come early to work, feel the rising sun!", Public, List(prettyearlyatwork, earlyatwork, earlyenough, earlyatworks))
     val stayer      = Quest(Qid("kstayer"), "The stayer", "Put in your hours, its good for the company and you", Public, List(prettyearlyatwork, lateatwork, prettylateatworks, lateatworks))
     val meetinghero = Quest(Qid("kmeetinroomhero"), "Meetingromm hero", "Meetings are great for productivity!", Public, List(meetingAttender, meetingRoomRoamer, meetingRoomStayer, meetingAttenders))
@@ -276,7 +276,8 @@ object quests {
       kq.latebird,
       kq.koffehero,
       kq.koffeeconnector,
-      kq.koffeaddict
+      kq.koffeaddict,
+      kq.koffeexperimenter
     )
 
   val badgesMap =
