@@ -3,8 +3,10 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.{DateTime, Instant}
-import techex.domain.preds._
 import scalaz._, Scalaz._
+import techex.domain.preds._
+import patternmatching._
+
 
 object quests {
 
@@ -12,33 +14,10 @@ object quests {
   val joinedAnActivityOnTime =
     fact { case j: JoinedOnStart => true}
 
-  val leftSameOnTime =
-    ctx({ case (LeftOnEnd(_, entry, _) :: matches) if matches.exists(matched({ case LeftActivityEarly(_, e, _) => entry === e})) => true})
-
-
-  val leftActivity =
-    fact({ case LeftActivityEarly(_, entry, _) => true})
-
-  val joinedAnActivityLate =
-    fact({ case JoinedActivityLate(_, entry, _) => true})
-
-  val joinedSameActivityLate =
-    ctx({ case (JoinedActivityLate(_, entry, _) :: matches) if matches.exists(matched({ case LeftActivityEarly(_, e, _) => entry === e})) => true})
-
-  val joinedActivityAtSameArea =
-    ctx({ case (JoinedActivityLate(_, entry, _) :: matches) if matches.exists(matched({ case ArrivedAtArea(_, e, _) => entry.area === e})) => true})
-
-  val leftSameActivity =
-    ctx({ case (LeftActivityEarly(_, entry, _) :: matches) if matches.exists(matched({ case JoinedActivityLate(_, e, _) => entry === e})) => true})
 
   val coffee =
     visited(areas.coffeeStand)
 
-  val toilet =
-    visited(areas.toiletAtSamf) or visited(areas.toiletAtSeminar)
-
-  val attendedWholeSession =
-    joinedAnActivityOnTime ~> leftSameActivity.never ~>< leftSameOnTime
 
   val enteredArea =
     fact({ case entered: ArrivedAtArea => true})
@@ -46,12 +25,9 @@ object quests {
   val leftArea =
     fact({ case entered: LeftArea => true})
 
-  val leftSameArea =
-    ctx({ case (LeftArea(_, area, _) :: matches) if matches.exists(matched({ case ArrivedAtArea(_, areaToMatch, _) => area === areaToMatch})) => true})
-
 
   val metOtherPlayer =
-    fact({ case met: MetPlayer => true})
+    head({ case met: MetPlayer => true})
 
 
   //Badges
@@ -109,14 +85,14 @@ object quests {
   val eagerNess         = Quest(Qid("beEager"), "The early bird", "Be on time", Public, List(earlybird, ontime))
   val antihero          = Quest(Qid("antihero"), "The Antihero", "No, you dont want to be good here", Secret, List(keepsringing, placestogo, tinyjavabladder, smalljavabladder))
 
-  val attendASessionPred =
-    visited(areas.mrtTuring) or visited(areas.mrtTesla) or visited(areas.mrtHopper) or visited(areas.mrtCurie)
+  val attendASession =
+    visited(areas.mrtTuring).first or visited(areas.mrtTesla).first or visited(areas.mrtHopper).first or visited(areas.mrtCurie)
 
 
   val TEMPattendAllSessionsProgressTracker =
-    StatefulTracker[Set[Area], Achievement](exists(attendASessionPred), Set()) { token => State { set =>
+    StatefulTracker[Set[Area], Achievement](attendASession, Set()) { token => State { set =>
       val entered =
-        token.pattern.head.asInstanceOf[ArrivedAtArea]
+        token.facts.head.asInstanceOf[ArrivedAtArea]
 
       val newSet =
         set + entered.area
@@ -139,22 +115,16 @@ object quests {
     }
     }
 
-  val attendAllSessionsProgressTracker =
-    CountingTracker(0, 6, attendedWholeSession) {
-      case 2 => seetalksbronze.some
-      case 4 => seetalkssilver.some
-      case 6 => seetalksgold.some
-      case _ => none
-    }
+
 
 
   val vistitedStandPred =
     visited(areas.testArea1) or visited(areas.testArea2) or visited(areas.testArea3)
 
   val visitAllStandsTracker =
-    StatefulTracker[Set[Area], Achievement](exists(vistitedStandPred), Set()) { token => State { set =>
+    StatefulTracker[Set[Area], Achievement](vistitedStandPred , Set()) { token => State { set =>
       val entered =
-        token.pattern.head.asInstanceOf[ArrivedAtArea]
+        token.facts.head.asInstanceOf[ArrivedAtArea]
 
       val newSet =
         set + entered.area
@@ -196,9 +166,9 @@ object quests {
     )
 
   val networkingTracker =
-    StatefulTracker[Set[Nick], Achievement](exists(metOtherPlayer), Set()) { token => State { set =>
+    StatefulTracker[Set[Nick], Achievement](occurs(metOtherPlayer), Set()) { token => State { set =>
       val metOther =
-        token.pattern.head.asInstanceOf[MetPlayer]
+        token.facts.head.asInstanceOf[MetPlayer]
 
       val newSet =
         set + metOther.otherPlayer.player.nick

@@ -1,197 +1,319 @@
 package techex
 
-import org.specs2.mutable.Specification
+import org.specs2.mutable._
+import techex.data.windows
 import techex.domain._
 import techex.domain.preds._
+import patternmatching._
+import scalaz._, Scalaz._
 
-import scalaz._,Scalaz._
 
-case class FactA(value: String, n: Int) extends Fact
+case class DelimInner(n: Int) extends Fact
+case class DelimOuter(n: Int) extends Fact
+case class FactA(n: Int, value: String) extends Fact
 case class FactB(n: Int) extends Fact
 case class FactC(n: Int) extends Fact
 class ParseEventsSpec extends Specification {
 
 
-
   try {
 
+    val innerDelim =
+      head({ case di: DelimInner => true})
+
+    val outDelim =
+      head({ case od: DelimOuter => true})
+
     val factA =
-      fact({ case entered: FactA => true})
+      head({ case entered: FactA => true})
 
     val factB =
-      fact({ case c: FactB => true})
+      head({ case c: FactB => true})
 
     val factC =
-      fact({ case c: FactC => true})
+      head({ case c: FactC => true})
 
     val factAWithSameValue =
-      ctx({ case (FactA(entry, _) :: matches) if matches.exists(matched({ case FactA(e, _) if entry === e => true})) => true})
+      pattern({ case (FactA(entry, _) :: matches) if matches.exists({ case FactA(e, _) if entry === e => true}) => true})
 
 
     val events =
       List(
-        FactA("a", 1),
+        FactA(1, "a"),
         FactB(2),
-        FactA("b", 3),
-        FactA("c", 4),
+        FactA(3, "b"),
+        FactA(4, "c"),
         FactB(5),
-        FactA("d", 6),
+        FactA(6, "d"),
         FactC(7),
-        FactA("b",8),
+        FactA(8, "b"),
         FactB(9),
-        FactA("e",10),
-        FactC(11)
+        FactA(10, "e"),
+        FactA(11, "e"),
+        FactC(12)
       )
 
 
     "The parser" should {
 
-      "create several matches match when accumulating three facts" in {
+      "first" in {
 
         val pattern =
-          factA ~> factB ~> factC
+          factA.first
 
         val tokens =
           foldEvents(pattern, events)
 
-        printTokens(tokens) ! ((tokens.length must_== 10) and (tokens(0).pattern.length must_== 3))
+        printTokens(tokens) !
+          ((tokens.length must_== 12) and
+            tokens.map(_.facts.length).forall(_ == 1)
+            )
       }
 
-      "create many matches when accumulating two and one facts" in {
+      "last" in {
 
         val pattern =
-          factA ~> factA ~> factB
+          factB.last
 
         val tokens =
           foldEvents(pattern, events)
 
-        printTokens(tokens) ! ((tokens.length must_== 12) and (tokens(0).pattern.length must_== 3))
+        printTokens(tokens) ! ((tokens.length must_== 11))
       }
 
-      "create a one match when accumulating three facts repeatedly" in {
+      "a ~> a " in {
 
         val pattern =
-          (factA ~> factA ~> factB).once
+          factA ~> factA
 
         val tokens =
           foldEvents(pattern, events, print = false)
 
-        printTokens(tokens) ! ((tokens.length must_== 1) and (tokens(0).pattern.length must_== 3))
+        printTokens(tokens) ! ((tokens.length must_== 2))
       }
 
-      "create a several matches match when accumulating three facts where the last is repeated" in {
+      "a ~> b " in {
 
         val pattern =
-          factA ~> factA ~> exists(factB)
+          factA ~> factB
+
+        val evs =
+          List(
+            FactA(-0, "a")
+            , FactA(0, "b")
+            , FactA(1, "a")
+            , FactB(2)
+            , FactA(3, "b")
+            , FactA(4, "c")
+            , FactB(5)
+            , FactA(6, "d")
+            , FactA(7, "b")
+            , FactA(8, "c")
+            , FactB(9)
+            , FactA(10, "c")
+          )
+
 
         val tokens =
-          foldEvents(pattern, events, print = false)
+          foldEvents(pattern, evs, print = false)
 
-        printTokens(tokens) ! ((tokens.length must_== 5) and (tokens(0).pattern.length must_== 3))
+        printTokens(tokens) ! ((tokens.length must_== 3))
       }
 
-
-      /*
-
-      "create a one matches match when accumulating three facts until the last one" in {
+      "(factA ~> factB) ~> (factA ~> factB) " in {
 
         val pattern =
-          factA ~> factA ~>< factB
+          (factA.first ~> factB.first) ~> (factA.first ~> factB.first)
+
+        val evs =
+          List(
+            FactA(-0, "a")
+            , FactA(0, "b")
+            , FactA(1, "a")
+            , FactB(2)
+            , FactA(3, "b")
+            , FactA(4, "c")
+            , FactB(5)
+            , FactA(6, "d")
+            , FactA(7, "b")
+            , FactA(8, "c")
+            , FactB(9)
+            , FactA(10, "c")
+            , FactA(11, "a")
+            , FactB(12)
+            , FactA(13, "b")
+            , FactA(14, "c")
+            , FactB(15)
+          )
+
 
         val tokens =
-          foldEvents(pattern, events,print=true)
+          foldEvents(pattern, evs, print = true)
 
-        printTokens(tokens) ! ((tokens.length must_== 11) and (tokens(0).matches.length must_== 3))
+        printTokens(tokens) ! ((tokens.length must_== 11))
       }
-*/
-      "create a single match when matching one fact" in {
+
+      "(a ~>< b).repeat2 " in {
 
         val pattern =
-          exists(factB).once
+          (factA ~> factB).times(2)
+
+        val evs =
+          List(
+            FactA(-0, "a")
+            , FactA(0, "b")
+            , FactA(1, "a")
+            , FactB(2)
+            , FactA(3, "b")
+            , FactA(4, "c")
+            , FactB(5)
+            , FactA(6, "d")
+            , FactA(7, "b")
+            , FactA(8, "c")
+            , FactB(9)
+            , FactA(10, "c")
+          )
+
 
         val tokens =
-          foldEvents(pattern, events)
+          foldEvents(pattern, evs, print = false)
 
-        printTokens(tokens) ! (tokens.length must_== 1)
+        printTokens(tokens) ! ((tokens.length must_== 1) and tokens.map(_.facts.length).forall(_ == 4))
       }
 
-      "create a multiple match when matching one fact repeatedly" in {
+
+      "factA.first ~> factB.accumN(10) ~>< factC" in {
+
+        val evs =
+          List(
+            FactA(0, "a"),
+            FactA(1, "a"),
+            FactB(2),
+            FactA(3, "b"),
+            FactA(4, "c"),
+            FactB(5),
+            FactA(6, "d"),
+            FactC(7),
+            FactA(8, "b"),
+            FactB(9),
+            FactA(10, "e"),
+            //FactA(11, "e"),
+            FactC(12)
+          )
+
 
         val pattern =
-          exists(factB)
+          factA.first ~> factB.accumN(10) ~>< factC
+
 
         val tokens =
-          foldEvents(pattern, events)
+          foldEvents(pattern, evs, print = false)
 
-        printTokens(tokens) ! (tokens.length must_== 5)
+        printTokens(tokens) ! ((tokens.length must_== 1))
       }
 
-      "create a single match matching facts with same value" in {
+      "(factA.first ~> factB.accum(windows.sized[Fact](10)) ~>< factC).repeat" in {
+
+        val evs =
+          List(
+            FactA(0, "a"),
+            FactA(1, "a"),
+            FactB(2),
+            FactA(3, "b"),
+            FactA(4, "c"),
+            FactB(5),
+            FactA(6, "d"),
+            FactC(7),
+            FactA(8, "b"),
+            FactB(9),
+            FactA(10, "e"),
+            //FactA(11, "e"),
+            FactC(12)
+          )
+
 
         val pattern =
-          exists(factA) ~> factAWithSameValue
+          (factA.first ~> factB.accumN(10) ~>< factC).repeat
+
 
         val tokens =
-          foldEvents(pattern, events, print = false)
+          foldEvents(pattern, evs)
 
-        (tokens.length must_== 1)
+        printTokens(tokens) ! ((tokens.length must_== 2))
       }
+      "(factA.first ~> factB.last ~>< factC).repeat" in {
 
-      "create a many matches when finding a and then b" in {
+        val evs =
+          List(
+            FactA(0, "a"),
+            FactA(1, "a"),
+            FactB(2),
+            FactA(3, "b"),
+            FactA(4, "c"),
+            FactB(5),
+            FactA(6, "d"),
+            FactC(7),
+            FactA(8, "b"),
+            FactB(9),
+            FactA(10, "e"),
+            //FactA(11, "e"),
+            FactC(12)
+          )
+
 
         val pattern =
-          (factA ~> factB)
+          (factA.first ~> factB.last ~>< factC).repeat
+
 
         val tokens =
-          foldEvents(pattern, events)
+          foldEvents(pattern, evs)
 
-        printTokens(tokens) ! (tokens.length must_== 9)
+        printTokens(tokens) ! ((tokens.length must_== 2) and tokens.map(_.facts.length).forall(_ == 3))
       }
 
-      "create a many matches when finding a and then b in a hort list" in {
+
+
+      "innerDelim.last ~> (factB.first ~> factB.first).repeatN(2) ~> innerDelim" in {
+
+        val evs =
+          List(
+            FactA(0, "a"),
+            FactA(1, "a"),
+            DelimInner(1),
+            FactB(2),
+            FactA(3, "b"),
+            FactA(4, "c"),
+            FactB(5),
+            FactA(6, "d"),
+            FactC(7),
+            FactA(8, "b"),
+            FactB(9),
+            FactA(10, "b"),
+            FactB(11),
+            DelimInner(12),
+            FactA(13, "e"),
+            //FactA(14, "e"),
+            FactC(15)
+          )
 
         val pattern =
-          (factA ~> factB)
+          innerDelim.first ~> (factA.first ~> factB.first).times(2).first ~> innerDelim
 
         val tokens =
-          foldEvents(pattern, events.take(5), print = true)
+          foldEvents(pattern, evs)
 
-        printTokens(tokens) ! (tokens.length must_== 5)
+        printTokens(tokens) ! ((tokens.length must_== 1))
       }
-      /*
-            "create a multiple matches when finding a until b" in {
-                val pattern =
-                  factA ~>< factB
-
-                val tokens =
-                  foldEvents(pattern, events)
 
 
-
-                printTokens(tokens) ! (tokens.length must_== 1)
-            }
-
-                        "create create matches when entering an area without connecting" in {
-
-                          val pattern =
-                            factA ~> factA
-
-                          val tokens =
-                            foldEvents(pattern, events)
-
-
-
-                          printTokens(tokens) ! (tokens.length must_== 6)
-                        }
-                  */
     }
 
 
-    def foldEvents(pattern: PatternMatcher, event: List[Fact], print: Boolean = false) =
-      events
-        .foldLeft(pattern, nil[Match]) { (pair: (PatternMatcher, List[Match]), update: Fact) => {
+    def foldEvents(pattern: Matcher, event: List[Fact], print: Boolean = false) =
+      event
+        .foldLeft(pattern, nil[Pattern]) { (pair: (Matcher, List[Pattern]), update: Fact) => {
         val (nextParser, newTokens) =
-          pair._1.parse(update)
+          pair._1.check(update)
         if (print) {
 
           println("PRE " + pair._1)
@@ -200,12 +322,12 @@ class ParseEventsSpec extends Specification {
           println("<<< " + newTokens)
           println("")
         }
-        (nextParser, pair._2 ::: newTokens)
+        (nextParser, newTokens.toList ::: pair._2)
       }
       }._2
 
-    def printTokens(tokens: List[Match]): String = {
-      "Final tokens: \n" + tokens.map(t => t.pattern.reverse.mkString(" ~> ")).mkString("\n") + "\n"
+    def printTokens(tokens: List[Pattern]): String = {
+      "Final tokens: \n" + tokens.map(t => t.facts.reverse.mkString(" ~> ")).mkString("\n") + "\n"
     }
   } catch {
     case t: Throwable => t.printStackTrace()
