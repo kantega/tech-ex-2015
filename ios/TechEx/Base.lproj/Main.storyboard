@@ -17,13 +17,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LogoWithTitle" translatesAutoresizingMaskIntoConstraints="NO" id="uU0-5J-Ysc">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="LogoWithTitle" translatesAutoresizingMaskIntoConstraints="NO" id="uU0-5J-Ysc">
                                 <rect key="frame" x="181" y="60" width="238" height="66"/>
                             </imageView>
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fbX-71-Wiy" userLabel="Welcome view">
                                 <rect key="frame" x="150" y="150" width="300" height="300"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IWH-1K-csB" userLabel="Welcome label">
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -199,15 +199,18 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outlet property="helpButton" destination="oTC-1V-bwf" id="NRf-pN-deU"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RXw-Gb-hAU" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1154" y="177"/>
         </scene>
-        <!--Info View Controller-->
+        <!--Help View Controller-->
         <scene sceneID="qrl-y2-mDO">
             <objects>
-                <viewController id="tAX-yQ-YZW" userLabel="Info View Controller" customClass="BackgroundViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="helpViewController" id="tAX-yQ-YZW" userLabel="Help View Controller" customClass="HelpViewController" customModule="TechEx" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="fQv-tJ-daN"/>
                         <viewControllerLayoutGuide type="bottom" id="yvP-2F-v6s"/>
@@ -216,23 +219,22 @@ By accepting this disclaimer i grant Technoport permission to gather and utilize
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Acg-ib-b8l">
-                                <rect key="frame" x="16" y="0.0" width="568" height="600"/>
+                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Rk1-g8-DkD">
+                                <rect key="frame" x="16" y="8" width="568" height="576"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                            </textView>
+                            </webView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstAttribute="bottomMargin" secondItem="Acg-ib-b8l" secondAttribute="bottom" id="SW5-Ea-g2M"/>
-                            <constraint firstItem="Acg-ib-b8l" firstAttribute="leading" secondItem="5Ft-5s-SdS" secondAttribute="leadingMargin" id="jAh-RC-1UQ"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="Acg-ib-b8l" secondAttribute="trailing" id="rbP-83-8YY"/>
-                            <constraint firstItem="Acg-ib-b8l" firstAttribute="top" secondItem="5Ft-5s-SdS" secondAttribute="topMargin" id="xls-d3-Gkm"/>
+                            <constraint firstItem="yvP-2F-v6s" firstAttribute="top" secondItem="Rk1-g8-DkD" secondAttribute="bottom" constant="16" id="24a-zG-dVb"/>
+                            <constraint firstItem="Rk1-g8-DkD" firstAttribute="leading" secondItem="5Ft-5s-SdS" secondAttribute="leadingMargin" id="U5K-1g-C2f"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Rk1-g8-DkD" secondAttribute="trailing" id="Wq6-IW-GwX"/>
+                            <constraint firstItem="Rk1-g8-DkD" firstAttribute="top" secondItem="5Ft-5s-SdS" secondAttribute="topMargin" constant="8" id="dSi-CI-L4R"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="textView" destination="Rk1-g8-DkD" id="bb4-fa-sEx"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="PSi-C2-UuT" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

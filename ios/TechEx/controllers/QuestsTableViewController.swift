@@ -10,6 +10,7 @@ import UIKit
 
 class QuestsTableViewController: UITableViewController{
     
+    @IBOutlet weak var helpButton: UIBarButtonItem!
 
     let questCellIdentifier = "QuestPrototypeCell"
     var quests = Array<Quest>()
@@ -33,6 +34,9 @@ class QuestsTableViewController: UITableViewController{
         self.refreshControl!.addTarget(self, action: "loadQuests", forControlEvents: UIControlEvents.ValueChanged)
         self.tableView.addSubview(refreshControl!)
         
+        self.helpButton.enabled = false
+        self.helpButton.tintColor = UIColor.clearColor()
+        
         self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
         
         // Hide empty table rows
@@ -41,8 +45,8 @@ class QuestsTableViewController: UITableViewController{
         
         NSLog("QuestsTableViewController.viewDidLoad() bootstrapping complete. About to load initial data.")
         self.loadQuests()
+        self.loadHelpText()
         self.startDetectingBeacons()
-        
     }
 
     
@@ -85,7 +89,15 @@ class QuestsTableViewController: UITableViewController{
         }
     }
 
-
+    func loadHelpText() {
+        request(.GET,"\(baseApiUrl)/text/help/ios")
+            .responseString { (req, resp, text, error) in
+                if (error == nil && text != nil && !text!.isEmpty) {
+                    self.helpButton.enabled = true
+                    self.helpButton.tintColor = UIColor.whiteColor()
+                }
+        }
+    }
     
     func startDetectingBeacons() {
         let appDelegate = UIApplication.sharedApplication().delegate as AppDelegate

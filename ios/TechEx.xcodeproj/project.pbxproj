@@ -32,6 +32,7 @@
 		579C6D6F1A9B84F800483004 /* UIViewController+Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579C6D6E1A9B84F800483004 /* UIViewController+Background.swift */; };
 		579C6D751A9B8CAF00483004 /* BackgroundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579C6D741A9B8CAF00483004 /* BackgroundViewController.swift */; };
 		579C6D771A9CAB6E00483004 /* BadgeAwardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579C6D761A9CAB6E00483004 /* BadgeAwardViewController.swift */; };
+		57F9D8CD1AA44E3800B8FCBC /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F9D8CC1AA44E3800B8FCBC /* HelpViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,7 @@
 		579C6D6E1A9B84F800483004 /* UIViewController+Background.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIViewController+Background.swift"; path = "../UIViewController+Background.swift"; sourceTree = "<group>"; };
 		579C6D741A9B8CAF00483004 /* BackgroundViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundViewController.swift; sourceTree = "<group>"; };
 		579C6D761A9CAB6E00483004 /* BadgeAwardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BadgeAwardViewController.swift; sourceTree = "<group>"; };
+		57F9D8CC1AA44E3800B8FCBC /* HelpViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,6 +158,7 @@
 				574652571A8A281300D70F9F /* QuestsTableViewController.swift */,
 				574652BB1A960EB000D70F9F /* QuestTableViewController.swift */,
 				579C6D761A9CAB6E00483004 /* BadgeAwardViewController.swift */,
+				57F9D8CC1AA44E3800B8FCBC /* HelpViewController.swift */,
 			);
 			path = controllers;
 			sourceTree = "<group>";
@@ -321,6 +324,7 @@
 				574652761A8C8ED700D70F9F /* Config.swift in Sources */,
 				5746526B1A8A281300D70F9F /* Almofire.swift in Sources */,
 				5746526C1A8A281300D70F9F /* SwiftyJSON.swift in Sources */,
+				57F9D8CD1AA44E3800B8FCBC /* HelpViewController.swift in Sources */,
 				574652621A8A281300D70F9F /* Alert.swift in Sources */,
 				579262B81A97620A0010AC45 /* BadgeTableViewCell.swift in Sources */,
 				574652B41A8CE12E00D70F9F /* QuestTableViewCell.swift in Sources */,
@@ -447,13 +451,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
 				INFOPLIST_FILE = TechEx/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "8dbb37b9-8a5f-48ce-b79d-0ca1b2a99dbd";
+				PROVISIONING_PROFILE = "238423d6-9f28-452b-959f-623f98665278";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -462,13 +466,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Kristian Selnæs (Z38D2KF85G)";
 				INFOPLIST_FILE = TechEx/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "8dbb37b9-8a5f-48ce-b79d-0ca1b2a99dbd";
+				PROVISIONING_PROFILE = "238423d6-9f28-452b-959f-623f98665278";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
