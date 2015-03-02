@@ -26,16 +26,16 @@ class KeychainService: NSObject {
     * Exposed methods to perform queries.
     */
     internal class func save(key: KeychainKey, value: NSString) {
-        NSUserDefaults.standardUserDefaults().setValue(value, forKey: keyAsString(key))
-//        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
-//        self.save(serviceIdentifier, key: key, value: value)
+//        NSUserDefaults.standardUserDefaults().setValue(value, forKey: keyAsString(key))
+        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
+        self.save(serviceIdentifier, key: key, value: value)
     }
     
     internal class func load(key: KeychainKey) -> NSString? {
-        return NSUserDefaults.standardUserDefaults().objectForKey(keyAsString(key)) as? String
-//        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
-//        var token = self.load(serviceIdentifier, key: key)
-//        return token
+//        return NSUserDefaults.standardUserDefaults().objectForKey(keyAsString(key)) as? String
+        let serviceIdentifier = NSBundle.mainBundle().bundleIdentifier!
+        var token = self.load(serviceIdentifier, key: key)
+        return token
     }
     
     internal class func deleteAll() {
@@ -74,19 +74,18 @@ class KeychainService: NSObject {
         var dataTypeRef :Unmanaged<AnyObject>?
         NSLog("About to call SecItemCopyMatching with key chain query \(keychainQuery)")
         // Search for the keychain items
-        let status: OSStatus = SecItemCopyMatching(keychainQuery, &dataTypeRef)
-        NSLog("SecItemCopyMatching completed. Status: \(status)")
-        let opaque = dataTypeRef?.toOpaque()
+        
         
         var contentsOfKeychain: NSString?
         
-        if let op = opaque? {
-            let retrievedData = Unmanaged<NSData>.fromOpaque(op).takeUnretainedValue()
-            
-            // Convert the data retrieved from the keychain into a string
-            contentsOfKeychain = NSString(data: retrievedData, encoding: NSUTF8StringEncoding)
-        } else {
-            println("Nothing was retrieved from the keychain. Status code \(status)")
+        var result: AnyObject?
+        var status = withUnsafeMutablePointer(&result) {
+            SecItemCopyMatching(keychainQuery, UnsafeMutablePointer($0))
+        }
+        
+        if status == errSecSuccess {
+            let data = result as NSData?
+            contentsOfKeychain = NSString(data: data!, encoding: NSUTF8StringEncoding)
         }
         
         return contentsOfKeychain
