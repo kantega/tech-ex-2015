@@ -30,7 +30,7 @@ class QuestsTableViewController: UITableViewController{
         
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.tintColor = UIColor.whiteColor()
-        self.refreshControl!.addTarget(self, action: "loadInitialData", forControlEvents: UIControlEvents.ValueChanged)
+        self.refreshControl!.addTarget(self, action: "loadQuests", forControlEvents: UIControlEvents.ValueChanged)
         self.tableView.addSubview(refreshControl!)
         
         self.navigationItem.titleView = UIImageView(image: UIImage(named: "NavbarLogo"))
@@ -40,13 +40,13 @@ class QuestsTableViewController: UITableViewController{
         self.navigationController?.view.backgroundColor = UIColor.clearColor()
         
         NSLog("QuestsTableViewController.viewDidLoad() bootstrapping complete. About to load initial data.")
-        self.loadInitialData()
+        self.loadQuests()
         self.startDetectingBeacons()
         
     }
 
     
-    func loadInitialData() {
+    func loadQuests() {
         LoadingOverlay.shared.showOverlay(self.view)
         NSLog("Loading playerId from KeyChain")
         let playerId = KeychainService.load(.PlayerId)!;
@@ -84,6 +84,7 @@ class QuestsTableViewController: UITableViewController{
                 LoadingOverlay.shared.hideOverlayView();
         }
     }
+
 
     
     func startDetectingBeacons() {
