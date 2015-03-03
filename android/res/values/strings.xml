@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Technoport Experience</string>
+    <string name="welcome_text">Welcome,\n%1$s!</string>
+
+
+    <!-- Registration -->
+    <string name="nick_hint">Nickname...</string>
+    <string name="register_button">Login</string>
+    <string name="register_dialog_success_msg">Login successful</string>
+    <string name="register_dialog_error_msg">Internal error, try again later</string>
+    <string name="register_dialog_error_btn">OK</string>
+    <string name="register_dialog_error_title">Registration failed</string>
+    <string name="register_dialog_taken_msg">The desired nickname \'%1$s\' is already taken, choose another one.</string>
+    <string name="register_dialog_taken_btn">OK</string>
+    <string name="register_dialog_taken_title">Registration failed</string>
+    <string name="register_disclaimer_title">Disclaimer</string>
+    <string name="register_disclaimer_text">This application is an experiment on whether gamification adds value to the conference experience and if it works to promote desired behaviours.\n
+        It will collect location data from your device at the event venue.\n
+        The data collected will not be used for commercial purposes, but an anonymized data set will be made available for future research and development.\n
+        By accepting this disclaimer I grant Technoport permission to gather and utilize data in this way.</string>
+
+    <!-- Quest list -->
+    <string name="questlist_title">Quests</string>
+    <string name="beacon_destroy_warning">Location monitoring stopped.</string>
+
+    <!-- beacon monitoring -->
+    <string name="bluetooth_unavailable_msg">The application requires Bluetooth connection to determine the location. Unfortunately your device is not capable of running the application.</string>
+    <string name="bluetooth_didntturnon_msg">The application requires Bluetooth connection to determine the location.</string>
+    <string name="bluetooth_didntturnon_title">Bluetooth required</string>
+    <string name="bluetooth_unavailable_btn">OK</string>
+    <string name="bluetooth_enablerequest_denied_msg">While bluetooth is disabled, the application is unable to determine your location.</string>
+    <string name="bluetooth_enablerequest_denied_btn">OK</string>
+    <string name="beacon_started">Location monitoring started.</string>
+
+</resources>

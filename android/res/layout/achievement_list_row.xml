@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              style="@style/ListViewRow">
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.9">
+        <TextView style="@style/AchievementTitle"
+                android:id="@+id/tvAchievementTitle"/>
+        <TextView style="@style/AchievementDescription"
+                android:id="@+id/tvAchievementDesc"/>
+    </LinearLayout>
+    <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/achievementBadge"
+            android:layout_gravity="right|center_vertical"
+            android:layout_weight="0.1"/>
+</LinearLayout>

@@ -32,3 +32,14 @@ mockbackend/node_modules
 /.project
 
 *.p12
+
+# Android
+android/.idea
+android/out
+android/bin
+android/build.xml
+android/local.properties
+android/proguard-project.txt
+android/techexp.iml
+android/ant.properties
+android/project.properties

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Configuration settings for accessing the API
+    -->
+    <string name="config_server_address">https://techex.kantega.no</string>
+    <string name="config_rest_registration">/players</string>
+    <string name="config_rest_allquests">/quests/player/%1$s</string>
+    <string name="config_rest_locationupdate">/location/%1$s</string>
+
+    <!-- Other config -->
+    <string name="config_sharedpref_id">no.kantega.techex.android</string>
+
+    <!-- Beacon config -->
+    <string name="beacon_region_uuid">f7826da6-4fa2-4e98-8024-bc5b71e0893e</string>
+
+    <!-- GCM -->
+    <string name="gcm_project_id">902599159415</string>
+
+</resources>

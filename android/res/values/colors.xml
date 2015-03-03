@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="white" type="color">#FFFFFFFF</item>
+    <item name="white_opaque" type="color">#33FFFFFF</item>
+    <item name="magenta" type="color">#FFCC3399</item>
+    <item name="light_green" type="color">#FF99CCCC</item>
+</resources>
