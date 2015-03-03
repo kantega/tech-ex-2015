@@ -21,8 +21,9 @@ object trackPlayer {
       for {
         maybeLocationUpdate <- nextLocation(observation)
         b <- maybeLocationUpdate.map(location2VisitActivities).getOrElse(State.state[Storage, List[Fact]](nil))
-        c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffee)).getOrElse(State.state[Storage, List[Fact]](nil))
-      } yield b ::: c
+        c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeUp)).getOrElse(State.state[Storage, List[Fact]](nil))
+        d <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeDn)).getOrElse(State.state[Storage, List[Fact]](nil))
+      } yield b ::: c ::: d
   }
 
   def nextLocation: Observation => State[Storage, Option[LocationUpdate]] =
@@ -77,7 +78,7 @@ object trackPlayer {
           val updates =
             left :: arrived :: Nil
 
-          (ctx.addFacts(updates).updatePlayerData(locationUpdate.playerId,_.addMovement(locationUpdate)), updates)
+          (ctx.addFacts(updates).updatePlayerData(locationUpdate.playerId, _.addMovement(locationUpdate)), updates)
         }
 
       }
@@ -92,12 +93,13 @@ object trackPlayer {
 
         maybePlayerData.fold((ctx, nil[Fact])) { playerData =>
           val facts =
-            ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
-              .flatMap(other =>
-              List(
-                MetPlayer(playerData, other, location.instant),
-                MetPlayer(other, playerData, location.instant)))
-
+            if (location.area === meetingArea)
+              ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
+                .flatMap(other =>
+                List(
+                  MetPlayer(playerData, other, location.instant),
+                  MetPlayer(other, playerData, location.instant)))
+            else nil
 
           val nextState =
             ctx.addFacts(facts)

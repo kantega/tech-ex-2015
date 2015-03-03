@@ -17,7 +17,11 @@ object sqlmappers {
     Atom.fromScalaType[String].xmap(UUID.fromString, _.toString)
 
   implicit val beaconAtom: Atom[Beacon] =
-    Atom.fromScalaType[String].xmap(Beacon, _.id)
+    Atom.fromScalaType[String].xmap(str => {
+      val major = str.split(':')(0)
+      val minor = str.split(':')(1)
+      Beacon(major.toInt,minor.toInt)
+    }, beacon => beacon.major+":"+beacon.minor)
 
   implicit val playerIdAtom: Atom[PlayerId] =
     Atom.fromScalaType[String].xmap(PlayerId(_), _.value)
@@ -33,9 +37,6 @@ object sqlmappers {
 
   implicit val instantAtom: Atom[Instant] =
     Atom.fromScalaType[Long].xmap(new Instant(_), _.getMillis)
-
-  implicit val locationAtom: Atom[Region] =
-    Atom.fromScalaType[String].xmap(Region.apply, _.name)
 
   implicit val proximityAtom: Atom[Proximity] =
     Atom.fromScalaType[String].xmap(str => str.toLowerCase match {

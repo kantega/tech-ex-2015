@@ -9,7 +9,7 @@ import techex.domain._
 object codecJson {
 
   implicit val areaCodec: CodecJson[Region] =
-    casecodec1(Region.apply, Region.unapply)("name")
+    casecodec2(Region.apply, Region.unapply)("id","name")
 
   implicit val visibilityEncode: EncodeJson[Visibility] =
     jencode1((v: Visibility) => v.asString)
@@ -52,9 +52,9 @@ object codecJson {
     jdecode1((value: String) => Proximity(value))
 
   implicit val observationDecodeJson: DecodeJson[ObservationData] =
-    jdecode2L(
-      (beaconId: String, proximity: String) =>
-        ObservationData(Beacon(beaconId), Proximity(proximity)))("beaconId", "proximity")
+    jdecode3L(
+      (major: Int, minor:Int,proximity: String) =>
+        ObservationData(Beacon(major,minor), Proximity(proximity)))("major","minor", "proximity")
 
   implicit val summaryEncode: CodecJson[ProgressSummary] =
     casecodec4(ProgressSummary, ProgressSummary.unapply)("level", "max", "onQuest", "notOnQuest")
@@ -109,7 +109,7 @@ object codecJson {
     casecodec3(CreatePlayerData, CreatePlayerData.unapply)("nick", "platform", "preferences")
 
   implicit val codecBeacon: CodecJson[Beacon] =
-    casecodec1(Beacon.apply, Beacon.unapply)("value")
+    casecodec2(Beacon.apply, Beacon.unapply)("major","minor")
 
   implicit val codecPlayerId: CodecJson[PlayerId] =
     casecodec1(PlayerId.apply, PlayerId.unapply)("value")

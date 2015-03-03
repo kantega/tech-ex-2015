@@ -84,7 +84,7 @@ object playerSignup {
           else SignupOk(PlayerData(
             player,
             Set(),
-            LocationUpdate(player.id,Region("unknown"),Instant.now()),
+            LocationUpdate(player.id,Region(0,"unknown"),Instant.now()),
             Vector(),
             player.privateQuests
               .map(q => quests.trackerForQuest.get(q.id))

@@ -38,8 +38,6 @@ object notifySlack {
       slack.sendMessage(":thumbsdown: *" + player.player.nick.value + "* came _late_ for _" + event.name + "_")
     case JoinedOnStart(player, event, _)             =>
       slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* came _early_ for _" + event.name + "_")
-    case Observation(beacon, playerId, _, proximity) =>
-      slack.sendMessage(playerId.value + " is " + proximity.asString + " to " + beacon.id + " ")
     case any: AnyRef                                 => Task {}
   }
 }

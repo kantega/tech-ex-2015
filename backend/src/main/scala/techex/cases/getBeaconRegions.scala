@@ -22,7 +22,7 @@ object getBeaconRegions {
     case req@GET -> Root / "beaconregions" =>
       val regions =
         areas.regionList.map(region => BeaconRegion(region.name, uuid, region.id))
-      Ok(regions)
+      Ok(regions.asJson)
 
   }
 
