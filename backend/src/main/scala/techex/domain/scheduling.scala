@@ -57,7 +57,7 @@ case object AnyTime extends TimeBounds {
 
 
 case class ScId(value: String)
-case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Area, started: Boolean = false) {
+case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Region, started: Boolean = false) {
   def start =
     copy(started = true)
 
@@ -71,11 +71,11 @@ object ScheduleEntry {
   implicit val scheduleEntryOrder: Order[ScheduleEntry] =
     Order.orderBy((entry: ScheduleEntry) => entry.time.start.getMillis)
 
-  def withStringId(id: String, name: String, time: IntervalBounds, area: Area, started: Boolean) = {
+  def withStringId(id: String, name: String, time: IntervalBounds, area: Region, started: Boolean) = {
     ScheduleEntry(ScId(id), name, time, area, started)
   }
 
-  def unapplyWithStringId(entry: ScheduleEntry): Option[(String, String, IntervalBounds, Area, Boolean)] =
+  def unapplyWithStringId(entry: ScheduleEntry): Option[(String, String, IntervalBounds, Region, Boolean)] =
     ScheduleEntry.unapply(entry).map(t => t.copy(_1 = t._1.value))
 }
 

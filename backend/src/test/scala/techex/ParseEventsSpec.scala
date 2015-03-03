@@ -1,5 +1,8 @@
 package techex
 
+import java.util.concurrent.atomic.AtomicLong
+
+import org.joda.time.Instant
 import org.specs2.mutable._
 import techex.data.windows
 import techex.domain._
@@ -7,12 +10,19 @@ import techex.domain.preds._
 import patternmatching._
 import scalaz._, Scalaz._
 
+object time {
+  val counter = new AtomicLong(0)
+}
 
-case class DelimInner(n: Int) extends Fact
-case class DelimOuter(n: Int) extends Fact
-case class FactA(n: Int, value: String) extends Fact
-case class FactB(n: Int) extends Fact
-case class FactC(n: Int) extends Fact
+abstract class NowFact extends Fact {
+  val instant = Instant.now().plus(time.counter.incrementAndGet())
+}
+case class DelimInner(n: Int) extends NowFact
+case class DelimOuter(n: Int) extends NowFact
+case class FactA(n: Int, value: String) extends NowFact
+case class FactB(n: Int) extends NowFact
+case class FactC(n: Int) extends NowFact
+case class FactD(n: Int,value:String) extends NowFact
 class ParseEventsSpec extends Specification {
 
 
@@ -33,8 +43,14 @@ class ParseEventsSpec extends Specification {
     val factC =
       head({ case c: FactC => true})
 
-    val factAWithSameValue =
-      pattern({ case (FactA(entry, _) :: matches) if matches.exists({ case FactA(e, _) if entry === e => true}) => true})
+    val factAWithSameValue :Matcher = patternmatching.occurs("factCsame", pattern => {
+      val res = pattern.facts.head match {
+        case a:FactD => pattern.factsAndHistory.collect{case a2:FactA => a.value === a2.value}.nonEmpty
+        case _ => false
+      }
+      println("Checking factCA " + pattern + ":" + res)
+      res
+    })
 
 
     val events =
@@ -42,7 +58,7 @@ class ParseEventsSpec extends Specification {
         FactA(1, "a"),
         FactB(2),
         FactA(3, "b"),
-        FactA(4, "c"),
+        FactA(4, "b"),
         FactB(5),
         FactA(6, "d"),
         FactC(7),
@@ -84,18 +100,32 @@ class ParseEventsSpec extends Specification {
       "a ~> a " in {
 
         val pattern =
-          factA ~> factA
+          factA.first ~> factA.last
 
         val tokens =
           foldEvents(pattern, events, print = false)
 
-        printTokens(tokens) ! ((tokens.length must_== 2))
+        printTokens(tokens) ! ((tokens.length must_== 10))
+      }
+
+      "short a ~> b " in {
+        val evs = List(
+          FactA(0, "b")
+          , FactB(1)
+        )
+        val pattern =
+          factA.first ~> factB.last
+
+        val tokens =
+          foldEvents(pattern, evs, print = false)
+
+        printTokens(tokens) ! ((tokens.length must_== 1))
       }
 
       "a ~> b " in {
 
         val pattern =
-          factA ~> factB
+          factA.first ~> factB.last
 
         val evs =
           List(
@@ -117,13 +147,13 @@ class ParseEventsSpec extends Specification {
         val tokens =
           foldEvents(pattern, evs, print = false)
 
-        printTokens(tokens) ! ((tokens.length must_== 3))
+        printTokens(tokens) ! ((tokens.length must_== 9))
       }
 
       "(factA ~> factB) ~> (factA ~> factB) " in {
 
         val pattern =
-          (factA.first ~> factB.first) ~> (factA.first ~> factB.first)
+          ((factA.first ~> factB.first) ~> (factA.first ~> factB.first)).repeat
 
         val evs =
           List(
@@ -148,12 +178,33 @@ class ParseEventsSpec extends Specification {
 
 
         val tokens =
-          foldEvents(pattern, evs, print = true)
+          foldEvents(pattern, evs, print = false)
 
-        printTokens(tokens) ! ((tokens.length must_== 11))
+        printTokens(tokens) ! ((tokens.length must_== 2))
       }
 
-      "(a ~>< b).repeat2 " in {
+      "short (factA ~> factB) ~> (factA ~> factB) " in {
+
+        val pattern =
+          (factA.first ~> factB.first).first ~> (factA.first ~> factB.first).first
+
+        val evs =
+          List(
+            FactA(1, "a")
+            , FactB(2)
+            , FactA(4, "c")
+            , FactA(5, "c")
+            , FactB(6)
+          )
+
+
+        val tokens =
+          foldEvents(pattern, evs, print = false)
+
+        printTokens(tokens) ! ((tokens.length must_== 1))
+      }
+
+      "(a ~>< b).times(2) " in {
 
         val pattern =
           (factA ~> factB).times(2)
@@ -180,39 +231,73 @@ class ParseEventsSpec extends Specification {
 
         printTokens(tokens) ! ((tokens.length must_== 1) and tokens.map(_.facts.length).forall(_ == 4))
       }
+      "(a ~>< b).repeat " in {
 
-
-      "factA.first ~> factB.accumN(10) ~>< factC" in {
+        val pattern =
+          (factA ~> factB).repeat
 
         val evs =
           List(
-            FactA(0, "a"),
-            FactA(1, "a"),
-            FactB(2),
-            FactA(3, "b"),
-            FactA(4, "c"),
-            FactB(5),
-            FactA(6, "d"),
-            FactC(7),
-            FactA(8, "b"),
-            FactB(9),
-            FactA(10, "e"),
-            //FactA(11, "e"),
-            FactC(12)
+            FactA(-0, "a")
+            , FactA(0, "b")
+            , FactA(1, "a")
+            , FactB(2)
+            , FactA(3, "b")
+            , FactA(4, "c")
+            , FactB(5)
+            , FactA(6, "d")
+            , FactA(7, "b")
+            , FactA(8, "c")
+            , FactB(9)
+            // , FactA(10, "c")
           )
-
-
-        val pattern =
-          factA.first ~> factB.accumN(10) ~>< factC
 
 
         val tokens =
           foldEvents(pattern, evs, print = false)
 
-        printTokens(tokens) ! ((tokens.length must_== 1))
+        printTokens(tokens) ! ((tokens.length must_== 3) and tokens.map(_.facts.length).forall(_ == 2))
       }
 
-      "(factA.first ~> factB.accum(windows.sized[Fact](10)) ~>< factC).repeat" in {
+      " (factC.first ~> factA.first ~> factB.accumN(10) ~>< factC).repeat" in {
+
+        val evs =
+          List(
+            FactC(1),
+            FactA(0, "a"),
+            FactA(1, "a"),
+            FactC(2),
+            FactB(2),
+            FactC(3),
+            FactA(3, "b"),
+            FactA(4, "c"),
+            FactB(5),
+            FactA(6, "d"),
+            FactC(4),
+            FactC(5),
+            FactA(9, "b"),
+            FactB(10),
+            FactB(11),
+            FactB(12),
+            FactB(13),
+            FactA(14, "b"),
+            FactA(11, "e"),
+            //FactA(11, "e"),
+            FactC(6)
+          )
+
+
+        val pattern =
+          (factC.last ~> factA.first ~> factB.accumN(10) ~> factC).repeat
+
+
+        val tokens =
+          foldEvents(pattern, evs, print = false)
+
+        printTokens(tokens) ! ((tokens.length must_== 2))
+      }
+
+      "(factA.first ~> factB.accumN(10) ~>< factC).repeat" in {
 
         val evs =
           List(
@@ -224,11 +309,13 @@ class ParseEventsSpec extends Specification {
             FactB(5),
             FactA(6, "d"),
             FactC(7),
+            FactB(8),
             FactA(8, "b"),
             FactB(9),
             FactA(10, "e"),
             //FactA(11, "e"),
-            FactC(12)
+            FactC(12),
+            FactB(13)
           )
 
 
@@ -237,7 +324,7 @@ class ParseEventsSpec extends Specification {
 
 
         val tokens =
-          foldEvents(pattern, evs)
+          foldEvents(pattern, evs, print = false)
 
         printTokens(tokens) ! ((tokens.length must_== 2))
       }
@@ -273,7 +360,7 @@ class ParseEventsSpec extends Specification {
 
 
 
-      "innerDelim.last ~> (factB.first ~> factB.first).repeatN(2) ~> innerDelim" in {
+      "innerDelim.last ~> (factA.first ~> factB.first).times(3) ~> innerDelim" in {
 
         val evs =
           List(
@@ -297,7 +384,33 @@ class ParseEventsSpec extends Specification {
           )
 
         val pattern =
-          innerDelim.first ~> (factA.first ~> factB.first).times(2).first ~> innerDelim
+          innerDelim.first ~> (factA.first ~> factB.first).times(3).first ~> innerDelim
+
+        val tokens =
+          foldEvents(pattern, evs)
+
+        printTokens(tokens) ! ((tokens.length must_== 1))
+      }
+
+      " (factA.first and factB.first).times(3).first" in {
+
+        val evs =
+          List(
+            // FactA(0, "a"),
+            //FactA(1, "a"),
+            //DelimInner(1),
+            FactB(2),
+            FactA(3, "b"),
+            FactB(2),
+            FactA(3, "b"),
+            FactA(4, "c"),
+            FactB(5)
+            //DelimInner(16)
+            //FactA(6, "d"),
+          )
+
+        val pattern =
+          (factA.first and factB.first).times(3).first
 
         val tokens =
           foldEvents(pattern, evs)
@@ -306,8 +419,27 @@ class ParseEventsSpec extends Specification {
       }
 
 
-    }
+      "(factA.last ~> factAWithSameValue)" in {
 
+        val evs =
+          List(
+            FactA(0, "a"),
+            FactA(1, "b"),
+            DelimInner(1),
+            FactD(13, "a"),
+            FactA(14, "e"),
+            FactC(15)
+          )
+
+        val pattern =
+          (factA.accumN(10) ~> factAWithSameValue)
+
+        val tokens =
+          foldEvents(pattern, evs,print=true)
+
+        printTokens(tokens) ! ((tokens.length must_== 1))
+      }
+    }
 
     def foldEvents(pattern: Matcher, event: List[Fact], print: Boolean = false) =
       event
@@ -327,7 +459,7 @@ class ParseEventsSpec extends Specification {
       }._2
 
     def printTokens(tokens: List[Pattern]): String = {
-      "Final tokens: \n" + tokens.map(t => t.facts.reverse.mkString(" ~> ")).mkString("\n") + "\n"
+      "Final tokens: \n" + tokens.map(t => t.facts.reverse.mkString(", ")).mkString("\n") + "\n"
     }
   } catch {
     case t: Throwable => t.printStackTrace()

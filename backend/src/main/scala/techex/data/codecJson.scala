@@ -8,8 +8,8 @@ import techex.domain._
 
 object codecJson {
 
-  implicit val areaCodec: CodecJson[Area] =
-    casecodec1(Area.apply, Area.unapply)("name")
+  implicit val areaCodec: CodecJson[Region] =
+    casecodec1(Region.apply, Region.unapply)("name")
 
   implicit val visibilityEncode: EncodeJson[Visibility] =
     jencode1((v: Visibility) => v.asString)
@@ -134,20 +134,20 @@ object codecJson {
 
   implicit val encodeFact: EncodeJson[Fact] =
     EncodeJson((fact: Fact) => fact match {
-      case JoinedActivityLate(player, event, instant)    => ("activity" := "joinedLate") ->: ("event" := event.id.value) ->: ("area" := event.area.id) ->: ("instant" := instant) ->: jEmptyObject
-      case LeftActivityEarly(player, event, instant)     => ("activity" := "leftEarly") ->: ("event" := event.id.value) ->:("area" := event.area.id) ->: ( "instant" := instant) ->: jEmptyObject
-      case JoinedOnStart(player, event, instant)         => ("activity" := "arrivedOnTime") ->: ("event" := event.id.value) ->:("area" := event.area.id) ->: ( "instant" := instant) ->: jEmptyObject
-      case LeftOnEnd(player, event, instant)             => ("activity" := "leftOnTime") ->: ("event" := event.id.value) ->:("area" := event.area.id) ->: ( "instant" := instant) ->: jEmptyObject
-      case ArrivedAtArea(player, area, instant)          => ("activity" := "arrivedAtArea") ->: ("area" := area.id) ->: ("instant" := instant) ->: jEmptyObject
-      case LeftArea(player, area, instant)               => ("activity" := "leftFromArea") ->: ("area" := area.id) ->: ("instant" := instant) ->: jEmptyObject
+      case JoinedActivityLate(player, event, instant)    => ("activity" := "joinedLate") ->: ("event" := event.id.value) ->: ("area" := event.area.name) ->: ("instant" := instant) ->: jEmptyObject
+      case LeftActivityEarly(player, event, instant)     => ("activity" := "leftEarly") ->: ("event" := event.id.value) ->:("area" := event.area.name) ->: ( "instant" := instant) ->: jEmptyObject
+      case JoinedOnStart(player, event, instant)         => ("activity" := "arrivedOnTime") ->: ("event" := event.id.value) ->:("area" := event.area.name) ->: ( "instant" := instant) ->: jEmptyObject
+      case LeftOnEnd(player, event, instant)             => ("activity" := "leftOnTime") ->: ("event" := event.id.value) ->:("area" := event.area.name) ->: ( "instant" := instant) ->: jEmptyObject
+      case EnteredRegion(player, area, instant)          => ("activity" := "arrivedAtArea") ->: ("area" := area.name) ->: ("instant" := instant) ->: jEmptyObject
+      case LeftRegion(player, area, instant)               => ("activity" := "leftFromArea") ->: ("area" := area.name) ->: ("instant" := instant) ->: jEmptyObject
       case MetPlayer(player, otherPlayer, instant)       => ("activity" := "metOther") ->: ("player" := player.player.nick.value) ->: ("other" := otherPlayer.player.nick.value) ->: ("instant" := instant) ->: jEmptyObject
       case EarnedAchievemnt(player, achievemnt, instant) => ("activity" := "earnedAchievement") ->: ("player" := player.player.nick.value) ->: ("badge" := achievemnt.id.value) ->: ("instant" := instant) ->: jEmptyObject
       case AwardedBadge(player, badge, instant)          => ("activity" := "earnedBadge") ->: ("player" := player.player.nick.value) ->: ("badge" := badge.achievement.id.value) ->: ("instant" := instant) ->: jEmptyObject
       case PlayerCreated(player, instant)                => ("activity" := "playerCreated") ->: ("player" := player.player.nick.value) ->: ("instant" := instant) ->: jEmptyObject
-      case Started(entry, instant)                       => ("activity" := "eventStarted") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
-      case Ended(entry, instant)                         => ("activity" := "eventEnded") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
-      case Added(entry, instant)                         => ("activity" := "eventAdded") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
-      case Removed(entry, instant)                       => ("activity" := "eventRemoved") ->: ("event" := entry.id.value) ->:("area" := entry.area.id) ->: ( "instant" := instant) ->: jEmptyObject
+      case Started(entry, instant)                       => ("activity" := "eventStarted") ->: ("event" := entry.id.value) ->:("area" := entry.area.name) ->: ( "instant" := instant) ->: jEmptyObject
+      case Ended(entry, instant)                         => ("activity" := "eventEnded") ->: ("event" := entry.id.value) ->:("area" := entry.area.name) ->: ( "instant" := instant) ->: jEmptyObject
+      case Added(entry, instant)                         => ("activity" := "eventAdded") ->: ("event" := entry.id.value) ->:("area" := entry.area.name) ->: ( "instant" := instant) ->: jEmptyObject
+      case Removed(entry, instant)                       => ("activity" := "eventRemoved") ->: ("event" := entry.id.value) ->:("area" := entry.area.name) ->: ( "instant" := instant) ->: jEmptyObject
       case _                                             => jEmptyObject
     }
 

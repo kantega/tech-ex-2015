@@ -11,14 +11,14 @@ object locateOnSessionTimeBoundaries {
 
 
   def handleTimeBoundsFacts: Fact => State[Storage, List[Fact]] = {
-    case a: ArrivedAtArea => handleJoining(a)
-    case l: LeftArea      => handleLeaving(l)
+    case a: EnteredRegion => handleJoining(a)
+    case l: LeftRegion      => handleLeaving(l)
     case s: Started       => handleStart(s)
     case e: Ended         => handleEnd(e)
     case a@_              => State.state(nil)
   }
 
-  def handleJoining: ArrivedAtArea => State[Storage, List[Fact]] =
+  def handleJoining: EnteredRegion => State[Storage, List[Fact]] =
     arrival => State {
       ctx => {
         val joinActivities =
@@ -30,7 +30,7 @@ object locateOnSessionTimeBoundaries {
       }
     }
 
-  def handleLeaving: LeftArea => State[Storage, List[Fact]] =
+  def handleLeaving: LeftRegion => State[Storage, List[Fact]] =
     leaving => State {
       ctx => {
         val leaveActivities =
@@ -47,7 +47,7 @@ object locateOnSessionTimeBoundaries {
     started => State { ctx =>
       val joinedFacts =
         ctx.players
-          .filter(_.movements.headOption.exists(lu => lu.area === started.entry.area))
+          .filter(_.lastKnownLocation.area === started.entry.area)
           .map(player => JoinedOnStart(player, started.entry,started.instant))
 
       (ctx.addFacts(joinedFacts), joinedFacts)
@@ -58,7 +58,7 @@ object locateOnSessionTimeBoundaries {
     ended => State { ctx =>
       val endedfacts =
         ctx.players
-          .filter(_.movements.headOption.exists(lu => lu.area === ended.entry.area))
+          .filter(_.lastKnownLocation.area === ended.entry.area)
           .map(player => LeftOnEnd(player, ended.entry,ended.instant))
 
       (ctx.addFacts(endedfacts), endedfacts)

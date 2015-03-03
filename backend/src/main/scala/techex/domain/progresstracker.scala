@@ -6,13 +6,15 @@ import scalaz._, Scalaz._
 
 
 
-
-object PatternTracker {
+object progresstracker {
   implicit def matcherMonoid[A]: Monoid[PatternTracker[A]] =
     Monoid.instance({ case (m1: PatternTracker[A], m2: PatternTracker[A]) => AndTracker(m1, m2)}, ZeroTracker[A]())
 
   def zero[A]: PatternTracker[A] =
     ZeroTracker[A]()
+
+  def value[A](value: A,m: Matcher): PatternTracker[A] =
+    ValueOnMatchTracker(m)(value)
 }
 
 
@@ -26,6 +28,20 @@ trait PatternTracker[A] {
       case (first, second)        => AndTracker(first, other)
     }
 
+  def ++(other: PatternTracker[A]) =
+    (this, other) match {
+      case (ZeroTracker(), other) => other
+      case (one, ZeroTracker())   => one
+      case (one, other)           => AndTracker(one, other)
+    }
+
+  def zeroOnHalt(m: Matcher, p: PatternTracker[A]): PatternTracker[A] = {
+    m match {
+      case Halt() => ZeroTracker[A]()
+      case _      => p
+    }
+  }
+
 }
 
 case class ZeroTracker[A]() extends PatternTracker[A] {
@@ -38,22 +54,39 @@ case class AndTracker[A](one: PatternTracker[A], other: PatternTracker[A]) exten
     val (next1, tokens1) = one(t)
     val (next2, tokens2) = other(t)
 
-    (AndTracker(next1, next2), tokens1 ::: tokens2)
+    (next1 ++ next2, tokens1 ::: tokens2)
   }
 }
 
+case class OnMatchTracker[A](m: Matcher)(f: Pattern => A) extends PatternTracker[A] {
+  def apply(t: Fact) = {
+    val (next, pattern) =
+      m.check(t)
+    val nextTracker = zeroOnHalt(next, OnMatchTracker(next)(f))
 
-case class StatefulTracker[S, A](pattern: Matcher, s: S)(f: Pattern => State[S, Option[A]]) extends PatternTracker[A] {
+    (nextTracker, pattern.map(f).toList)
+  }
+}
+
+case class ValueOnMatchTracker[A](m: Matcher)(f: => A) extends PatternTracker[A] {
+  def apply(t: Fact) = {
+    val (next, pattern) =
+      m.check(t)
+    val nextTracker = zeroOnHalt(next, ValueOnMatchTracker(m)(f))
+    (nextTracker, pattern.map(x => f).toList)
+  }
+}
+case class StatefulTracker[S, A](m: Matcher, s: S)(f: Pattern => State[S, Option[A]]) extends PatternTracker[A] {
 
   type StateS[x] = State[S, x]
 
   def apply(t: Fact): (PatternTracker[A], List[A]) = {
     val (next, matches) =
-      pattern.check(t)
+      m.check(t)
 
-   val (ns,out) = matches.fold((s,none[A])){ pattern =>
-     f(pattern).run(s)
-   }
+    val (ns, out) = matches.fold((s, none[A])) { pattern =>
+      f(pattern).run(s)
+    }
 
 
     (StatefulTracker(next, ns)(f), out.toList)

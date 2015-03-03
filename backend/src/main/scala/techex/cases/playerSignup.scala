@@ -64,6 +64,7 @@ object playerSignup {
       quests.questPermutations(index)
 
     List(perm._1, perm._2)
+    quests.quests //TODO:All quests for now
   }
 
   val updateContext: PlayerData => State[Storage, PlayerData] =
@@ -83,12 +84,12 @@ object playerSignup {
           else SignupOk(PlayerData(
             player,
             Set(),
-            Vector(),
+            LocationUpdate(player.id,Region("unknown"),Instant.now()),
             Vector(),
             player.privateQuests
               .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
-              .foldLeft(PatternTracker.zero[Achievement])(_ and _),
+              .foldLeft(progresstracker.zero[Achievement])(_ and _),
             createData.platform.toPlatform
           )))
       } yield rsult
@@ -130,7 +131,7 @@ object playerSignup {
     def toPlatform =
       plattformType.toLowerCase match {
         case "ios"     => iOS(deviceToken.map(t => DeviceToken(t)))
-        case "android" => Android()
+        case "android" => Android(deviceToken.map(t => DeviceToken(t)))
         case _         => Web()
       }
   }

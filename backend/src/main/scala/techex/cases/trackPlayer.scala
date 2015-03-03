@@ -29,8 +29,8 @@ object trackPlayer {
     observation => State {
       ctx => {
 
-        val history =
-          ctx.playerData.get(observation.playerId).map(_.movements.toList).getOrElse(nil[LocationUpdate])
+        val maybePlayer =
+          ctx.playerData.get(observation.playerId)
 
         val maybeArea =
           areas.beaconPlacement.get(observation.beacon).flatMap {
@@ -38,18 +38,15 @@ object trackPlayer {
           }
 
         val maybeUpdate =
-          (maybeArea, history) match {
-            case (None, _)                  => None
-            case (Some(area), Nil)          => Some(LocationUpdate(observation.playerId, area, Instant.now()))
-            case (Some(area), last :: rest) =>
-              if (area === last.area) None
-              else Some(LocationUpdate(observation.playerId, area, Instant.now()))
+          maybePlayer.flatMap { player =>
+            maybeArea match {
+              case None       => None
+              case Some(area) =>
+                if (area === player.lastKnownLocation.area) None
+                else Some(LocationUpdate(observation.playerId, area, Instant.now()))
+            }
           }
-
-        maybeUpdate.fold((ctx, maybeUpdate)) {
-          update =>
-            (ctx.updatePlayerData(observation.playerId, _.addMovement(update)), maybeUpdate)
-        }
+        (ctx, maybeUpdate)
       }
     }
 
@@ -58,64 +55,64 @@ object trackPlayer {
     locationUpdate => State {
       ctx => {
 
-        val player =
+        val maybePlayer =
           ctx
-            .playerData(locationUpdate.playerId)
+            .playerData.get(locationUpdate.playerId)
 
-        val lastLocation =
-          player
-            .movements
-            .tail //The update is already prepended to history at this stage
-            .headOption
-            .map(loc => List(loc.area))
-            .getOrElse(nil[Area])
 
-        val nextLocation =
-          List(locationUpdate.area)
 
-        val left =
-          lastLocation
-            .map(area => LeftArea(player, area,locationUpdate.instant))
+        maybePlayer.fold((ctx, nil[Fact])) { (player: PlayerData) =>
+          val lastLocation =
+            player.lastKnownLocation
 
-        val arrived =
-          nextLocation
-            .map(area => ArrivedAtArea(player, area,locationUpdate.instant))
+          val nextLocation =
+            locationUpdate
 
-        val updates =
-          left ::: arrived
+          val left =
+            LeftRegion(player, lastLocation.area, locationUpdate.instant)
 
-        (ctx.addFacts(updates), updates)
+          val arrived =
+            EnteredRegion(player, nextLocation.area, locationUpdate.instant)
+
+          val updates =
+            left :: arrived :: Nil
+
+          (ctx.addFacts(updates).updatePlayerData(locationUpdate.playerId,_.addMovement(locationUpdate)), updates)
+        }
+
       }
     }
 
 
-  def meetingPoints2Activity(meetingArea: Area): LocationUpdate => State[Storage, List[Fact]] =
+  def meetingPoints2Activity(meetingArea: Region): LocationUpdate => State[Storage, List[Fact]] =
     location => State {
       ctx =>
-        val playerData =
-          ctx.playerData(location.playerId)
+        val maybePlayerData =
+          ctx.playerData.get(location.playerId)
+
+        maybePlayerData.fold((ctx, nil[Fact])) { playerData =>
+          val facts =
+            ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
+              .flatMap(other =>
+              List(
+                MetPlayer(playerData, other, location.instant),
+                MetPlayer(other, playerData, location.instant)))
 
 
-        val facts =
-          ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
-            .flatMap(other =>
-            List(
-              MetPlayer(playerData, other,location.instant),
-              MetPlayer(other, playerData,location.instant)))
+          val nextState =
+            ctx.addFacts(facts)
 
 
-        val nextState =
-          ctx.addFacts(facts)
+          (nextState, facts)
+        }
 
-
-        (nextState, facts)
     }
 
 
   def restApi(topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "location" / playerId =>
 
-      req.decode[String]{body => {
+      req.decode[String] { body => {
         val maybeObservation =
           toJsonQuotes(body)
             .decodeValidation[ObservationData]
@@ -129,7 +126,8 @@ object trackPlayer {
               _ <- eventstreams.events.publishOne(observation)
               response <- Ok()
             } yield response)
-      }}
+      }
+      }
   }
 
 }

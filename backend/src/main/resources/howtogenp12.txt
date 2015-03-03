@@ -1,0 +1,6 @@
+production_identity.cer <= download from Apple
+mykey.p12 <= Your private key
+
+openssl x509 -in production_identity.cer -inform DER -out production_identity.pem -outform PEM
+openssl pkcs12 -nocerts -in mykey.p12 -out mykey.pem
+openssl pkcs12 -export -inkey mykey.pem -in production_identity.pem -out iphone_prod.p12

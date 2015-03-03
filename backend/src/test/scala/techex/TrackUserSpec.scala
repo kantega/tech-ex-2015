@@ -27,7 +27,7 @@ class TrackUserSpec extends Specification {
             _ <- putObservation(playerId, "58796:18570", Near)
             _ <- putObservation(playerId, "58796:18570", Near)
             _ <- putObservation(playerId, "k", Near)
-            response <- putObservation(playerId, "58796:18570", Near)
+            response <- putObservation(playerId, "40647:50232", Near)
           } yield response
 
         Thread.sleep(5000)

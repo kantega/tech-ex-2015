@@ -34,8 +34,8 @@ object sqlmappers {
   implicit val instantAtom: Atom[Instant] =
     Atom.fromScalaType[Long].xmap(new Instant(_), _.getMillis)
 
-  implicit val locationAtom: Atom[Area] =
-    Atom.fromScalaType[String].xmap(Area.apply, _.id)
+  implicit val locationAtom: Atom[Region] =
+    Atom.fromScalaType[String].xmap(Region.apply, _.name)
 
   implicit val proximityAtom: Atom[Proximity] =
     Atom.fromScalaType[String].xmap(str => str.toLowerCase match {
@@ -72,11 +72,11 @@ object InputMessageDAO {
           """.update.run
   }
 
-  def storeObservation(input: InputMessage): ConnectionIO[Int] = {
+  def storeObservation(input: InputMessage): ConnectionIO[Unit] = {
     sql"""
-          INSERT INTO observations
-          VALUES (${Instant.now().getMillis},${input.msgType},${input.asJson.nospaces}  )
-    """.update.run
+          INSERT INTO observations (instant,type,payload)
+          VALUES (${Instant.now().getMillis},${input.msgType},${input.asJson.nospaces} )
+    """.update.run.map(x=>Unit)
   }
 
   def loadObservationForPlayer(playerId: PlayerId): Process[ConnectionIO, (Long, Long, String, String)] = {

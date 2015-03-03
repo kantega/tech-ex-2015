@@ -40,11 +40,9 @@ object startup {
     val enqeueToDatabaseQueueProcess =
       eventstreams.events.subscribe to storeToDatabaseQueue.enqueue
 
-
-
-    //val handleStoreToDatabase =
-    //    (storeToDatabaseQueue.dequeue pipe txor.transact()
-
+    val handleStoreToDatabase =
+      storeToDatabaseQueue.dequeue to
+      process.sink[Task,InputMessage]((input:InputMessage) => txor.transact(InputMessageDAO.storeObservation(input)))
 
     val handleInputStream =
       inputHandlerQueue.dequeue pipe
@@ -54,12 +52,14 @@ object startup {
 
 
     Task {
+      notifyGCM.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       notifySlack.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       printFactsToLog.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       notifyAPNS.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       enqueueToInputHandlerProcess.handle(streams.printAndReset(enqueueToInputHandlerProcess)).run.runAsync(_.toString)
       handleInputStream.handle(streams.printAndReset(handleInputStream)).run.runAsync(_.toString)
-
+      enqeueToDatabaseQueueProcess.handle(streams.printAndReset(enqeueToDatabaseQueueProcess)).run.runAsync(_.toString)
+      handleStoreToDatabase.handle(streams.printAndReset(handleStoreToDatabase)).run.runAsync(_.toString)
       println("Streams set up")
     }
   }
@@ -92,10 +92,10 @@ object startup {
     for {
       _ <- slack.sendMessage("Starting up server", Attention)
       ds <- db.ds(dbConfig)
+      _ <- ds.transact(InputMessageDAO.createObservationtable)
       _ <- setupStream(ds)
       _ <- setupSchedule
 
-      _ <- ds.transact(InputMessageDAO.createObservationtable)
 
     } yield (HttpService(
       playerSignup.restApi(eventstreams.events) orElse

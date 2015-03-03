@@ -30,8 +30,8 @@ object notifySlack {
   def handleFact: AnyRef => Task[Unit] = {
     case AwardedBadge(player, badge, _)              =>
       slack.sendMessage(":star: *" + player.player.nick.value + "* was awarded the _" + badge.achievement.name + "_ badge", Good)
-    case ArrivedAtArea(player, area, _)              =>
-      slack.sendMessage("*" + player.player.nick.value + "* visited _" + area.id + "_")
+    case EnteredRegion(player, area, _)              =>
+      slack.sendMessage("*" + player.player.nick.value + "* visited _" + area.name + "_")
     case PlayerCreated(player, _)                    =>
       slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* just signed up with quests _" + player.player.privateQuests.map(_.name).mkString("_ and _") + "_", Good)
     case JoinedActivityLate(player, event, _)        =>
