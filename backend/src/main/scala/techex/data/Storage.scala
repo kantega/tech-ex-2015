@@ -99,8 +99,7 @@ case class PlayerData(
   lastLocation: LocationUpdate,
   activities: Vector[FactAboutPlayer],
   progress: PatternTracker[Achievement],
-  platform: NotificationTarget,
-  lastKnownLocation:LocationUpdate) {
+  platform: NotificationTarget) {
 
   def addAchievement(achievemnt: Achievement): PlayerData =
     copy(achievements = achievements + achievemnt)
