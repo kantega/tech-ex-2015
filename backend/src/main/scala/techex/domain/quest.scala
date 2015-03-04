@@ -1,7 +1,7 @@
 package techex.domain
 
 import org.joda.time.Minutes._
-import org.joda.time.{Hours, DateTime, ReadableDuration}
+import org.joda.time.{Minutes, Hours, DateTime, ReadableDuration}
 import techex._
 import techex.domain.patternmatching._
 import techex.domain.preds._
@@ -12,60 +12,76 @@ import scalaz._
 
 object quests {
 
-  def first(p: Pred) =
-    p.first
 
-  def last(p: Pred) =
+  def last(p: Pred[Fact]) =
     p.last
 
-  def enter(area: Area) =
-    head({ case EnteredArea(_, a, _) if a === area => true})
+  def at(area: Area): Pred[Area] =
+    a => a === area
 
-  def enterOneOf(areas: Area*) =
-    head({ case EnteredArea(_, area, _) if areas.exists(a => a === area) => true})
+  def atOneOf(areas: Area*): Pred[Area] =
+    area => areas.exists(a => a === area)
 
-  def exitOneOf(areas: Area*) =
-    head({ case LeftArea(_, area, _) if areas.exists(a => a === area) => true})
+  def enter(p: Pred[Area]): Matcher[EnteredArea] =
+    on[EnteredArea].filter(f => p(f.area))
+
+  def enterOneOf(areas: Area*): Matcher[EnteredArea] =
+    on[EnteredArea].filter(entered => areas.exists(a => a === entered.area))
+
+  def exitOneOf(areas: Area*): Pred[Fact] =
+    fact({ case LeftArea(_, area, _) if areas.exists(a => a === area) => true})
 
   //def stayAt(area:Area,duration:ReadableDuration) =
 
 
-  def time(t: DateTime => Boolean): Pred =
-    pattern => t(pattern.facts.head.instant.toDateTime)
+  def time(t: DateTime => Boolean): Pred[Fact] =
+    fact => t(fact.instant.toDateTime)
 
-  def size(t: Int): Pred =
-    pattern => (pattern.facts.length >= t)
+  def size(t: Int): Pred[List[Fact]] =
+    list => (list.length >= t)
 
   def visitCoffee =
-    enter(kantegaCoffeeUp) or enter(kantegaCoffeeDn)
+    at(kantegaCoffeeUp) or at(kantegaCoffeeDn)
 
   //Patterns
   val joinedAnActivityOnTime =
-    head { case j: JoinedOnStart => true}
+    fact { case j: JoinedOnStart => true}
 
   val enteredArea =
-    head({ case entered: EnteredArea => true})
+    fact({ case entered: EnteredArea => true})
 
   val leftArea =
-    head({ case entered: LeftArea => true})
+    fact({ case entered: LeftArea => true})
 
-  def leftSameAreaWithin(duration: ReadableDuration) =
-    pattern {
-      case (LeftArea(_, exitArea, leftTime), history)
-        if history.collect {
-          case EnteredArea(_, enterArea, enterTime) if
-          enterArea === exitArea && durationBetween(enterTime, leftTime).isShorterThan(duration) => true
-        }.nonEmpty => true
+  def stay(dur: ReadableDuration)(pred: Pred[Area]): Matcher[(EnteredArea, LeftArea)] =
+    (on[EnteredArea].last and on[LeftArea].last).filter {
+      pair => {
+        val enter = pair._1
+        val exit = pair._2
+        pred(enter.area) &&
+          enter.area === exit.area &&
+          durationBetween(enter.instant, exit.instant).isShorterThan(dur)
+      }
     }
 
+  def stayForFive = stay(Minutes.minutes(5)) _
+
+  def stayForTen = stay(Minutes.minutes(10)) _
+
+  def stayForThirty = stay(Minutes.minutes(30)) _
+
+  def stayForHour = stay(Hours.ONE) _
+
+  def stayforTwoHours = stay(Hours.TWO) _
+
   val metOtherPlayer =
-    head({ case met: MetPlayer => true})
+    fact({ case met: MetPlayer => true})
 
   val startOfDay =
-    head { case mn: StartOfDay => true}
+    fact { case mn: StartOfDay => true}
 
   val endOfDay =
-    head { case mn: EndOfDay => true}
+    fact { case mn: EndOfDay => true}
 
   //Badges
   val seetalksiron     = Achievement(Bid("seetalksiron"), "First talk attended", "Attending one talks")
@@ -89,7 +105,6 @@ object quests {
 
   //Kantega badges and quests
   object kq {
-
 
 
     val earlyatwork            = Achievement(Bid("kearlyatwork"), "Came in early today", "Have coffee before 08:00")
@@ -124,20 +139,13 @@ object quests {
     val roamer      = Quest(Qid("kroamer"), "The roamer", "Look for the desks", Public, List(seeAllTheDesksBronze, seeAllTheDesksSilver, seeAllTheDesksGold))
 
 
-    val meetingRoomRoamerTracker =
-      progresstracker.value(
-        ((first(enter(areas.mrtTuring)) ++
-          first(enter(areas.mrtTesla)) ++
-          first(enter(areas.mrtHopper)) ++
-          first(enter(areas.mrtEngelbart)) ++
-          first(enter(areas.mrtAda)) ++
-          first(enter(areas.mrtCurie))) or
-          halt(on(endOfDay))).repeat,
-        meetingRoomRoamer)
+    val atAnyMeetingRoom =
+      atOneOf(areas.mrtTuring, areas.mrtTesla, areas.mrtHopper, areas.mrtEngelbart, areas.mrtAda, areas.mrtCurie)
+
 
     val visitAllDesksTracker =
       progresstracker.collect(
-      last(enter(areas.desk1)) or last(enter(areas.desk2)) or last(enter(areas.desk3)), { case EnteredArea(_, area, _) :: tail => area}) {
+        enterOneOf(areas.desk1, areas.desk2, areas.desk3), (e: EnteredArea) => e.area.some) {
         case 1 => seeAllTheDesksBronze.some
         case 2 => seeAllTheDesksSilver.some
         case 3 => seeAllTheDesksGold.some
@@ -145,93 +153,109 @@ object quests {
       }
 
 
-
     //Early
     val prettyEarlyAtWorkTracker =
       progresstracker.value(
-        last(visitCoffee and time(_.getHourOfDay <= 9)).haltAfter,
+        enter(visitCoffee).filter(time(_.getHourOfDay <= 9)).haltAfter,
         earlyatwork
       )
 
     val earlyAtWorkTracker =
       progresstracker.value(
-        last(visitCoffee and time(_.getHourOfDay <= 8)).haltAfter,
+        enter(visitCoffee).filter(time(_.getHourOfDay <= 8)).haltAfter,
         earlyatwork
       )
 
     val earlyEnoughTracker =
       progresstracker.value(
-        (last(startOfDay) and on(visitCoffee and time(_.getHourOfDay <= 9))).times(5),
+        (last(startOfDay) and enter(visitCoffee).filter(time(_.getHourOfDay <= 9))).times(5),
         earlyenough
       )
 
     val earlyAtWorksTracker =
       progresstracker.value(
-        (last(startOfDay) and on(visitCoffee and time(_.getHourOfDay <= 8))).times(5),
+        (last(startOfDay) and enter(visitCoffee).filter(time(_.getHourOfDay <= 8))).times(5),
         earlyatworks
       )
 
     //LAte
     val prettyLateAtWorkTracker =
       progresstracker.value(
-        on(visitCoffee) and time(_.getHourOfDay >= 16),
+        enter(visitCoffee).filter(time(_.getHourOfDay >= 16)).haltAfter,
         lateprettylateatwork
       )
 
     val lateAtWorkTracker =
       progresstracker.value(
-        on(visitCoffee) and time(_.getHourOfDay >= 17),
+        enter(visitCoffee).filter(time(_.getHourOfDay >= 17)).haltAfter,
         lateatwork
       )
 
     val lateEnoughTracker =
       progresstracker.value(
-        last(startOfDay) and on(visitCoffee and time(_.getHourOfDay >= 16)).times(5),
+        last(startOfDay) and enter(visitCoffee).filter(time(_.getHourOfDay >= 16)).times(5),
         lateprettylateatworks
       )
 
     val lateAtWorksTracker =
       progresstracker.value(
-        last(startOfDay) and on(visitCoffee and time(_.getHourOfDay >= 17)).times(5),
+        last(startOfDay) and enter(visitCoffee).filter(time(_.getHourOfDay >= 17)).times(5),
         lateatworks
       )
 
     val coffeeLikerTracker =
       progresstracker.value(
-        on(visitCoffee).times(5) or halt(on(endOfDay)),
+        (stayForFive(visitCoffee).times(5) or halt(on[EndOfDay])).repeat,
         coffeeliker
       )
 
     val coffeexperimenterTracker =
       progresstracker.value(
-        (last(enter(kantegaCoffeeUp)) and last(enter(kantegaCoffeeDn))) or halt(on(endOfDay)),
+        (stayForFive(at(kantegaCoffeeUp)).last and stayForFive(at(kantegaCoffeeDn)).last) or halt(on[EndOfDay]),
         coffeexperimenter
       )
 
     val coffeeConnectorTracker =
       progresstracker.value(
-        on(metOtherPlayer).times(3) or halt(on(endOfDay)),
+        (on[MetPlayer].times(3) or halt(on[EndOfDay])).times(1),
         coffeeconnector
       )
 
     val coffeeNetworkerTracker =
       progresstracker.value(
-        on(metOtherPlayer).times(10) or halt(on(endOfDay)),
+        (on[MetPlayer].times(10) or halt(on[EndOfDay])).times(1),
         coffeenetworker
       )
 
     val coffeeAddictTracker =
       progresstracker.value(
-        on(visitCoffee).accumD(Hours.ONE).filter(_.facts.length > 10) or halt(on(endOfDay)),
+        (stayForFive(visitCoffee).times(10) or halt(on[EndOfDay])).times(1),
         coffeenetworker
       )
 
+    val meetingRoomRoamerTracker =
+      progresstracker.collect(
+        (stayForTen(atAnyMeetingRoom).map(_._1.area) xor halt(on[EndOfDay])).repeat, (pair: Area \/ EndOfDay) => pair.fold(_.some,ex=>none)) {
+        case 4 => meetingRoomRoamer.some
+        case _ => none
+      }
+
     val meetingAttenderTracker =
       progresstracker.value(
-        ((first(enterOneOf(areas.mrtTuring, areas.mrtTesla, areas.mrtHopper, areas.mrtEngelbart, areas.mrtAda, areas.mrtCurie)) ++
-          first(exitOneOf(areas.mrtTuring, areas.mrtTesla, areas.mrtHopper, areas.mrtEngelbart, areas.mrtAda, areas.mrtCurie))) or
-          halt(on(endOfDay))).repeat,
-        coffeaddict
+        (stayForHour(atAnyMeetingRoom) xor halt(on[EndOfDay])).times(1),
+        meetingAttender
+      )
+
+    val meetingAttendersTracker =
+      progresstracker.value(
+        (stayForHour(atAnyMeetingRoom) xor halt(on[EndOfDay])).times(5),
+        meetingAttender
+      )
+
+    val meetingRoomStayerTracker =
+      progresstracker.value(
+        (stayforTwoHours(atAnyMeetingRoom) xor halt(on[EndOfDay])).times(1),
+        meetingRoomStayer
       )
 
   }
@@ -263,9 +287,7 @@ object quests {
     )
 
   val networkingTracker =
-    StatefulTracker[Set[Nick], Achievement](on(metOtherPlayer), Set()) { token => State { set =>
-      val metOther =
-        token.facts.head.asInstanceOf[MetPlayer]
+    StatefulTracker[Set[Nick], MetPlayer, Achievement](on[MetPlayer], Set()) { metOther => State { set =>
 
       val newSet =
         set + metOther.otherPlayer.player.nick
@@ -353,8 +375,11 @@ object quests {
 
   val trackerForQuest: Map[Qid, PatternTracker[Achievement]] =
     Map(
-      kq.meetinghero.id -> networkingTracker,
-      kq.roamer.id -> kq.visitAllDesksTracker
+      kq.meetinghero.id -> (kq.meetingRoomRoamerTracker ++ kq.meetingAttenderTracker ++ kq.meetingAttendersTracker ++ kq.meetingRoomStayerTracker),
+      kq.roamer.id -> kq.visitAllDesksTracker,
+      kq.stayer.id -> (kq.prettyLateAtWorkTracker ++kq.lateAtWorkTracker ++ kq.lateEnoughTracker ++ kq.lateAtWorksTracker),
+      kq.coffeeHero.id -> (kq.coffeeLikerTracker ++ kq.coffeexperimenterTracker ++ kq.coffeeConnectorTracker ++ kq.coffeeNetworkerTracker ++ kq.coffeeAddictTracker),
+      kq.earlybird.id -> (kq.prettyEarlyAtWorkTracker ++ kq.earlyAtWorkTracker ++ kq.earlyEnoughTracker ++ kq.earlyAtWorksTracker)
     )
 
   val zeroTracker =

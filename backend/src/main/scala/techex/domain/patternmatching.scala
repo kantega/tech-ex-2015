@@ -1,92 +1,69 @@
 package techex.domain
 
-import org.joda.time.Duration
+import org.joda.time.{ReadableInstant, Duration}
 import techex.data.{windows, Window}
 import patternmatching._
+import scala.reflect.runtime.universe._
 import scalaz._, Scalaz._
 
 object patternmatching {
 
-  type Pred = Pattern => Boolean
+  type Pred[A] = A => Boolean
 
-  def await(f: Pattern => Matcher) = {
+  def await[A](f: Fact => Matcher[A]) = {
     Await(MF(f))
   }
 
-  def await(desc: String, f: Pattern => Matcher) = {
+  def await[A](desc: String, f: Fact => Matcher[A]) = {
     Await(MF(f, desc))
   }
 
-  def halt(m: Matcher) =
+  def halt[A](m: Matcher[A]) =
     m.haltOn
 
-
-  def on(pred: Pred): Matcher =
+  def on[FF <: Fact](implicit evidence: TypeTag[FF]):Matcher[FF] = {
+    onFact(fact => typeOf[FF] <:< typeOf[fact.type]).map(a => a.asInstanceOf[FF])
+  }
+  def onFact(pred: Pred[Fact]): Matcher[Fact] =
     await("a(" + pred + ")", p =>
       if (pred(p)) {
-        Match(p, on(pred))
+        Emit(p, onFact(pred))
       }
       else
-        on(pred))
+        onFact(pred))
 
-  def on(desc: String, pred: Pred): Matcher =
+  def onFact(desc: String, pred: Pred[Fact]): Matcher[Fact] =
     await("a(" + desc + ")", p =>
       if (pred(p)) {
-        Match(p, on(desc, pred))
+        Emit(p, onFact(desc, pred))
       }
       else
-        on(desc, pred))
+        onFact(desc, pred))
 
-  implicit def toMatcher(pred: Pred): Matcher =
-    on(pred)
+  implicit def toMatcher(pred: Pred[Fact]): Matcher[Fact] =
+    onFact(pred)
 
 }
 
 
 object preds {
 
-  implicit class PredOps(pred: Pred) {
-    def and(other: Pred) =
+  implicit class PredOps[A](pred: Pred[A]) {
+    def and(other: Pred[A]) =
       preds.and(pred, other)
 
-    def or(other: Pred) =
+    def or(other: Pred[A]) =
       preds.or(pred, other)
   }
 
-  def not(pred: Pred): Pred =
+  def not[A](pred: Pred[A]): Pred[A] =
     ctx => !pred(ctx)
 
-  def and(one: Pred, other: Pred): Pred =
+  def and[A](one: Pred[A], other: Pred[A]): Pred[A] =
     ctx => one(ctx) && other(ctx)
 
-  def or(one: Pred, other: Pred): Pred =
+  def or[A](one: Pred[A], other: Pred[A]): Pred[A] =
     ctx => one(ctx) || other(ctx)
-
-
-  def pattern(f: PartialFunction[(Fact, List[Fact]), Boolean]): Pred =
-    ctx => {
-      if (f.isDefinedAt((ctx.facts.head, ctx.facts.tail)))
-        f((ctx.facts.head, ctx.facts.tail))
-      else
-        false
-    }
-
-  def head(f: PartialFunction[Fact, Boolean]): Pred =
-    ctx => {
-      if (f.isDefinedAt(ctx.facts.head))
-        f(ctx.facts.head)
-      else
-        false
-    }
-
-  def history(f: PartialFunction[List[Fact], Boolean]): Pred = {
-    ctx => {
-      if (f.isDefinedAt(ctx.factsAndHistory))
-        f(ctx.factsAndHistory)
-      else
-        false
-    }
-  }
 
   def fact(f: PartialFunction[Fact, Boolean]): Fact => Boolean = {
     update =>
@@ -97,220 +74,232 @@ object preds {
   }
 }
 
-trait Matcher {
+
+trait Matcher[A] {
 
   import patternmatching._
 
-  def check(fact: Fact): (Matcher, Option[Pattern]) = {
-    step(Pattern(List(fact))) match {
-      case Halt()      => (Halt(), None)
-      case Match(m, n) => (n, Some(m))
-      case a: Await    => (a, None)
+  def map[B](f: A => B): Matcher[B] =
+    this match {
+      case Halt()     => Halt()
+      case Emit(m, n) => Emit(f(m), map(f))
+      case Await(nf)  => await(fact => nf(fact).map(f))
+    }
+
+
+  def check(fact: Fact): (Matcher[A], Option[A]) = {
+    step(fact) match {
+      case Halt()     => (Halt(), None)
+      case Emit(m, n) => (n, Some(m))
+      case a: Await[A]   => (a, None)
     }
   }
 
 
-  def step(fact: Pattern): Matcher = {
-    def go(p: Matcher): Matcher = {
+  def step(fact: Fact): Matcher[A] = {
+    def go(p: Matcher[A]): Matcher[A] = {
       p match {
-        case Halt()               => Halt()
-        case Match(matches, next) => go(next) match {
-          case Match(m2, n2) => Match(m2 ++ matches, n2)
-          case a@_           => Match(matches, a)
-        }
-        case Await(f)             => f(fact)
+        case Halt()              => Halt()
+        case Emit(matches, next) => throw new Exception("You cannot step a match")
+        case Await(f)            => f(fact)
       }
     }
     val ntx = go(this)
     ntx
   }
 
-  def ++(a: Matcher) =
+  def ++[B](a: Matcher[B]) =
     and(a)
 
+  /*
+    def ~>(m: Matcher[A]) =
+      fby(m)
+  */
 
-  def ~>(m: Matcher) =
-    fby(m)
-
-  def ~><(m: Matcher) =
+  def ~><(m: Matcher[A]) =
     and(m.haltAfter)
 
-  def ||(m: Matcher) =
+  def ||(m: Matcher[A]) =
     or(m)
 
 
-  def end: Matcher = this match {
+  def end: Matcher[A] = this match {
     case Halt()      => Halt()
-    case Match(p, n) => Match(p, Halt())
-    case a: Await    => await("end", p => a.step(p).end)
+    case Emit(p, n)  => Emit[A](p, Halt())
+    case a: Await[A] => await("end", p => a.step(p).end)
   }
 
 
-  def last: Matcher =
+  def last: Matcher[A] =
     this match {
       case Halt()      => Halt()
-      case Match(m, n) => Match(m, n.lastC(m))
-      case a: Await    => await("last(" + a + ")", p => a.step(p).last)
+      case Emit(m, n)  => Emit(m, n.lastC(m))
+      case a: Await[A] => await("last(" + a + ")", p => a.step(p).last)
     }
 
-  def filter(f: Pattern => Boolean): Matcher =
+  def collect[B](pf: PartialFunction[A, B]): Matcher[B] = {
+    filter(pf.isDefinedAt).map(pf)
+  }
+
+  def filter(f: Pred[A]): Matcher[A] =
     this match {
       case Halt()      => Halt()
-      case Match(p, n) => if (f(p)) Match(p, n) else n
-      case a: Await    => await("end", p => a.step(p).filter(f))
+      case Emit(p, n)  => if (f(p)) Emit(p, n) else n
+      case a: Await[A] => await("end", p => a.step(p).filter(f))
     }
 
-  private def lastC(cache: Pattern): Matcher = {
+  private def lastC(cache: A): Matcher[A] = {
     this match {
-      case Halt()      => Match(cache, await("lastC(" + cache + ")", p => valueForever(cache)))
-      case Match(m, n) => Match(m, n.lastC(m))
-      case a: Await    => Match(cache, await("lastC(" + a.f + "," + cache + ")", p => a.f(p).lastC(cache)))
+      case Halt()      => Emit(cache, await("lastC(" + cache + ")", p => valueForever(cache)))
+      case Emit(m, n)  => Emit(m, n.lastC(m))
+      case a: Await[A] => Emit(cache, await("lastC(" + a.f + "," + cache + ")", p => a.f(p).lastC(cache)))
     }
   }
 
-  def first: Matcher =
+  def first: Matcher[A] =
     this match {
-      case Halt()      => Halt()
-      case Match(m, n) => Match(m, await("forever(" + m.facts.head + ")", p => valueForever(m)))
-      case Await(f)    => await("first(" + f + ")", p => f(p).first)
+      case Halt()     => Halt()
+      case Emit(m, n) => Emit(m, await("forever(" + m + ")", p => valueForever(m)))
+      case Await(f)   => await("first(" + f + ")", p => f(p).first)
     }
 
-  private def valueForever(matched: Pattern): Matcher =
-    Match(matched, await("forever(" + matched.facts.head + ")", p => valueForever(matched)))
+  private def valueForever(matched: A): Matcher[A] =
+    Emit(matched, await("forever(" + matched + ")", p => valueForever(matched)))
 
 
-  def accumD(duration: Duration): Matcher = {
+  def accumD(duration: Duration)(implicit ev: A => ReadableInstant): Matcher[List[A]] = {
     this match {
-      case Halt()      => Halt()
-      case Match(p, n) =>
-        val acs = p.facts ::: windows.time(duration, (fact: Fact) => fact.instant)
-        Match(Pattern(acs.contents.toList), await("awaitAccum(" + acs + ")", p => n.step(p).accumNonEmpty(acs)))
-      case Await(f)    => await("awaitAccum(" + f + ")", p => f(p).accumD(duration))
-    }
-  }
-
-  def accumN(size: Int): Matcher = {
-    this match {
-      case Halt()      => Halt()
-      case Match(p, n) =>
-        val acs = p.facts ::: windows.sized(size)
-        Match(Pattern(acs.contents.toList), await("awaitAccum(" + acs + ")", p => n.step(p).accumNonEmpty(acs)))
-      case Await(f)    => await("awaitAccum(" + f + ")", p => f(p).accumN(size))
+      case Halt()     => Halt()
+      case Emit(p, n) =>
+        val acs = p :: windows.time[A](duration, ev)
+        Emit(acs.contents.toList, await("awaitAccum(" + acs + ")", p => n.step(p).accumNonEmpty(acs)))
+      case Await(f)   => await("awaitAccum(" + f + ")", p => f(p).accumD(duration))
     }
   }
 
-  def accumNonEmpty(w: Window[Fact]): Matcher = {
+  def accumN(size: Int): Matcher[List[A]] = {
     this match {
-      case Halt()      => Halt()
-      case Match(p, n) => {
-        val acs = p.facts ::: w
-        Match(Pattern(acs.contents.toList), await("awaitAccum(" + acs + ")", p => n.step(p).accumNonEmpty(acs)))
-      }
-      case Await(f)    => Match(Pattern(w.contents.toList), await("awaitAccum(" + f + "," + w + ")", p => f(p).accumNonEmpty(w)))
+      case Halt()     => Halt()
+      case Emit(p, n) =>
+        val acs = p :: windows.sized(size)
+        Emit(acs.contents.toList, await("awaitAccum(" + acs + ")", p => n.step(p).accumNonEmpty(acs)))
+      case Await(f)   => await("awaitAccum(" + f + ")", p => f(p).accumN(size))
     }
   }
 
-  def repeat: Matcher =
+  def accumNonEmpty(w: Window[A]): Matcher[List[A]] = {
+    this match {
+      case Halt()     => Halt()
+      case Emit(p, n) =>
+        val acs = p :: w
+        Emit(acs.contents.toList, await("awaitAccum(" + acs + ")", p => n.step(p).accumNonEmpty(acs)))
+      case Await(f)   => Emit(w.contents.toList, await("awaitAccum(" + f + "," + w + ")", p => f(p).accumNonEmpty(w)))
+    }
+  }
+
+  def repeat: Matcher[A] =
     repeatForever(this)
 
-  private def repeatForever(original: Matcher): Matcher = {
+  private def repeatForever(original: Matcher[A]): Matcher[A] = {
     this match {
-      case Halt()      => original.repeatForever(original)
-      case Match(m, n) => Match(m, original.repeat)
-      case Await(f)    => await("repeat(" + f + ")", p => f(p).repeatForever(original))
+      case Halt()     => original.repeatForever(original)
+      case Emit(m, n) => Emit(m, original.repeat)
+      case Await(f)   => await("repeat(" + f + ")", p => f(p).repeatForever(original))
     }
   }
 
 
-  def times(times: Int): Matcher =
-    repeat(this, times, none)
+  def times(times: Int): Matcher[List[A]] =
+    repeat(this, times, nil[A])
 
 
-  private def repeat(original: Matcher, times: Int, matched: Option[Pattern]): Matcher = {
+  private def repeat(original: Matcher[A], times: Int, matched: List[A]): Matcher[List[A]] = {
     if (times == 0)
-      matched.fold[Matcher](Halt())(m => Match(m, Halt()))
+      Emit(matched, Halt())
     else
       this match {
-        case Halt()      => original.repeat(original, times - 1, matched)
-        case Match(m, n) => original.repeat(original, times - 1, matched.fold(Some(m))(x => Some(m ++ x)))
-        case Await(f)    => await("repeat(" + f + ")", p => f(p).repeat(original, times, matched))
+        case Halt()     => original.repeat(original, times, matched)
+        case Emit(m, n) => original.repeat(original, times - 1, m :: matched)
+        case Await(f)   => await("repeat(" + f + ")", p => f(p).repeat(original, times, matched))
       }
   }
 
-  def xor(other: Matcher): Matcher =
+  def xor[B](other: Matcher[B]): Matcher[A \/ B] =
     (this, other) match {
-      case (Halt(), _) | (_, Halt())      => Halt()
-      case (Match(m1, n1), Match(m2, n2)) => await(p => n1 xor n2)
-      case (Match(m1, n1), b: Await)      => Match(m1, n1 xor b)
-      case (a: Await, Match(m2, n2))      => Match(m2, a xor n2)
-      case (a: Await, b: Await)           => await(a + " xor " + b, p => a.f(p) xor b.f(p))
+      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Emit(m1, n1), Emit(m2, n2)) => await(p => n1 xor n2)
+      case (Emit(m1, n1), b: Await[B])  => Emit(m1.left, n1 xor b)
+      case (a: Await[A], Emit(m2, n2))  => Emit(m2.right, a xor n2)
+      case (a: Await[A], b: Await[B])   => await(a + " xor " + b, p => a.f(p) xor b.f(p))
     }
 
 
-  def or(other: Matcher): Matcher =
+  def or[B](other: Matcher[B]): Matcher[(Option[A], Option[B])] =
     (this, other) match {
-      case (Halt(), _) | (_, Halt())      => Halt()
-      case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1 or n2)
-      case (Match(m1, n1), b: Await)      => Match(m1, n1 or b) // await(p => n1.step(p) or b.step(p)))
-      case (a: Await, Match(m2, n2))      => Match(m2, a or n2) // await(p => a.step(p) or n2.step(p)))
-      case (a: Await, b: Await)           => await(p => a.f(p) or b.f(p))
+      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Emit(m1, n1), Emit(m2, n2)) => Emit((m1.some, m2.some), n1 or n2)
+      case (Emit(m1, n1), b: Await[B])  => Emit((m1.some, none[B]), n1 or b) // await(p => n1.step(p) or b.step(p)))
+      case (a: Await[A], Emit(m2, n2))  => Emit((none[A], m2.some), a or n2) // await(p => a.step(p) or n2.step(p)))
+      case (a: Await[A], b: Await[B])   => await(p => a.f(p) or b.f(p))
     }
 
-  def and(other: Matcher): Matcher =
+  def and[B](other: Matcher[B]): Matcher[(A, B)] =
     (this, other) match {
-      case (Halt(), _) | (_, Halt())      => Halt()
-      case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1 and n2)
-      case (Match(m1, n1), b: Await)      => n1 and b //await(n1 + " *and " + b, p => n1.step(p) and b.step(p))
-      case (a: Await, Match(m2, n2))      => a and n2 //await(a + " and* " + n2, p => a.step(p) and n2.step(p))
-      case (a: Await, b: Await)           => await(a + " and " + b, p => a.f(p) and b.f(p))
+      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Emit(m1, n1), Emit(m2, n2)) => Emit((m1, m2), n1 and n2)
+      case (Emit(m1, n1), b: Await[B])  => n1 and b //await(n1 + " *and " + b, p => n1.step(p) and b.step(p))
+      case (a: Await[A], Emit(m2, n2))  => a and n2 //await(a + " and* " + n2, p => a.step(p) and n2.step(p))
+      case (a: Await[A], b: Await[B])   => await(a + " and " + b, p => a.f(p) and b.f(p))
     }
 
-  def haltAfter: Matcher =
+  def haltAfter: Matcher[A] =
     this match {
-      case Halt()      => Halt()
-      case Match(p, n) => Match(p, Halt())
-      case Await(f)    => await("haltAfter(" + f + ")", p => f(p).haltAfter)
+      case Halt()     => Halt()
+      case Emit(p, n) => Emit(p, Halt())
+      case Await(f)   => await("haltAfter(" + f + ")", p => f(p).haltAfter)
     }
 
-  def haltOn: Matcher =
+  def haltOn: Matcher[A] =
     this match {
-      case Halt()      => Halt()
-      case Match(p, n) => Halt()
-      case Await(f)    => await(p => f(p).haltOn)
+      case Halt()     => Halt()
+      case Emit(p, n) => Halt()
+      case Await(f)   => await(p => f(p).haltOn)
     }
 
-  def fby(other: Matcher): Matcher =
+
+  def fby(other: Matcher[A])(implicit ev1: Order[A]): Matcher[(A, A)] =
     (this, other) match {
-      case (Halt(), _) | (_, Halt())      => Halt()
-      case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby(n2, m1))
-      case (Match(m1, n1), a2: Await)     => n1.fby(a2, m1)
-      case (a1: Await, Match(m2, n2))     => a1.fby(n2)
-      case (a1: Await, a2: Await)         => await(a1 + "~>" + a2, p => a1.f(p).fby(a2)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
+      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Emit(m1, n1), Emit(m2, n2)) => if (m1 lt m2) Emit((m1, m2), n1.fby(n2)) else n1.fby(n2)
+      case (Emit(m1, n1), a2: Await[A]) => n1.fby(a2)
+      case (a1: Await[A], Emit(m2, n2)) => a1.fby(n2)
+      case (a1: Await[A], a2: Await[A]) => await(a1 + "~>" + a2, p => a1.f(p).fby(a2.f(p))) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
     }
 
-
-  def fby(other: Matcher, cached: Pattern): Matcher =
-    (this, other) match {
-      case (Halt(), _) | (_, Halt())      => Halt()
-      case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
-      case (Match(m1, n1), a2: Await)     => n1.fby(a2, m1)
-      case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
-      case (a1: Await, a2: Await)         => await(a1 + "/" + cached.facts.head + "~>" + a2, p => a1.f(p).fby(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
-    }
-
-  def fby2(other: Matcher, cached: Pattern): Matcher =
-    (this, other) match {
-      case (Halt(), _) | (_, Halt())      => Halt()
-      case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
-      case (Match(m1, n1), a2: Await)     => n1.fby2(a2, m1)
-      case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
-      case (a1: Await, a2: Await)         => await(a1 + "//" + cached.facts.head + "~>" + a2, p => a1.fby2(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
-    }
-
+  /*
+  
+      def fby(other: Matcher, cached: Pattern): Matcher =
+        (this, other) match {
+          case (Halt(), _) | (_, Halt())      => Halt()
+          case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
+          case (Match(m1, n1), a2: Await)     => n1.fby(a2, m1)
+          case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
+          case (a1: Await, a2: Await)         => await(a1 + "/" + cached.facts.head + "~>" + a2, p => a1.f(p).fby(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
+        }
+  
+      def fby2(other: Matcher, cached: Pattern): Matcher =
+        (this, other) match {
+          case (Halt(), _) | (_, Halt())      => Halt()
+          case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
+          case (Match(m1, n1), a2: Await)     => n1.fby2(a2, m1)
+          case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
+          case (a1: Await, a2: Await)         => await(a1 + "//" + cached.facts.head + "~>" + a2, p => a1.fby2(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
+        }
+    */
 }
 
 
-trait HaltOrAwait extends Matcher
+trait HaltOrAwait[A] extends Matcher[A]
 
 object Pattern {
   def apply(facts: List[Fact]): Pattern = Pattern(facts, Nil)
@@ -326,21 +315,21 @@ case class Pattern(facts: List[Fact], history: List[Fact]) {
   def latest = facts.head.instant
 }
 
-trait MatchFunc {
-  def apply(fact: Pattern): Matcher
+trait MatchFunc[A] {
+  def apply(fact: Fact): Matcher[A]
 }
-case class MF(f: Pattern => Matcher, desc: String = "f(?)") extends MatchFunc {
-  def apply(fact: Pattern) = f(fact)
+case class MF[A](f: Fact => Matcher[A], desc: String = "f(?)") extends MatchFunc[A] {
+  def apply(fact: Fact) = f(fact)
 
   override def toString = desc
 }
-case class Halt() extends HaltOrAwait
-case class Match(p: Pattern, next: Matcher) extends Matcher
-case class Await(f: MatchFunc) extends HaltOrAwait {
+case class Halt[A]() extends HaltOrAwait[A]
+case class Emit[A](p: A, next: Matcher[A]) extends Matcher[A]
+case class Await[A](f: MatchFunc[A]) extends HaltOrAwait[A] {
   override def toString = f.toString
 }
 
-
+/*
 case class FBy(one: Matcher, other: Matcher) extends MatchFunc {
   def apply(p: Pattern) = {
     (one.step(p), other.step(p)) match {
@@ -368,3 +357,4 @@ case class MatchedFBy(one: Matcher, other: Matcher, consumed: Pattern) extends M
 
   override def toString = "m(" + consumed.facts.mkString(",") + ") ~> " + other
 }
+*/

@@ -13,27 +13,27 @@ object progresstracker {
   def zero[A]: PatternTracker[A] =
     ZeroTracker[A]()
 
-  def value[A](m: Matcher,value: A): PatternTracker[A] =
+  def value[A,F](m: Matcher[F], value: A): PatternTracker[A] =
     ValueOnMatchTracker(m)(value)
 
-  def collect[C,A](m:Matcher,f:PartialFunction[List[Fact],C])(g:Int=>Option[A]):PatternTracker[A] =
-    StatefulTracker[Set[C], A](m, Set()) { token => State { set =>
-    val value = f(token.facts)
+  def collect[C, F, A](m: Matcher[F], f: F => Option[C])(g: Int => Option[A]): PatternTracker[A] =
+    StatefulTracker[Set[C], F, A](m, Set()) { token => State { set =>
+      val value = f(token)
 
-    val newSet =
-      set + value
+      val newSet =
+        value.fold(set)(v=> set + v)
 
-    val isIncrease =
-      set.size != newSet.size
+      val isIncrease =
+        set.size != newSet.size
 
-    val badge =
-      if (isIncrease)
-        g(newSet.size)
-      else none
+      val badge =
+        if (isIncrease)
+          g(newSet.size)
+        else none
 
-    (newSet, badge)
-  }
-  }
+      (newSet, badge)
+    }
+    }
 }
 
 
@@ -54,7 +54,7 @@ trait PatternTracker[A] {
       case (one, other)           => AndTracker(one, other)
     }
 
-  def zeroOnHalt(m: Matcher, p: PatternTracker[A]): PatternTracker[A] = {
+  def zeroOnHalt[F](m: Matcher[F], p: PatternTracker[A]): PatternTracker[A] = {
     m match {
       case Halt() => ZeroTracker[A]()
       case _      => p
@@ -77,7 +77,7 @@ case class AndTracker[A](one: PatternTracker[A], other: PatternTracker[A]) exten
   }
 }
 
-case class OnMatchTracker[A](m: Matcher)(f: Pattern => A) extends PatternTracker[A] {
+case class OnMatchTracker[A](m: Matcher[Nothing])(f: Pattern => A) extends PatternTracker[A] {
   def apply(t: Fact) = {
     val (next, pattern) =
       m.check(t)
@@ -87,7 +87,7 @@ case class OnMatchTracker[A](m: Matcher)(f: Pattern => A) extends PatternTracker
   }
 }
 
-case class ValueOnMatchTracker[A](m: Matcher)(f: => A) extends PatternTracker[A] {
+case class ValueOnMatchTracker[A,F](m: Matcher[F])(f: => A) extends PatternTracker[A] {
   def apply(t: Fact) = {
     val (next, pattern) =
       m.check(t)
@@ -95,7 +95,7 @@ case class ValueOnMatchTracker[A](m: Matcher)(f: => A) extends PatternTracker[A]
     (nextTracker, pattern.map(x => f).toList)
   }
 }
-case class StatefulTracker[S, A](m: Matcher, s: S)(f: Pattern => State[S, Option[A]]) extends PatternTracker[A] {
+case class StatefulTracker[S, P, A](m: Matcher[P], s: S)(f: P => State[S, Option[A]]) extends PatternTracker[A] {
 
   type StateS[x] = State[S, x]
 
@@ -112,13 +112,13 @@ case class StatefulTracker[S, A](m: Matcher, s: S)(f: Pattern => State[S, Option
   }
 }
 
-case class PredStatefulTracker[S, A](pred: Pred, s: S)(f: Fact => State[S, List[A]]) extends PatternTracker[A] {
+case class PredStatefulTracker[S, A](pred: Pred[Fact], s: S)(f: Fact => State[S, List[A]]) extends PatternTracker[A] {
 
 
   def apply(t: Fact): (PatternTracker[A], List[A]) = {
 
     val changes: State[S, List[A]] =
-      if (pred(Pattern(List(t))))
+      if (pred(t))
         f(t)
       else
         State.state(nil)
