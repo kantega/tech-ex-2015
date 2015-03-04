@@ -25,7 +25,7 @@ object trackPlayer {
         d <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeDn)).getOrElse(State.state[Storage, List[Fact]](nil))
       } yield b ::: c ::: d
 
-    case exitObservation: ExitObservation =>
+    case exitObservation: ExitObservation => movedToUnknown(exitObservation)
 
   }
 
