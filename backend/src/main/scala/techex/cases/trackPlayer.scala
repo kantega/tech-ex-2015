@@ -17,16 +17,52 @@ object trackPlayer {
 
 
   def calcActivity: PartialFunction[InputMessage, State[Storage, List[Fact]]] = {
-    case observation: Observation =>
+    case observation: EnterObservation =>
       for {
         maybeLocationUpdate <- nextLocation(observation)
         b <- maybeLocationUpdate.map(location2VisitActivities).getOrElse(State.state[Storage, List[Fact]](nil))
         c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeUp)).getOrElse(State.state[Storage, List[Fact]](nil))
         d <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeDn)).getOrElse(State.state[Storage, List[Fact]](nil))
       } yield b ::: c ::: d
+
+    case exitObservation: ExitObservation =>
+
   }
 
-  def nextLocation: Observation => State[Storage, Option[LocationUpdate]] =
+  def movedToUnknown: ExitObservation => State[Storage, List[Fact]] =
+    exit => State {
+      ctx => {
+
+        val maybePlayer =
+          ctx
+            .playerData.get(exit.playerId)
+
+
+
+        maybePlayer.fold((ctx, nil[Fact])) { (player: PlayerData) =>
+          val lastLocation =
+            player.lastLocation
+
+          val nextLocation =
+            LocationUpdate(player.player.id,areas.anywhere,exit.instant)
+
+          val left =
+            LeftArea(player, lastLocation.area, exit.instant)
+
+          val arrived =
+            EnteredArea(player, areas.anywhere, exit.instant)
+
+          val updates =
+            left :: arrived :: Nil
+
+          (ctx.addFacts(updates).updatePlayerData(exit.playerId, _.addMovement(nextLocation)), updates)
+        }
+
+      }
+    }
+
+
+  def nextLocation: EnterObservation => State[Storage, Option[LocationUpdate]] =
     observation => State {
       ctx => {
 
@@ -43,7 +79,7 @@ object trackPlayer {
             maybeArea match {
               case None       => None
               case Some(area) =>
-                if (area === player.lastKnownLocation.area) None
+                if (area === player.lastLocation.area) None
                 else Some(LocationUpdate(observation.playerId, area, Instant.now()))
             }
           }
@@ -64,16 +100,16 @@ object trackPlayer {
 
         maybePlayer.fold((ctx, nil[Fact])) { (player: PlayerData) =>
           val lastLocation =
-            player.lastKnownLocation
+            player.lastLocation
 
           val nextLocation =
             locationUpdate
 
           val left =
-            LeftRegion(player, lastLocation.area, locationUpdate.instant)
+            LeftArea(player, lastLocation.area, locationUpdate.instant)
 
           val arrived =
-            EnteredRegion(player, nextLocation.area, locationUpdate.instant)
+            EnteredArea(player, nextLocation.area, locationUpdate.instant)
 
           val updates =
             left :: arrived :: Nil
@@ -85,7 +121,7 @@ object trackPlayer {
     }
 
 
-  def meetingPoints2Activity(meetingArea: Region): LocationUpdate => State[Storage, List[Fact]] =
+  def meetingPoints2Activity(meetingArea: Area): LocationUpdate => State[Storage, List[Fact]] =
     location => State {
       ctx =>
         val maybePlayerData =
@@ -125,7 +161,7 @@ object trackPlayer {
             BadRequest(failMsg),
           observation =>
             for {
-              _ <- eventstreams.events.publishOne(observation)
+              _ <- eventstreams.events.publishOne(observation.fold(x => x, y => y))
               response <- Ok()
             } yield response)
       }

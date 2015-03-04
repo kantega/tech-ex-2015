@@ -22,8 +22,11 @@ trait InputMessage{
   val msgType:String
 }
 trait Command extends InputMessage
-case class Observation(beacon: Beacon, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage{
-  val msgType = "Observation"
+case class EnterObservation(beacon: BeaconId, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage{
+  val msgType = "EnterObservation"
+}
+case class ExitObservation(playerId:PlayerId,instant:Instant) extends InputMessage{
+  val msgType = "ExitObservation"
 }
 case class CreatePlayer(data:CreatePlayerData) extends Command{
   val msgType = "CreatePlayer"

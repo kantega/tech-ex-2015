@@ -18,8 +18,8 @@ case class JoinedActivityLate(player: PlayerData, event: ScheduleEntry, instant:
 case class LeftActivityEarly(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
 case class JoinedOnStart(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
 case class LeftOnEnd(player: PlayerData, event: ScheduleEntry, instant: Instant) extends FactAboutPlayer
-case class EnteredRegion(player: PlayerData, area: Region, instant: Instant) extends FactAboutPlayer
-case class LeftRegion(player: PlayerData, area: Region, instant: Instant) extends FactAboutPlayer
+case class EnteredArea(player: PlayerData, area: Area, instant: Instant) extends FactAboutPlayer
+case class LeftArea(player: PlayerData, area: Area, instant: Instant) extends FactAboutPlayer
 case class MetPlayer(player: PlayerData, otherPlayer: PlayerData, instant: Instant) extends FactAboutPlayer
 case class EarnedAchievemnt(player: PlayerData, achievemnt: Achievement, instant: Instant) extends FactAboutPlayer
 case class AwardedBadge(player: PlayerData, badge: Badge, instant: Instant) extends FactAboutPlayer

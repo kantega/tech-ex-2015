@@ -43,7 +43,7 @@ class ParseEventsSpec extends Specification {
     val factC =
       head({ case c: FactC => true})
 
-    val factAWithSameValue :Matcher = patternmatching.occurs("factCsame", pattern => {
+    val factAWithSameValue :Matcher = patternmatching.on("factCsame", pattern => {
       val res = pattern.facts.head match {
         case a:FactD => pattern.factsAndHistory.collect{case a2:FactA => a.value === a2.value}.nonEmpty
         case _ => false

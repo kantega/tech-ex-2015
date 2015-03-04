@@ -13,8 +13,27 @@ object progresstracker {
   def zero[A]: PatternTracker[A] =
     ZeroTracker[A]()
 
-  def value[A](value: A,m: Matcher): PatternTracker[A] =
+  def value[A](m: Matcher,value: A): PatternTracker[A] =
     ValueOnMatchTracker(m)(value)
+
+  def collect[C,A](m:Matcher,f:PartialFunction[List[Fact],C])(g:Int=>Option[A]):PatternTracker[A] =
+    StatefulTracker[Set[C], A](m, Set()) { token => State { set =>
+    val value = f(token.facts)
+
+    val newSet =
+      set + value
+
+    val isIncrease =
+      set.size != newSet.size
+
+    val badge =
+      if (isIncrease)
+        g(newSet.size)
+      else none
+
+    (newSet, badge)
+  }
+  }
 }
 
 

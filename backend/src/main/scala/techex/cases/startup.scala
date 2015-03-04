@@ -26,7 +26,7 @@ object startup {
       appendAccumP1(locateOnSessionTimeBoundaries.handleTimeBoundsFacts) pipe
       appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges)
 
-  def setupStream(txor:Transactor[Task]): Task[Unit] = {
+  def setupStream(txor: Transactor[Task]): Task[Unit] = {
 
     val inputHandlerQueue =
       async.unboundedQueue[InputMessage]
@@ -42,7 +42,7 @@ object startup {
 
     val handleStoreToDatabase =
       storeToDatabaseQueue.dequeue to
-      process.sink[Task,InputMessage]((input:InputMessage) => txor.transact(InputMessageDAO.storeObservation(input)))
+        process.sink[Task, InputMessage]((input: InputMessage) => txor.transact(InputMessageDAO.storeObservation(input)))
 
     val handleInputStream =
       inputHandlerQueue.dequeue pipe
@@ -96,7 +96,6 @@ object startup {
       _ <- setupStream(ds)
       _ <- setupSchedule
 
-
     } yield (HttpService(
       playerSignup.restApi(eventstreams.events) orElse
         test.testApi orElse
@@ -109,7 +108,8 @@ object startup {
         startSession.restApi(eventstreams.events) orElse
         endSession.restApi(eventstreams.events) orElse
         listSchedule.restApi orElse
-        serveHelptext.restApi
+        serveHelptext.restApi orElse
+        getBeaconRegions.restApi
     ), updateStream.wsApi(eventstreams.factUdpates))
 
   }

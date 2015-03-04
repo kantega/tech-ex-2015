@@ -7,7 +7,7 @@ import dispatch.Defaults._
 import dispatch.{host, _}
 import org.http4s.server.jetty.JettyBuilder
 import techex.cases.startup
-import techex.domain.{Proximity, Nick, PlayerId}
+import techex.domain._
 
 import scala.concurrent.Future
 import scalaz.\/
@@ -61,9 +61,8 @@ object TestServer {
 
     response
   }
-
-  def putObservation(playerId: PlayerId, beaconId: String, proximity: Proximity): Future[String] =
-    Http(((h / "location" / playerId.value) << "{'beaconId':'" + beaconId + "','proximity':'" + proximity.toString + "'}").POST)
-      .map(s => s.getStatusCode.toString)
+  def beaconAt(a: Area) = areas.beaconsAt(a).head
+  def putObservation(playerId: PlayerId, beacon: BeaconId, proximity: Proximity) =
+    Http(((h / "location" / playerId.value) << "{'major':'" + 1 + "','minor':" + beacon.minor +",'proximity':'" + proximity.toString + "','activity':'enter'}").POST)
 
 }

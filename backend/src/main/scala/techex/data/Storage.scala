@@ -32,7 +32,7 @@ object Storage {
   def updates[A]: Channel[Task, State[Storage, A], A] =
     Process.constant(run)
 
-  def playersPresentAt(area: Region): State[Storage, List[PlayerData]] = {
+  def playersPresentAt(area: Area): State[Storage, List[PlayerData]] = {
     State.gets { ctx =>
       ctx.playersPresentAt(area)
     }
@@ -71,9 +71,9 @@ case class Storage(playerData: Map[PlayerId, PlayerData], schedule: Map[ScId, Sc
     }
   }
 
-  def playersPresentAt(area: Region) = {
+  def playersPresentAt(area: Area) = {
     players
-      .filter(_.lastKnownLocation.area === area)
+      .filter(_.lastLocation.area === area)
   }
 
   def addEntry(scheduleEntry: ScheduleEntry) =
@@ -96,16 +96,17 @@ case class Storage(playerData: Map[PlayerId, PlayerData], schedule: Map[ScId, Sc
 case class PlayerData(
   player: Player,
   achievements: Set[Achievement],
-  lastKnownLocation: LocationUpdate,
+  lastLocation: LocationUpdate,
   activities: Vector[FactAboutPlayer],
   progress: PatternTracker[Achievement],
-  platform: NotificationTarget) {
+  platform: NotificationTarget,
+  lastKnownLocation:LocationUpdate) {
 
   def addAchievement(achievemnt: Achievement): PlayerData =
     copy(achievements = achievements + achievemnt)
 
   def addMovement(location: LocationUpdate): PlayerData =
-    copy(lastKnownLocation = location)
+    copy(lastLocation = location)
 
   def addActivities(activities: List[FactAboutPlayer]): PlayerData =
     activities.foldRight(this) { (activity, data) => data.addFact(activity)}

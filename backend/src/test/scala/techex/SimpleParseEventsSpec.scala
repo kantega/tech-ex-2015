@@ -20,32 +20,32 @@ class SimpleParseEventsSpec extends Specification {
     val outDelim =
       head({ case od: DelimOuter => true})
 
-    val factA: Matcher = patternmatching.occurs("factA", pattern => {
+    val factA: Matcher = patternmatching.on("factA", pattern => {
       val res = pattern.facts.head.isInstanceOf[FactA]
      // println("Checking factA " + pattern + ":" + res)
       res
     })
     //head({ case entered: FactA => true})
 
-    val factB: Matcher = patternmatching.occurs("factB", pattern => {
+    val factB: Matcher = patternmatching.on("factB", pattern => {
       val res = pattern.facts.head.isInstanceOf[FactB]
      // println("Checking factB " + pattern + ":" + res)
       res
     })
 
-    val factC: Matcher = patternmatching.occurs("factC", pattern => {
+    val factC: Matcher = patternmatching.on("factC", pattern => {
       val res = pattern.facts.head.isInstanceOf[FactC]
      // println("Checking factC " + pattern + ":" + res)
       res
     })
 
-    val factD: Matcher = patternmatching.occurs("factD", pattern => {
+    val factD: Matcher = patternmatching.on("factD", pattern => {
       val res = pattern.facts.head.isInstanceOf[FactD]
       //println("Checking factD " + pattern + ":" + res)
       res
     })
 
-    val factCAgain: Matcher = patternmatching.occurs("factC2", pattern => {
+    val factCAgain: Matcher = patternmatching.on("factC2", pattern => {
       val res = pattern.facts.head.isInstanceOf[FactC]
       //println("Checking factC2 " + pattern + ":" + res)
       res

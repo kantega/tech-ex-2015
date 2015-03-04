@@ -1,35 +1,61 @@
 package techex.domain
 
-import java.util.UUID
-
-import org.joda.time.{DateTime, Instant}
-import scalaz._, Scalaz._
+import org.joda.time.Minutes._
+import org.joda.time.{Hours, DateTime, ReadableDuration}
+import techex._
+import techex.domain.patternmatching._
 import techex.domain.preds._
-import patternmatching._
+import areas._
+import scalaz.Scalaz._
+import scalaz._
 
 
 object quests {
 
-  def firstVisit(area: Region) =
-    head({ case EnteredRegion(_, a, _) if a === area => true}).first
+  def first(p: Pred) =
+    p.first
 
-  def lastVisit(area: Region) =
-    head({ case EnteredRegion(_, a, _) if a === area => true}).last
+  def last(p: Pred) =
+    p.last
 
+  def enter(area: Area) =
+    head({ case EnteredArea(_, a, _) if a === area => true})
+
+  def enterOneOf(areas: Area*) =
+    head({ case EnteredArea(_, area, _) if areas.exists(a => a === area) => true})
+
+  def exitOneOf(areas: Area*) =
+    head({ case LeftArea(_, area, _) if areas.exists(a => a === area) => true})
+
+  //def stayAt(area:Area,duration:ReadableDuration) =
+
+
+  def time(t: DateTime => Boolean): Pred =
+    pattern => t(pattern.facts.head.instant.toDateTime)
+
+  def size(t: Int): Pred =
+    pattern => (pattern.facts.length >= t)
+
+  def visitCoffee =
+    enter(kantegaCoffeeUp) or enter(kantegaCoffeeDn)
 
   //Patterns
   val joinedAnActivityOnTime =
     head { case j: JoinedOnStart => true}
 
   val enteredArea =
-    head({ case entered: EnteredRegion => true})
+    head({ case entered: EnteredArea => true})
 
   val leftArea =
-    head({ case entered: LeftRegion => true})
+    head({ case entered: LeftArea => true})
 
-  val leftSameArea =
-    pattern{
-      case (LeftRegion(_,_,region),history) if history.collect{case EnteredRegion(_,_,region)=>true}.nonEmpty => true
+  def leftSameAreaWithin(duration: ReadableDuration) =
+    pattern {
+      case (LeftArea(_, exitArea, leftTime), history)
+        if history.collect {
+          case EnteredArea(_, enterArea, enterTime) if
+          enterArea === exitArea && durationBetween(enterTime, leftTime).isShorterThan(duration) => true
+        }.nonEmpty => true
     }
 
   val metOtherPlayer =
@@ -42,138 +68,184 @@ object quests {
     head { case mn: EndOfDay => true}
 
   //Badges
-  val seetalksiron          = Achievement(Bid("seetalksiron"), "First talk attended", "Attending one talks")
-  val seetalksbronze        = Achievement(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
-  val seetalkssilver        = Achievement(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
-  val seetalksgold          = Achievement(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
-  val firstsession          = Achievement(Bid("firstsession"), "I have seen the light", "Attending a session")
-  val kreatorsession        = Achievement(Bid("kreatorsession"), "I have been at Kreator", "Attending Kreator")
-  val fundingsession        = Achievement(Bid("fundingsession"), "I know you've got funds", "Attending live crowdfunding")
-  val keepsringing          = Achievement(Bid("keepsringing"), "Damned thing keeps ringing", "Left session for a couple of minutes")
-  val placestogo            = Achievement(Bid("placestogo"), "Got places to go, people to meet...", "Left a session early")
-  val tinyjavabladder       = Achievement(Bid("tinyjavabladder"), "Tiny java bladder", "Left session for toilet multiple times")
-  val smalljavabladder      = Achievement(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time")
-  val earlybird             = Achievement(Bid("earlybird"), "Early bird", "Arrived 20 mins early")
-  val ontime                = Achievement(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
-  val intlnetworker         = Achievement(Bid("intlnetworker"), "International networker", "You have many international connections")
-  val ambassador            = Achievement(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
-  val seeAllTheStandsBronze = Achievement(Bid("seestandsbronze"), "See at least a stand", "Visitng at least one stand")
-  val seeAllTheStandsSilver = Achievement(Bid("seestandssilver"), "See many stands", "Visiting half the stands")
-  val seeAllTheStandsGold   = Achievement(Bid("seestandsgold"), "Be at all the stands", "Visiting all the stands")
-  val networkingHero        = Achievement(Bid("nethero"), "Networking hero", "Meet with half of the crowd")
+  val seetalksiron     = Achievement(Bid("seetalksiron"), "First talk attended", "Attending one talks")
+  val seetalksbronze   = Achievement(Bid("seetalksbronze"), "Two talks down", "Attending two talks")
+  val seetalkssilver   = Achievement(Bid("seetalkssilver"), "Three is silver", "Attending three talks")
+  val seetalksgold     = Achievement(Bid("seetalksgold"), "Seen all the talks", "Attending all talks")
+  val firstsession     = Achievement(Bid("firstsession"), "I have seen the light", "Attending a session")
+  val kreatorsession   = Achievement(Bid("kreatorsession"), "I have been at Kreator", "Attending Kreator")
+  val fundingsession   = Achievement(Bid("fundingsession"), "I know you've got funds", "Attending live crowdfunding")
+  val keepsringing     = Achievement(Bid("keepsringing"), "Damned thing keeps ringing", "Left session for a couple of minutes")
+  val placestogo       = Achievement(Bid("placestogo"), "Got places to go, people to meet...", "Left a session early")
+  val tinyjavabladder  = Achievement(Bid("tinyjavabladder"), "Tiny java bladder", "Left session for toilet multiple times")
+  val smalljavabladder = Achievement(Bid("smalljavabladder"), "Small java bladder", "Left session for toilet one time")
+  val earlybird        = Achievement(Bid("earlybird"), "Early bird", "Arrived 20 mins early")
+  val ontime           = Achievement(Bid("ontime"), "If you are there on time, you are late", "Do not be late")
+  val intlnetworker    = Achievement(Bid("intlnetworker"), "International networker", "You have many international connections")
+  val ambassador       = Achievement(Bid("ambassador"), "Ambassador", "You add a lot of connection just right after they join the game")
+
+  val networkingHero = Achievement(Bid("nethero"), "Networking hero", "Meet with half of the crowd")
 
 
   //Kantega badges and quests
   object kq {
 
 
-    val meetingRoomRoamer =
-      Achievement(Bid("kmeetingroomroamer"), "Never settle", "Visit four meetingrooms in a day")
+
+    val earlyatwork            = Achievement(Bid("kearlyatwork"), "Came in early today", "Have coffee before 08:00")
+    val earlyprettyearlyatwork = Achievement(Bid("kprettyearlyatwork"), "Came on time today", "Have coffee before 09:00")
+    val earlyenough            = Achievement(Bid("kearlyenough"), "Came on time this week", "Have coffee before 09:00 for a week")
+    val earlyatworks           = Achievement(Bid("kearlyatwork"), "Came in early today", "Have coffee before 08:00 for a week")
+
+    val lateprettylateatwork  = Achievement(Bid("kprettylateatwork"), "Had some stuff to do.", "Have coffee after 16:00")
+    val lateprettylateatworks = Achievement(Bid("kprettylateatworks"), "Had a lot of stuff to do.", "Have coffee after 16:00 for a week")
+    val lateatwork            = Achievement(Bid("klateatwork"), "Had some more stuff to do.", "Have coffee after 17:00")
+    val lateatworks           = Achievement(Bid("klateatworks"), "I like staying at work.", "Have coffee after 17:00 for a week")
+
+    val coffeeliker       = Achievement(Bid("kkoffehero"), "I like coffee", "Get coffee five times in a day")
+    val coffeexperimenter = Achievement(Bid("kkoffeexperimenter"), "I like to experiment", "Have coffe from both areas in a day")
+    val coffeeconnector   = Achievement(Bid("kcoffeeconnector"), "I like my coworkers", "Meet with three others at the coffeemachine in one day")
+    val coffeenetworker   = Achievement(Bid("kcoffeeconnector"), "I like my coworkers a lot", "Meet with ten others at the coffeemachine in a day")
+    val coffeaddict       = Achievement(Bid("Kcoffeaddicted"), "Coffeeaddicted", "Get coffee five times in one hour")
+
+    val seeAllTheDesksBronze = Achievement(Bid("seeAllTheDesksBronze"), "One desk down", "Visitng at least one desk")
+    val seeAllTheDesksSilver = Achievement(Bid("seeAllTheDesksSilver"), "Both were thrilling", "Visiting half the desks")
+    val seeAllTheDesksGold   = Achievement(Bid("seeAllTheDesksGold"), "Be at all the desks", "Visiting all the stands")
+
+    val meetingRoomRoamer = Achievement(Bid("kmeetingroomroamer"), "Never settle", "Visit four meetingrooms in a day")
+    val meetingAttender   = Achievement(Bid("kmeetingAttender"), "A meeting might be fun", "Stay at one meetingroom for more than an hour")
+    val meetingAttenders  = Achievement(Bid("kmeetingAttenders"), "A meeting a day", "Stay at one meetingroom for more than an hour for a week")
+    val meetingRoomStayer = Achievement(Bid("kmeetingroomstayer"), "Excellent focus", "Stay at a meetingroom for more than three hours")
+
+    val coffeeHero  = Quest(Qid("kcoffeehero"), "Coffee connaisseur", "Drink coffe, the more the better", Public, List(coffeeliker, coffeexperimenter, coffeeconnector, coffeaddict))
+    val earlybird   = Quest(Qid("kearlybird"), "The early bird", "Come early to work, feel the rising sun!", Public, List(earlyprettyearlyatwork, earlyatwork, earlyenough, earlyatworks))
+    val stayer      = Quest(Qid("kstayer"), "The stayer", "Put in your hours, its good for the company and you", Public, List(lateprettylateatwork, lateatwork, lateprettylateatworks, lateatworks))
+    val meetinghero = Quest(Qid("kmeetinroomhero"), "Meeting maniac", "Meetings are great for productivity!", Public, List(meetingAttender, meetingRoomRoamer, meetingRoomStayer, meetingAttenders))
+    val roamer      = Quest(Qid("kroamer"), "The roamer", "Look for the desks", Public, List(seeAllTheDesksBronze, seeAllTheDesksSilver, seeAllTheDesksGold))
+
 
     val meetingRoomRoamerTracker =
       progresstracker.value(
-        meetingRoomRoamer,
-        (startOfDay.first ~> ((firstVisit(areas.mrtTuring) ++ firstVisit(areas.mrtTesla) ++ firstVisit(areas.mrtHopper) ++ firstVisit(areas.mrtCurie)).first ) ~>< endOfDay).repeat)
+        ((first(enter(areas.mrtTuring)) ++
+          first(enter(areas.mrtTesla)) ++
+          first(enter(areas.mrtHopper)) ++
+          first(enter(areas.mrtEngelbart)) ++
+          first(enter(areas.mrtAda)) ++
+          first(enter(areas.mrtCurie))) or
+          halt(on(endOfDay))).repeat,
+        meetingRoomRoamer)
 
-    val meetingAttender        = Achievement(Bid("kmeetingAttender"), "A meeting might be fun", "Stay at one meetingroom for more than an hour")
-    val meetingAttenderTracker =
+    val visitAllDesksTracker =
+      progresstracker.collect(
+      last(enter(areas.desk1)) or last(enter(areas.desk2)) or last(enter(areas.desk3)), { case EnteredArea(_, area, _) :: tail => area}) {
+        case 1 => seeAllTheDesksBronze.some
+        case 2 => seeAllTheDesksSilver.some
+        case 3 => seeAllTheDesksGold.some
+        case _ => none
+      }
+
+
+
+    //Early
+    val prettyEarlyAtWorkTracker =
       progresstracker.value(
-        meetingAttender,
-        (enteredArea.accumN(20) ~> leftSameArea)
+        last(visitCoffee and time(_.getHourOfDay <= 9)).haltAfter,
+        earlyatwork
       )
 
-    val meetingAttenders  = Achievement(Bid("kmeetingAttenders"), "A meeting a day", "Stay at one meetingroom for more than an hour for a week")
-    val meetingRoomStayer = Achievement(Bid("kmeetingroomstayer"), "Excellent focus", "Stay at a meetingroom for more than three hours")
-    val earlyatwork       = Achievement(Bid("kearlyatwork"), "Came in early today", "Have coffee before 08:00")
-    val prettyearlyatwork = Achievement(Bid("kprettyearlyatwork"), "Came on time today", "Have coffee before 09:00")
-    val earlyenough       = Achievement(Bid("kearlyenough"), "Came on time this week", "Have coffee before 09:00 for a week")
-    val prettylateatwork  = Achievement(Bid("kprettylateatwork"), "Had some stuff to do.", "Have coffee after 16:00")
-    val prettylateatworks = Achievement(Bid("kprettylateatworks"), "Had a lot of stuff to do.", "Have coffee after 16:00 for a week")
-    val lateatwork        = Achievement(Bid("klateatwork"), "Had some more stuff to do.", "Have coffee after 17:00")
-    val lateatworks       = Achievement(Bid("klateatworks"), "I like staying at work.", "Have coffee after 17:00 for a week")
-    val earlyatworks      = Achievement(Bid("kearlybird"), "The early bird", "Have coffee before 08:00 for a week")
-    val latebird          = Achievement(Bid("klatebird"), "The late bird", "Have coffee after 17:00 for a week")
-    val koffehero         = Achievement(Bid("kkoffehero"), "I like coffee", "Get coffee five times in a day")
-    val koffeexperimenter = Achievement(Bid("kkoffeexperimenter"), "I like to experiment", "Have coffe from both areas in a day")
-    val koffeeconnector   = Achievement(Bid("kcoffeeconnector"), "I like coffeedrinkers", "Meet with three others at the coffeemachine")
-    val koffeaddict       = Achievement(Bid("Kcoffeaddicted"), "Coffeeaddicted", "Get coffee ten times a day")
+    val earlyAtWorkTracker =
+      progresstracker.value(
+        last(visitCoffee and time(_.getHourOfDay <= 8)).haltAfter,
+        earlyatwork
+      )
 
-    val coffeeHero  = Quest(Qid("kcoffeehero"), "Coffee connaisseur", "Drink coffe, the more the better", Public, List(koffehero, koffeexperimenter, koffeeconnector, koffeaddict))
-    val earlybird   = Quest(Qid("kearlybird"), "The early bird", "Come early to work, feel the rising sun!", Public, List(prettyearlyatwork, earlyatwork, earlyenough, earlyatworks))
-    val stayer      = Quest(Qid("kstayer"), "The stayer", "Put in your hours, its good for the company and you", Public, List(prettyearlyatwork, lateatwork, prettylateatworks, lateatworks))
-    val meetinghero = Quest(Qid("kmeetinroomhero"), "Meeting maniac", "Meetings are great for productivity!", Public, List(meetingAttender, meetingRoomRoamer, meetingRoomStayer, meetingAttenders))
+    val earlyEnoughTracker =
+      progresstracker.value(
+        (last(startOfDay) and on(visitCoffee and time(_.getHourOfDay <= 9))).times(5),
+        earlyenough
+      )
+
+    val earlyAtWorksTracker =
+      progresstracker.value(
+        (last(startOfDay) and on(visitCoffee and time(_.getHourOfDay <= 8))).times(5),
+        earlyatworks
+      )
+
+    //LAte
+    val prettyLateAtWorkTracker =
+      progresstracker.value(
+        on(visitCoffee) and time(_.getHourOfDay >= 16),
+        lateprettylateatwork
+      )
+
+    val lateAtWorkTracker =
+      progresstracker.value(
+        on(visitCoffee) and time(_.getHourOfDay >= 17),
+        lateatwork
+      )
+
+    val lateEnoughTracker =
+      progresstracker.value(
+        last(startOfDay) and on(visitCoffee and time(_.getHourOfDay >= 16)).times(5),
+        lateprettylateatworks
+      )
+
+    val lateAtWorksTracker =
+      progresstracker.value(
+        last(startOfDay) and on(visitCoffee and time(_.getHourOfDay >= 17)).times(5),
+        lateatworks
+      )
+
+    val coffeeLikerTracker =
+      progresstracker.value(
+        on(visitCoffee).times(5) or halt(on(endOfDay)),
+        coffeeliker
+      )
+
+    val coffeexperimenterTracker =
+      progresstracker.value(
+        (last(enter(kantegaCoffeeUp)) and last(enter(kantegaCoffeeDn))) or halt(on(endOfDay)),
+        coffeexperimenter
+      )
+
+    val coffeeConnectorTracker =
+      progresstracker.value(
+        on(metOtherPlayer).times(3) or halt(on(endOfDay)),
+        coffeeconnector
+      )
+
+    val coffeeNetworkerTracker =
+      progresstracker.value(
+        on(metOtherPlayer).times(10) or halt(on(endOfDay)),
+        coffeenetworker
+      )
+
+    val coffeeAddictTracker =
+      progresstracker.value(
+        on(visitCoffee).accumD(Hours.ONE).filter(_.facts.length > 10) or halt(on(endOfDay)),
+        coffeenetworker
+      )
+
+    val meetingAttenderTracker =
+      progresstracker.value(
+        ((first(enterOneOf(areas.mrtTuring, areas.mrtTesla, areas.mrtHopper, areas.mrtEngelbart, areas.mrtAda, areas.mrtCurie)) ++
+          first(exitOneOf(areas.mrtTuring, areas.mrtTesla, areas.mrtHopper, areas.mrtEngelbart, areas.mrtAda, areas.mrtCurie))) or
+          halt(on(endOfDay))).repeat,
+        coffeaddict
+      )
 
   }
 
   //Quests
   val seeAllTalks       = Quest(Qid("seealltalks"), "See all the Talks", "Maximize your smart, see them all", Public, List(seetalksiron, seetalksbronze, seetalkssilver, seetalksgold))
   val attendAllSessions = Quest(Qid("visitallsessions"), "Attend all the Talks", "Maximize your smart, see them all", Public, List(firstsession, kreatorsession, fundingsession))
-  val visitAllStands    = Quest(Qid("visitthestands"), "Visit the stands", "Visit as many stands you can", Public, List(seeAllTheStandsBronze, seeAllTheStandsSilver, seeAllTheStandsGold))
+  val visitAllStands    = Quest(Qid("visitthestands"), "Visit the stands", "Visit as many stands you can", Public, List())
   val eagerNess         = Quest(Qid("beEager"), "The early bird", "Be on time", Public, List(earlybird, ontime))
   val antihero          = Quest(Qid("antihero"), "The Antihero", "No, you dont want to be good here", Secret, List(keepsringing, placestogo, tinyjavabladder, smalljavabladder))
 
-  val attendASession =
-    lastVisit(areas.mrtTuring) or lastVisit(areas.mrtTesla) or lastVisit(areas.mrtHopper) or lastVisit(areas.mrtCurie)
-
-
-  val TEMPattendAllSessionsProgressTracker =
-    StatefulTracker[Set[Region], Achievement](attendASession, Set()) { token => State { set =>
-      val entered =
-        token.facts.head.asInstanceOf[EnteredRegion]
-
-      val newSet =
-        set + entered.area
-
-      val isIncrease =
-        set.size != newSet.size
-
-      val badge =
-        if (isIncrease)
-          newSet.size match {
-            case 1 => seetalksiron.some
-            case 2 => seetalksbronze.some
-            case 3 => seetalkssilver.some
-            case 4 => seetalksgold.some
-            case _ => none
-          }
-        else none
-
-      (newSet, badge)
-    }
-    }
-
-
-  val vistitedStandMatcher =
-    lastVisit(areas.testArea1) or lastVisit(areas.testArea2) or lastVisit(areas.testArea3)
-
-  val visitAllStandsTracker =
-    StatefulTracker[Set[Region], Achievement](vistitedStandMatcher, Set()) { token => State { set =>
-      val entered =
-        token.facts.head.asInstanceOf[EnteredRegion]
-
-      val newSet =
-        set + entered.area
-
-      val isIncrease =
-        set.size != newSet.size
-
-      val badge =
-        if (isIncrease)
-          newSet.size match {
-            case 1 => seeAllTheStandsBronze.some
-            case 2 => seeAllTheStandsSilver.some
-            case 3 => seeAllTheStandsGold.some
-            case _ => none
-          }
-        else none
-
-      (newSet, badge)
-    }
-    }
-
 
   val ontimePred =
-    fact { case arr: EnteredRegion if DateTime.now().getHourOfDay < 9 => true}
+    fact { case arr: EnteredArea if DateTime.now().getHourOfDay < 9 => true}
 
   //val onTimeDayTwo =
 
@@ -191,7 +263,7 @@ object quests {
     )
 
   val networkingTracker =
-    StatefulTracker[Set[Nick], Achievement](occurs(metOtherPlayer), Set()) { token => State { set =>
+    StatefulTracker[Set[Nick], Achievement](on(metOtherPlayer), Set()) { token => State { set =>
       val metOther =
         token.facts.head.asInstanceOf[MetPlayer]
 
@@ -216,15 +288,11 @@ object quests {
 
   val quests =
     List(
-      //visitAllStands,
-      seeAllTalks,
-      //networking,
-      //antihero,
-      //eagerNess,
       kq.coffeeHero,
       kq.earlybird,
       kq.meetinghero,
-      kq.stayer
+      kq.stayer,
+      kq.roamer
     )
 
   val questPermutations =
@@ -261,18 +329,21 @@ object quests {
       kq.meetingAttenders,
       kq.meetingRoomStayer,
       kq.earlyatwork,
-      kq.prettyearlyatwork,
+      kq.earlyprettyearlyatwork,
       kq.earlyenough,
-      kq.prettylateatwork,
-      kq.prettylateatworks,
+      kq.earlyatworks,
+      kq.lateprettylateatwork,
+      kq.lateprettylateatworks,
       kq.lateatwork,
       kq.lateatworks,
-      kq.earlyatworks,
-      kq.latebird,
-      kq.koffehero,
-      kq.koffeeconnector,
-      kq.koffeaddict,
-      kq.koffeexperimenter
+      kq.coffeeliker,
+      kq.coffeexperimenter,
+      kq.coffeeconnector,
+      kq.coffeaddict,
+      kq.coffeenetworker,
+      kq.seeAllTheDesksBronze,
+      kq.seeAllTheDesksSilver,
+      kq.seeAllTheDesksGold
     )
 
   val badgesMap =
@@ -282,9 +353,8 @@ object quests {
 
   val trackerForQuest: Map[Qid, PatternTracker[Achievement]] =
     Map(
-      visitAllStands.id -> visitAllStandsTracker,
-      networking.id -> networkingTracker,
-      seeAllTalks.id -> TEMPattendAllSessionsProgressTracker
+      kq.meetinghero.id -> networkingTracker,
+      kq.roamer.id -> kq.visitAllDesksTracker
     )
 
   val zeroTracker =

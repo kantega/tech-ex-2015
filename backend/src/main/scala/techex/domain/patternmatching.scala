@@ -17,24 +17,28 @@ object patternmatching {
     Await(MF(f, desc))
   }
 
-  def occurs(pred: Pred): Matcher =
+  def halt(m: Matcher) =
+    m.haltOn
+
+
+  def on(pred: Pred): Matcher =
     await("a(" + pred + ")", p =>
       if (pred(p)) {
-        Match(p, occurs(pred))
+        Match(p, on(pred))
       }
       else
-        occurs(pred))
+        on(pred))
 
-  def occurs(desc: String, pred: Pred): Matcher =
+  def on(desc: String, pred: Pred): Matcher =
     await("a(" + desc + ")", p =>
       if (pred(p)) {
-        Match(p, occurs(desc, pred))
+        Match(p, on(desc, pred))
       }
       else
-        occurs(desc, pred))
+        on(desc, pred))
 
   implicit def toMatcher(pred: Pred): Matcher =
-    occurs(pred)
+    on(pred)
 
 }
 
@@ -149,6 +153,12 @@ trait Matcher {
       case a: Await    => await("last(" + a + ")", p => a.step(p).last)
     }
 
+  def filter(f: Pattern => Boolean): Matcher =
+    this match {
+      case Halt()      => Halt()
+      case Match(p, n) => if (f(p)) Match(p, n) else n
+      case a: Await    => await("end", p => a.step(p).filter(f))
+    }
 
   private def lastC(cache: Pattern): Matcher = {
     this match {
@@ -257,8 +267,8 @@ trait Matcher {
 
   def haltAfter: Matcher =
     this match {
-      case Halt()      =>  Halt()
-      case Match(p, n) =>  Match(p, Halt())
+      case Halt()      => Halt()
+      case Match(p, n) => Match(p, Halt())
       case Await(f)    => await("haltAfter(" + f + ")", p => f(p).haltAfter)
     }
 
@@ -273,7 +283,7 @@ trait Matcher {
     (this, other) match {
       case (Halt(), _) | (_, Halt())      => Halt()
       case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby(n2, m1))
-      case (Match(m1, n1), a2: Await)     => n1.fby(a2,m1)
+      case (Match(m1, n1), a2: Await)     => n1.fby(a2, m1)
       case (a1: Await, Match(m2, n2))     => a1.fby(n2)
       case (a1: Await, a2: Await)         => await(a1 + "~>" + a2, p => a1.f(p).fby(a2)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
     }
@@ -283,17 +293,18 @@ trait Matcher {
     (this, other) match {
       case (Halt(), _) | (_, Halt())      => Halt()
       case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
-      case (Match(m1, n1), a2: Await)     => n1.fby(a2,m1)
-      case (a1: Await, Match(m2, n2))     => Match(m2++cached,a1.fby2(n2,cached))
-      case (a1: Await, a2: Await)         => await(a1 +"/" + cached.facts.head + "~>" + a2, p => a1.f(p).fby(a2.f(p withHistory cached),cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
+      case (Match(m1, n1), a2: Await)     => n1.fby(a2, m1)
+      case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
+      case (a1: Await, a2: Await)         => await(a1 + "/" + cached.facts.head + "~>" + a2, p => a1.f(p).fby(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
     }
+
   def fby2(other: Matcher, cached: Pattern): Matcher =
     (this, other) match {
       case (Halt(), _) | (_, Halt())      => Halt()
       case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
-      case (Match(m1, n1), a2: Await)     => n1.fby2(a2,m1)
-      case (a1: Await, Match(m2, n2))     => Match(m2++cached,a1.fby2(n2,cached))
-      case (a1: Await, a2: Await)         => await(a1 +"//" + cached.facts.head + "~>" + a2, p => a1.fby2(a2.f(p withHistory cached),cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
+      case (Match(m1, n1), a2: Await)     => n1.fby2(a2, m1)
+      case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
+      case (a1: Await, a2: Await)         => await(a1 + "//" + cached.facts.head + "~>" + a2, p => a1.fby2(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
     }
 
 }

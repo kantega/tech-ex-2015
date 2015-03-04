@@ -2,7 +2,7 @@ import java.util.concurrent.{ThreadFactory, Executors}
 
 import com.typesafe.config.Config
 import org.http4s.{Request, Response}
-import org.joda.time.{Interval, ReadableInstant}
+import org.joda.time.{ReadablePeriod, Interval, ReadableInstant}
 import techex.web.WebSocket
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,6 +16,8 @@ package object techex {
 
   type WSHandler = PartialFunction[Request,Task[WebSocket]]
   type Val[A] = Validation[String, A]
+
+  implicit def toDuration(period:ReadablePeriod) = period.toPeriod.toStandardDuration
 
   def succ[A](a: A): Task[A] =
     Task.now(a)

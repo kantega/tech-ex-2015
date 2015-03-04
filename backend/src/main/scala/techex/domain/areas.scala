@@ -3,68 +3,72 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.{Duration, DateTime, Instant}
-import techex.data.{Observation, InputMessage}
+import techex.data.{ExitObservation, EnterObservation, InputMessage}
 import scalaz._, Scalaz._
 import scalaz.Tree
 
 
 object areas {
 
-  val allAreas = Region(1, "everywhere")
+  val anywhere = Area("anywhere")
 
-  val foyer           = Region(2, "foyer")
-  val toiletAtSamf    = Region(3, "toilet @ Samfundet")
-  val toiletAtSeminar = Region(4, "toilet @ Seminar")
-  val stage           = Region(5, "stage")
-  val auditorium      = Region(6, "auditorium")
-  val bar             = Region(7, "bar")
-  val kantegaStand    = Region(8, "Kantega stand")
-  val technoportStand = Region(9, "Technoport stand")
-  val seminarArea     = Region(10, "Technoport seminarområde")
-  val samfundet       = Region(11, "Samfundet")
-  val kjelleren       = Region(12, "Kjelleren")
-  val technoport2015  = Region(13, "Technoport 2015")
-  val auditoriumExit  = Region(14, "Auditorium exit")
-  val coffeeStand     = Region(15, "Coffee stand")
-  val storhubben      = Region(16, "Storhubben")
-  val mrtTuring       = Region(17, "Turing")
-  val mrtTesla        = Region(18, "Tesla")
-  val mrtEngelbart    = Region(19, "Engelbart")
-  val mrtAda          = Region(20, "Ada")
-  val mrtHopper       = Region(21, "Hopper")
-  val mrtCurie        = Region(22, "Curie")
-  val testArea1       = Region(23, "Stand1")
-  val testArea2       = Region(24, "Stand2")
-  val testArea3       = Region(25, "Stand3")
-  val kantegaCoffeeUp = Region(26, "kantegaCoffeeUpstairs")
-  val kantegaCoffeeDn = Region(27, "kantegaCoffeeDownstairs")
-  val kantegaKantine  = Region(28, "kantegaKantine")
-  val kantegaOffice   = Region(29, "KantegaOffice")
-  val meetingPoint    = Region(30, "Meetingpoint")
+  val foyer           = Area("foyer")
+  val toiletAtSamf    = Area("toilet @ Samfundet")
+  val toiletAtSeminar = Area("toilet @ Seminar")
+  val stage           = Area("stage")
+  val auditorium      = Area("auditorium")
+  val bar             = Area("bar")
+  val kantegaStand    = Area("Kantega stand")
+  val technoportStand = Area("Technoport stand")
+  val seminarArea     = Area("Technoport seminarområde")
+  val samfundet       = Area("Samfundet")
+  val kjelleren       = Area("Kjelleren")
+  val technoport2015  = Area("Technoport 2015")
+  val auditoriumExit  = Area("Auditorium exit")
+  val coffeeStand     = Area("Coffee stand")
+  val storhubben      = Area("Storhubben")
+  val mrtTuring       = Area("Turing")
+  val mrtTesla        = Area("Tesla")
+  val mrtEngelbart    = Area("Engelbart")
+  val mrtAda          = Area("Ada")
+  val mrtHopper       = Area("Hopper")
+  val mrtCurie        = Area("Curie")
+  val desk1       = Area("desk1")
+  val desk2       = Area("desk2")
+  val desk3       = Area("desk3")
+  val kantegaCoffeeUp = Area("kantegaCoffeeUpstairs")
+  val kantegaCoffeeDn = Area("kantegaCoffeeDownstairs")
+  val kantegaKantine  = Area("kantegaKantine")
+  val kantegaOffice   = Area("KantegaOffice")
+  val meetingPoint    = Area("Meetingpoint")
 
-  def beaconFor(r: Region, minor: Int, prox: Proximity): (Beacon, (Proximity, Region)) =
-    Beacon(r.id, minor) ->(prox, r)
+  def beaconPlacementFor(r: Area, minor: Int, prox: Proximity): (BeaconId, (Proximity, Area)) =
+    BeaconId(minor) ->(prox, r)
 
-  val beaconPlacement: Map[Beacon, (Proximity, Region)] =
+  def beaconsAt(r: Area) =
+    beaconPlacement.toList.filter(_._2._2 === r).map(_._1)
+
+  val beaconPlacement: Map[BeaconId, (Proximity, Area)] =
     Map(
-      beaconFor(testArea1, 1, Near),
-      beaconFor(testArea2, 1, Near),
-      beaconFor(testArea3, 1, Near),
-      beaconFor(kantegaCoffeeDn, 1, Near),
-      beaconFor(kantegaCoffeeUp, 1, Near),
-      beaconFor(mrtTuring, 1, Near),
-      beaconFor(mrtTesla, 1, Near),
-      beaconFor(mrtEngelbart, 1, Near),
-      beaconFor(mrtAda, 1, Near),
-      beaconFor(mrtHopper, 1, Near),
-      beaconFor(mrtCurie, 1, Near),
-      beaconFor(kantegaKantine, 1, Near))
+      beaconPlacementFor(desk1, 1, Near),
+      beaconPlacementFor(desk2, 2, Near),
+      beaconPlacementFor(desk3, 3, Near),
+      beaconPlacementFor(kantegaCoffeeDn, 4, Near),
+      beaconPlacementFor(kantegaCoffeeUp, 5, Near),
+      beaconPlacementFor(mrtTuring, 6, Near),
+      beaconPlacementFor(mrtTesla, 7, Near),
+      beaconPlacementFor(mrtEngelbart, 8, Near),
+      beaconPlacementFor(mrtAda, 9, Near),
+      beaconPlacementFor(mrtHopper, 10, Near),
+      beaconPlacementFor(mrtCurie, 11, Near),
+      beaconPlacementFor(kantegaKantine, 12, Far),
+      beaconPlacementFor(kantegaKantine, 13, Far),
+      beaconPlacementFor(kantegaKantine, 14, Far),
+      beaconPlacementFor(kantegaKantine, 15, Far))
 
-  lazy val regionList =
-    beaconPlacement.toList.map(_._2._2)
 
-  val locationHierarcy: Tree[Region] =
-    allAreas.node(
+  val locationHierarcy: Tree[Area] =
+    anywhere.node(
       technoport2015.node(
         samfundet.node(
           kjelleren.leaf,
@@ -86,15 +90,15 @@ object areas {
         mrtAda.leaf,
         mrtHopper.leaf,
         mrtCurie.leaf,
-        testArea1.leaf,
-        testArea2.leaf,
-        testArea3.leaf,
+        desk1.leaf,
+        desk2.leaf,
+        desk3.leaf,
         kantegaCoffeeUp.leaf,
         kantegaCoffeeDn.leaf,
         kantegaKantine.leaf
       ))
 
-  def contains(parent: Region, other: Region): Boolean = {
+  def contains(parent: Area, other: Area): Boolean = {
     if (parent === other)
       true
     else
@@ -107,17 +111,17 @@ object areas {
         .isDefined
   }
 
-  def withParentAreas(area: Region): List[Region] = {
-    def getParentMaybe(child: Option[Region]): List[Region] = {
+  def withParentAreas(area: Area): List[Area] = {
+    def getParentMaybe(child: Option[Area]): List[Area] = {
       child match {
-        case None    => nil[Region]
+        case None    => nil[Area]
         case Some(a) => a :: getParentMaybe(getParentArea(a))
       }
     }
     getParentMaybe(Some(area))
   }
 
-  def getParentArea(area: Region): Option[Region] = {
+  def getParentArea(area: Area): Option[Area] = {
     areas
       .locationHierarcy
       .loc
@@ -129,22 +133,22 @@ object areas {
 
 case class LocationId(value: String)
 
-case class Region(id: Int, name: String) {
-  def contains(other: Region) =
+case class Area(name: String) {
+  def contains(other: Area) =
     areas.contains(this, other)
 
-  def withParents: List[Region] =
+  def withParents: List[Area] =
     areas.withParentAreas(this)
 }
 
-object Region {
-  implicit val areaEqual: Equal[Region] =
+object Area {
+  implicit val areaEqual: Equal[Area] =
     Equal[String].contramap(_.name)
 }
 
-case class Beacon(major: Int, minor: Int)
+case class BeaconId(minor: Int)
 
-trait Proximity {
+sealed trait Proximity {
   def isSameOrCloserThan(other: Proximity) =
     (this, other) match {
       case (Immediate, _)     => true
@@ -168,18 +172,43 @@ object Proximity {
     case _                 => Far
   }
 
+  def unapply(p: Proximity) = Option(p.asString)
+
 }
 case object Near extends Proximity
 case object Far extends Proximity
 case object Immediate extends Proximity
 
-case class ObservationData(beacon: Beacon, proximity: Proximity) {
-  def toObservation(playerId: PlayerId, instant: Instant) =
-    Observation(beacon, playerId, instant, proximity)
+
+sealed trait Direction {
+  def asString = this match {
+    case Exit => "exit"
+    case _    => "enter"
+  }
+}
+object Direction {
+  def apply(value: String) = value.toLowerCase match {
+    case "exit" => Exit
+    case _      => Enter
+  }
+
+
+  def unapply(d: Direction) = Option(d.asString)
+}
+case object Enter extends Direction
+case object Exit extends Direction
+
+case class ObservationData(major: Option[Int], minor: Option[Int], proximity: Proximity, activity: String) {
+  def toObservation(playerId: PlayerId, instant: Instant):EnterObservation \/ ExitObservation =
+    Direction(activity) match {
+      case Enter =>  -\/( EnterObservation(BeaconId(minor.get), playerId, instant, proximity))
+      case Exit =>  \/-(ExitObservation(playerId,instant))
+    }
+
 }
 
 case class Timed[A](timestamp: Instant, value: A)
-case class LocationUpdate(playerId: PlayerId, area: Region, instant: Instant)
+case class LocationUpdate(playerId: PlayerId, area: Area, instant: Instant)
 case class UpdateMeta(playerId: PlayerId, instant: Instant)
 
 

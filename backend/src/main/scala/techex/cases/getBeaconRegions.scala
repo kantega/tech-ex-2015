@@ -3,7 +3,7 @@ package techex.cases
 import techex.WebHandler
 
 import argonaut.Argonaut._
-import argonaut.CodecJson
+import argonaut.{Json, CodecJson}
 import org.http4s.argonaut._
 import org.http4s.dsl._
 import techex.domain.areas
@@ -20,9 +20,7 @@ object getBeaconRegions {
 
   def restApi: WebHandler = {
     case req@GET -> Root / "beaconregions" =>
-      val regions =
-        areas.regionList.map(region => BeaconRegion(region.name, uuid, region.id))
-      Ok(regions.asJson)
+      Ok(Json("numberOfRegions" -> 5.asJson))
 
   }
 

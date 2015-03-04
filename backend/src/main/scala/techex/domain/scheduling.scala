@@ -11,13 +11,13 @@ import scalaz._,Scalaz._
 
 object scheduling {
 
-  val keyNote      = ScheduleEntry(ScId("1"), "Keynote", IntervalBounds(new DateTime(2015, 3, 18, 9, 0), minutes(20)), auditorium)
-  val session1     = ScheduleEntry(ScId("2"), "Session 1", IntervalBounds(new DateTime(2015, 3, 18, 9, 30), minutes(60)), auditorium)
-  val session2     = ScheduleEntry(ScId("3"), "Session 2", IntervalBounds(new DateTime(2015, 3, 18, 11, 0), minutes(60)), auditorium)
-  val session3     = ScheduleEntry(ScId("4"), "Session 3", IntervalBounds(new DateTime(2015, 3, 18, 12, 30), minutes(60)), auditorium)
-  val session4     = ScheduleEntry(ScId("5"), "Session 4", IntervalBounds(new DateTime(2015, 3, 18, 15, 0), minutes(60)), auditorium)
-  val session5     = ScheduleEntry(ScId("6"), "Session 5", IntervalBounds(new DateTime(2015, 3, 18, 16, 30), minutes(60)), auditorium)
-  val crowdFunding = ScheduleEntry(ScId("7"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 18, 19, 0), minutes(90)), auditorium)
+  val keyNote      = ScheduleEntry(ScId("1"), "Keynote", IntervalBounds(new DateTime(2015, 3, 18, 9, 0), minutes(20)), kantegaKantine)
+  val session1     = ScheduleEntry(ScId("2"), "Session 1", IntervalBounds(new DateTime(2015, 3, 18, 9, 30), minutes(60)), kantegaKantine)
+  val session2     = ScheduleEntry(ScId("3"), "Session 2", IntervalBounds(new DateTime(2015, 3, 18, 11, 0), minutes(60)), kantegaKantine)
+  val session3     = ScheduleEntry(ScId("4"), "Session 3", IntervalBounds(new DateTime(2015, 3, 18, 12, 30), minutes(60)), kantegaKantine)
+  val session4     = ScheduleEntry(ScId("5"), "Session 4", IntervalBounds(new DateTime(2015, 3, 18, 15, 0), minutes(60)), kantegaKantine)
+  val session5     = ScheduleEntry(ScId("6"), "Session 5", IntervalBounds(new DateTime(2015, 3, 18, 16, 30), minutes(60)), kantegaKantine)
+  val crowdFunding = ScheduleEntry(ScId("7"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 18, 19, 0), minutes(90)), kantegaKantine)
 
   val scheduleEntries =
     List(
@@ -57,7 +57,7 @@ case object AnyTime extends TimeBounds {
 
 
 case class ScId(value: String)
-case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Region, started: Boolean = false) {
+case class ScheduleEntry(id: ScId, name: String, time: IntervalBounds, area: Area, started: Boolean = false) {
   def start =
     copy(started = true)
 
@@ -71,11 +71,11 @@ object ScheduleEntry {
   implicit val scheduleEntryOrder: Order[ScheduleEntry] =
     Order.orderBy((entry: ScheduleEntry) => entry.time.start.getMillis)
 
-  def withStringId(id: String, name: String, time: IntervalBounds, area: Region, started: Boolean) = {
+  def withStringId(id: String, name: String, time: IntervalBounds, area: Area, started: Boolean) = {
     ScheduleEntry(ScId(id), name, time, area, started)
   }
 
-  def unapplyWithStringId(entry: ScheduleEntry): Option[(String, String, IntervalBounds, Region, Boolean)] =
+  def unapplyWithStringId(entry: ScheduleEntry): Option[(String, String, IntervalBounds, Area, Boolean)] =
     ScheduleEntry.unapply(entry).map(t => t.copy(_1 = t._1.value))
 }
 
