@@ -42,7 +42,7 @@ object startup {
 
     val handleStoreToDatabase =
       storeToDatabaseQueue.dequeue to
-        process.sink[Task, InputMessage]((input: InputMessage) => txor.transact(InputMessageDAO.storeObservation(input)))
+        process.sink[Task, InputMessage]((input: InputMessage) => {txor.transact(InputMessageDAO.storeObservation(input))})
 
     val handleInputStream =
       inputHandlerQueue.dequeue pipe

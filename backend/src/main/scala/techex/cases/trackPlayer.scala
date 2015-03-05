@@ -44,13 +44,13 @@ object trackPlayer {
             player.lastLocation
 
           val nextLocation =
-            LocationUpdate(player.player.id,areas.anywhere,exit.instant)
+            LocationUpdate(player.player.id,areas.somewhere,exit.instant)
 
           val left =
             LeftArea(player, lastLocation.area, exit.instant)
 
           val arrived =
-            EnteredArea(player, areas.anywhere, exit.instant)
+            EnteredArea(player, areas.somewhere, exit.instant)
 
           val updates =
             left :: arrived :: Nil
@@ -80,7 +80,7 @@ object trackPlayer {
               case None       => None
               case Some(area) =>
                 if (area === player.lastLocation.area) None
-                else Some(LocationUpdate(observation.playerId, area, Instant.now()))
+                else Some(LocationUpdate(observation.playerId, area, observation.instant))
             }
           }
         (ctx, maybeUpdate)

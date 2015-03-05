@@ -3,6 +3,7 @@ package techex.domain
 import org.joda.time.{ReadableInstant, Duration}
 import techex.data.{windows, Window}
 import patternmatching._
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import scalaz._, Scalaz._
 
@@ -21,9 +22,13 @@ object patternmatching {
   def halt[A](m: Matcher[A]) =
     m.haltOn
 
-  def on[FF <: Fact](implicit evidence: TypeTag[FF]):Matcher[FF] = {
-    onFact(fact => typeOf[FF] <:< typeOf[fact.type]).map(a => a.asInstanceOf[FF])
+  def on[FF <: Fact](implicit evidence: ClassTag[FF]): Matcher[FF] = {
+    onFact("on" + evidence, {
+      case f: FF => true
+      case _     => false
+    }).map(a => a.asInstanceOf[FF])
   }
+
   def onFact(pred: Pred[Fact]): Matcher[Fact] =
     await("a(" + pred + ")", p =>
       if (pred(p)) {
@@ -82,16 +87,16 @@ trait Matcher[A] {
   def map[B](f: A => B): Matcher[B] =
     this match {
       case Halt()     => Halt()
-      case Emit(m, n) => Emit(f(m), map(f))
-      case Await(nf)  => await(fact => nf(fact).map(f))
+      case Emit(m, n) => Emit(f(m), n.map(f))
+      case Await(nf)  => await(nf + ".mapped", fact => nf(fact).map(f))
     }
 
 
   def check(fact: Fact): (Matcher[A], Option[A]) = {
     step(fact) match {
-      case Halt()     => (Halt(), None)
-      case Emit(m, n) => (n, Some(m))
-      case a: Await[A]   => (a, None)
+      case Halt()      => (Halt(), None)
+      case Emit(m, n)  => (n, Some(m))
+      case a: Await[A] => (a, None)
     }
   }
 
@@ -126,16 +131,9 @@ trait Matcher[A] {
   def end: Matcher[A] = this match {
     case Halt()      => Halt()
     case Emit(p, n)  => Emit[A](p, Halt())
-    case a: Await[A] => await("end", p => a.step(p).end)
+    case a: Await[A] => await("end", p => a.f(p).end)
   }
 
-
-  def last: Matcher[A] =
-    this match {
-      case Halt()      => Halt()
-      case Emit(m, n)  => Emit(m, n.lastC(m))
-      case a: Await[A] => await("last(" + a + ")", p => a.step(p).last)
-    }
 
   def collect[B](pf: PartialFunction[A, B]): Matcher[B] = {
     filter(pf.isDefinedAt).map(pf)
@@ -144,15 +142,27 @@ trait Matcher[A] {
   def filter(f: Pred[A]): Matcher[A] =
     this match {
       case Halt()      => Halt()
-      case Emit(p, n)  => if (f(p)) Emit(p, n) else n
-      case a: Await[A] => await("end", p => a.step(p).filter(f))
+      case Emit(p, n)  => if (f(p)) Emit(p, n.filter(f)) else n.filter(f)
+      case a: Await[A] => await("filter", p => a.f(p).filter(f))
     }
 
-  private def lastC(cache: A): Matcher[A] = {
+  def last: Matcher[A] =
     this match {
-      case Halt()      => Emit(cache, await("lastC(" + cache + ")", p => valueForever(cache)))
+      case Halt()      => Halt()
       case Emit(m, n)  => Emit(m, n.lastC(m))
-      case a: Await[A] => Emit(cache, await("lastC(" + a.f + "," + cache + ")", p => a.f(p).lastC(cache)))
+      case a: Await[A] => await("last(" + a + ")", p => a.f(p).last)
+    }
+
+  def lastC(cache: A): Matcher[A] = {
+    this match {
+      case Halt()      => await("lastC(" + cache + ")", p => valueForever(cache))
+      case Emit(m, n)  => Emit(m, n.lastC(m))
+      case a: Await[A] => await("lastC(" + a.f + "," + cache + ")", p => {
+        a.f(p) match {
+          case an: Await[A]   => Emit(cache, an.lastC(cache))
+          case nn: Matcher[A] => nn.lastC(cache)
+        }
+      })
     }
   }
 
@@ -243,7 +253,7 @@ trait Matcher[A] {
       case (a: Await[A], b: Await[B])   => await(p => a.f(p) or b.f(p))
     }
 
-  def and[B](other: Matcher[B]): Matcher[(A, B)] =
+  def and[B](other: Matcher[B]): Matcher[(A, B)] = {
     (this, other) match {
       case (Halt(), _) | (_, Halt())    => Halt()
       case (Emit(m1, n1), Emit(m2, n2)) => Emit((m1, m2), n1 and n2)
@@ -251,6 +261,7 @@ trait Matcher[A] {
       case (a: Await[A], Emit(m2, n2))  => a and n2 //await(a + " and* " + n2, p => a.step(p) and n2.step(p))
       case (a: Await[A], b: Await[B])   => await(a + " and " + b, p => a.f(p) and b.f(p))
     }
+  }
 
   def haltAfter: Matcher[A] =
     this match {

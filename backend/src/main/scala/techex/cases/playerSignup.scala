@@ -56,14 +56,14 @@ object playerSignup {
     }
 
   def selectPersonalQuests(nick: Nick): List[Quest] = {
-    val rand = Random
+    /*val rand = Random
     rand.setSeed(nick.value.hashCode)
     val index =
       rand.nextInt(quests.questPermutations.length - 1)
     val perm =
       quests.questPermutations(index)
 
-    List(perm._1, perm._2)
+    List(perm._1, perm._2)*/
     quests.quests //TODO:All quests for now
   }
 
@@ -84,7 +84,7 @@ object playerSignup {
           else SignupOk(PlayerData(
             player,
             Set(),
-            LocationUpdate(player.id,areas.anywhere,Instant.now()),
+            LocationUpdate(player.id,areas.somewhere,Instant.now()),
             Vector(),
             player.privateQuests
               .map(q => quests.trackerForQuest.get(q.id))

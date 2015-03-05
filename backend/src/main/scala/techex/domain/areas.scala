@@ -10,7 +10,7 @@ import scalaz.Tree
 
 object areas {
 
-  val anywhere = Area("anywhere")
+  val somewhere = Area("somewhere")
 
   val foyer           = Area("foyer")
   val toiletAtSamf    = Area("toilet @ Samfundet")
@@ -33,9 +33,9 @@ object areas {
   val mrtAda          = Area("Ada")
   val mrtHopper       = Area("Hopper")
   val mrtCurie        = Area("Curie")
-  val desk1       = Area("desk1")
-  val desk2       = Area("desk2")
-  val desk3       = Area("desk3")
+  val desk1           = Area("desk1")
+  val desk2           = Area("desk2")
+  val desk3           = Area("desk3")
   val kantegaCoffeeUp = Area("kantegaCoffeeUpstairs")
   val kantegaCoffeeDn = Area("kantegaCoffeeDownstairs")
   val kantegaKantine  = Area("kantegaKantine")
@@ -68,7 +68,7 @@ object areas {
 
 
   val locationHierarcy: Tree[Area] =
-    anywhere.node(
+    somewhere.node(
       technoport2015.node(
         samfundet.node(
           kjelleren.leaf,
@@ -199,10 +199,10 @@ case object Enter extends Direction
 case object Exit extends Direction
 
 case class ObservationData(major: Option[Int], minor: Option[Int], proximity: Proximity, activity: String) {
-  def toObservation(playerId: PlayerId, instant: Instant):EnterObservation \/ ExitObservation =
+  def toObservation(playerId: PlayerId, instant: Instant): EnterObservation \/ ExitObservation =
     Direction(activity) match {
-      case Enter =>  -\/( EnterObservation(BeaconId(minor.get), playerId, instant, proximity))
-      case Exit =>  \/-(ExitObservation(playerId,instant))
+      case Enter => -\/(EnterObservation(BeaconId(minor.get), playerId, instant, proximity))
+      case Exit  => \/-(ExitObservation(playerId, instant))
     }
 
 }

@@ -91,7 +91,7 @@ case class ValueOnMatchTracker[A,F](m: Matcher[F])(f: => A) extends PatternTrack
   def apply(t: Fact) = {
     val (next, pattern) =
       m.check(t)
-    val nextTracker = zeroOnHalt(next, ValueOnMatchTracker(m)(f))
+    val nextTracker = pattern.fold(zeroOnHalt(next, ValueOnMatchTracker(next)(f)))(ma=>ZeroTracker())
     (nextTracker, pattern.map(x => f).toList)
   }
 }
