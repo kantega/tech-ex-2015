@@ -1,7 +1,7 @@
 package techex.domain
 
 import org.joda.time.{Instant, DateTime, Duration}
-import techex.data.{Command, PlayerData}
+import techex.data.{InputMessage, Command, PlayerData}
 
 object facts {
 
@@ -29,6 +29,10 @@ case class Started(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
 case class Ended(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
 case class Added(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
 case class Removed(entry: ScheduleEntry, instant: Instant) extends ScheduleEvent
-
-case class StartOfDay(instant:Instant) extends Fact
-case class EndOfDay(instant:Instant) extends Fact
+trait Ticks extends Fact with InputMessage
+ case class StartOfDay(instant:Instant) extends Ticks {
+   override val msgType: String = "StartOfDay"
+ }
+case class EndOfDay(instant:Instant) extends Ticks{
+  override val msgType: String = "EndOfDay"
+}

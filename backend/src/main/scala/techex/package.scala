@@ -57,6 +57,12 @@ package object techex {
     }
   })
 
+  def namedSingleThreadScheduler(name:String) = Executors.newSingleThreadScheduledExecutor(new ThreadFactory {
+    override def newThread(r: Runnable): Thread = {
+      new Thread(r,name)
+    }
+  })
+
   def getStringOr(cfg:Config,key:String,defValue:String)=
   if(cfg.hasPath(key)) cfg.getString(key) else defValue
 }

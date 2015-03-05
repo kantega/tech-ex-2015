@@ -21,12 +21,16 @@ object startup {
   val streamRunner =
     namedSingleThreadExecutor("Streamsetup")
 
+
   val messagehandlerPipe =
-    process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse playerSignup.toFact) pipe
+    process1.lift(trackPlayer.calcActivity orElse updateSchedule.handleScheduling orElse playerSignup.toFact orElse noOp) pipe
       appendAccumP1(locateOnSessionTimeBoundaries.handleTimeBoundsFacts) pipe
       appendAccumP1(calculatAchievements.calcAchievementsAndAwardBadges)
 
   def setupStream(txor: Transactor[Task]): Task[Unit] = {
+
+    val handleTicks =
+      produceTicks.days to eventstreams.events.publish
 
     val inputHandlerQueue =
       async.unboundedQueue[InputMessage]
@@ -52,6 +56,7 @@ object startup {
 
 
     Task {
+      handleTicks.run.runAsync(_.toString)
       notifyGCM.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       notifySlack.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       printFactsToLog.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
@@ -65,7 +70,8 @@ object startup {
   }
 
   def noOp: PartialFunction[InputMessage, State[Storage, List[Fact]]] = {
-    case _ => State.state(List())
+    case m: Fact => State.state(List(m))
+    case _       => State.state(List())
   }
 
   def setupSchedule: Task[Unit] = {
