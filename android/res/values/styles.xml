@@ -39,8 +39,10 @@
     <style name="DisclaimerBox" parent="@android:style/Widget.ScrollView">
         <item name="android:background">@color/white_opaque</item>
         <item name="android:layout_width">300dp</item>
-        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginBottom">40dp</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:layout_gravity">center</item>
     </style>
 
     <style name="DisclaimerTitle" parent="@android:style/Widget.TextView">

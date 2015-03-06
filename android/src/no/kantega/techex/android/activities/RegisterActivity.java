@@ -17,6 +17,7 @@ import no.kantega.techex.android.rest.OnTaskComplete;
 import no.kantega.techex.android.rest.RegisterTask;
 import no.kantega.techex.android.rest.wrapper.RegistrationResult;
 import no.kantega.techex.android.tools.BeaconMonitorListener;
+import no.kantega.techex.android.tools.Configuration;
 
 /**
  * Registering new user
@@ -27,10 +28,14 @@ import no.kantega.techex.android.tools.BeaconMonitorListener;
 public class RegisterActivity extends Activity implements OnTaskComplete<RegistrationResult> {
     private final String TAG = RegisterActivity.class.getSimpleName();
 
+    private Configuration configuration;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.register);
+
+        configuration = Configuration.getInstance();
 
         Button b = (Button)findViewById(R.id.btnRegister);
 
@@ -42,10 +47,10 @@ public class RegisterActivity extends Activity implements OnTaskComplete<Registr
                 String enteredNN = et.getText().toString().trim();
 
                 Activity myActivity=(Activity)(view.getContext()); // all views have a reference to their context
-                SharedPreferences prefs = myActivity.getSharedPreferences(getString(R.string.config_sharedpref_id), Context.MODE_PRIVATE);
-                String gcmId = prefs.getString("gcm_id",null);
+                SharedPreferences prefs = myActivity.getSharedPreferences(configuration.getSharedPreferencesId(), Context.MODE_PRIVATE);
+                String gcmId = prefs.getString(configuration.getSpGcmAuthKey(),null);
 
-                String address = getString(R.string.config_server_address)+getString(R.string.config_rest_registration);
+                String address = configuration.getRegistrationREST();
                 new RegisterTask((RegisterActivity)myActivity).execute(enteredNN,address,gcmId);
             }
         });
@@ -85,10 +90,10 @@ public class RegisterActivity extends Activity implements OnTaskComplete<Registr
                 break;
             case SUCCESS:
                 //Saving registration data
-                SharedPreferences prefs = getSharedPreferences(getString(R.string.config_sharedpref_id), Context.MODE_PRIVATE);
+                SharedPreferences prefs = getSharedPreferences(configuration.getSharedPreferencesId(), Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("nickname",result.getNickname());
-                editor.putString("id",result.getId());
+                editor.putString(configuration.getSpUserNameKey(),result.getNickname());
+                editor.putString(configuration.getSpUserIdKey(),result.getId());
                 //save preferences if needed
                 //save quest list if needed
                 editor.commit();

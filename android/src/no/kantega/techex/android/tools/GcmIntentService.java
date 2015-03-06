@@ -26,12 +26,15 @@ public class GcmIntentService extends IntentService {
     // Defines a custom Intent action used for broadcasting that user information has changed
     public static final String BROADCAST_ACTION = "no.kantega.techex.android.BROADCAST";
 
-    public static final int NOTIFICATION_ID = 1;
-    private NotificationManager mNotificationManager;
-    private NotificationCompat.Builder builder;
+    public static final String BROADCAST_DATA = "no.kantega.techex.android.BROADCAST";
+
+    public static final String EXTRA_BADGE_ID = "badge";
+
+   private int notificationId;
 
     public GcmIntentService() {
         super("GcmIntentService");
+        notificationId = 1;
     }
 
     @Override
@@ -42,11 +45,15 @@ public class GcmIntentService extends IntentService {
         // in your BroadcastReceiver.
         String messageType = gcm.getMessageType(intent);
         if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
+            //New achievement
+            String id = extras.getString("id");
+
             //Achievement received!
             String msg = extras.getString("message");
 
             //Intent to advertise data update (can have extras if needed)
             Intent localIntent = new Intent(BROADCAST_ACTION);
+            localIntent.putExtra(EXTRA_BADGE_ID,id);
             // Broadcasts the Intent to receivers in this app.
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
@@ -73,30 +80,24 @@ public class GcmIntentService extends IntentService {
                         .setContentText(msg);
         // Creates an explicit intent for an Activity in your app
         Intent resultIntent = new Intent(this, QuestListActivity.class);
-        resultIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //loads the already running instance of the QuestList
+        resultIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT); //loads the already running instance of the QuestList
 
-        // The stack builder object will contain an artificial back stack for the
-        // started Activity.
-        // This ensures that navigating backward from the Activity leads out of
-        // your application to the Home screen.
-//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-//        // Adds the back stack for the Intent (but not the Intent itself)
-//        stackBuilder.addParentStack(QuestListActivity.class);
-//        // Adds the Intent that starts the Activity to the top of the stack
-//        stackBuilder.addNextIntent(resultIntent);
-//        PendingIntent resultPendingIntent =
-//                stackBuilder.getPendingIntent(
-//                        0,
-//                        PendingIntent.FLAG_UPDATE_CURRENT
-//                );
-
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, 0);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        // Adds the back stack
+        stackBuilder.addParentStack(QuestListActivity.class);
+        // Adds the Intent to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        // Gets a PendingIntent containing the entire back stack
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder.setContentIntent(resultPendingIntent);
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         // mId allows you to update the notification later on.
-        mNotificationManager.notify(1, mBuilder.build());
+        Log.d(TAG,"Sending notification #"+notificationId);
+        notificationId +=2;
+        mNotificationManager.notify(notificationId, mBuilder.build());
     }
 }

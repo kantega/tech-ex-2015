@@ -1,37 +1,70 @@
 package no.kantega.techex.android.activities;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.ListView;
 import android.widget.TextView;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.data.Quest;
 import no.kantega.techex.android.display.AchievementArrayAdapter;
+import no.kantega.techex.android.tools.GcmIntentService;
 
 /**
- * Created by zsuhor on 24.02.2015.
+ * This activity displays the details of a quest (list of achievements).
+ *
+ * It needs to receive the Quest object as an Intent extra with the key "quest"
  */
 public class QuestDetailsActivity extends Activity {
     private static final String TAG = QuestDetailsActivity.class.getSimpleName();
+
+    private Quest quest;
+
+    private AchievementArrayAdapter adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_details);
 
-        Quest quest = (Quest) getIntent().getExtras().getParcelable("quest");
+        quest = (Quest) getIntent().getExtras().getParcelable("quest");
 
         if (quest == null) {
             Log.e(TAG,"Failed to pass quest data between activities");
         } else {
-//            TextView tvTitle = (TextView) findViewById(R.id.quest_details_title);
-//            tvTitle.setText(quest.getTitle());
-
             //Showing achievements in list
             ListView lv = (ListView) findViewById(R.id.lvAchievements);
-            AchievementArrayAdapter adapter = new AchievementArrayAdapter(this,quest.getAchievements());
+            adapter = new AchievementArrayAdapter(this,quest.getAchievements());
             lv.setAdapter(adapter);
+
+            //Register for change broadcast
+            LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,new IntentFilter(GcmIntentService.BROADCAST_ACTION));
         }
     }
+
+    /**
+     * Receiver for quest achievement received broadcast
+     */
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if(action.equals(GcmIntentService.BROADCAST_ACTION)) {
+                Log.d(TAG,"GCM Broadcast received");
+                //Check & update if achievement is for this quest
+                String newAchievement = intent.getStringExtra(GcmIntentService.EXTRA_BADGE_ID);
+                if (quest.updateAchievement(newAchievement)) {
+                    //The new achievement as for this quest, update the UI
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        }
+    };
 }

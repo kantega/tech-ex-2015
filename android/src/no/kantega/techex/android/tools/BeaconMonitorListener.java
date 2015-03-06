@@ -1,5 +1,7 @@
 package no.kantega.techex.android.tools;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -7,8 +9,10 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.Toast;
@@ -21,6 +25,7 @@ import com.kontakt.sdk.android.factory.AdvertisingPackage;
 import com.kontakt.sdk.android.factory.Filters;
 import com.kontakt.sdk.android.manager.BeaconManager;
 import com.kontakt.sdk.android.manager.BeaconManager.MonitoringListener;
+import com.kontakt.sdk.core.Proximity;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.rest.LocationUpdateTask;
 
@@ -34,9 +39,9 @@ import java.util.UUID;
  */
 public class BeaconMonitorListener extends Service implements MonitoringListener{
 
-    private final String TAG = BeaconMonitorListener.class.getSimpleName();
+    public static enum BeaconProximityChange {ENTER, EXIT, IGNORE};
 
-    private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 1;
+    private final String TAG = BeaconMonitorListener.class.getSimpleName();
 
     private BeaconManager beaconManager = null;
 
@@ -46,22 +51,30 @@ public class BeaconMonitorListener extends Service implements MonitoringListener
 
     private String updateURL;
 
-    private static UUID regionUUID; //TODO there is going to be a set of configuration data
+    private static UUID regionUUID;
+
+    private static int numberOfRegions;
 
     private BeaconDataHelper dbHelper;
 
+    private BeaconDevice currentClosestBeacon;
+
     public void init(Context context) {
-            beaconManager = BeaconManager.newInstance(context);
-            //beaconManager.setMonitorPeriod(MonitorPeriod.MINIMAL); //5 s active, 5s passive
-            beaconManager.setMonitorPeriod(new MonitorPeriod(5*1000,60*1000)); //TODO store in config, active is min 5s
-            beaconManager.setForceScanConfiguration(ForceScanConfiguration.DEFAULT);
-            beaconManager.registerMonitoringListener(this);
-            beaconManager.addFilter(new Filters.CustomFilter() {
+        Configuration configuration = Configuration.getInstance();
+        beaconManager = BeaconManager.newInstance(context);
+        beaconManager.setMonitorPeriod(new MonitorPeriod(configuration.getBeaconMonitoringActive()*1000,
+                configuration.getBeaconMonitoringPassive()*1000));
+        beaconManager.setForceScanConfiguration(ForceScanConfiguration.DEFAULT);
+        beaconManager.registerMonitoringListener(this);
+        beaconManager.addFilter(new Filters.CustomFilter() {
             @Override
             public Boolean apply(AdvertisingPackage object) {
                 final UUID proximityUUID = object.getProximityUUID();
-                //TODO there is going to be a list of regions, we nee to filter based on those
-                return proximityUUID.equals(regionUUID);
+                if (proximityUUID.equals(regionUUID)) {
+                    return (object.getMajor() > 0) && (object.getMajor() <= numberOfRegions);
+                } else {
+                    return false;
+                }
             }
         });
     }
@@ -82,19 +95,46 @@ public class BeaconMonitorListener extends Service implements MonitoringListener
      * @param list
      */
     @Override
-    public void onBeaconsUpdated(Region region, List<BeaconDevice> list) {
+    public synchronized void  onBeaconsUpdated(Region region, List<BeaconDevice> list) {
         Log.d(TAG,"UPDATE RECEIVED WITH "+list.size()+" beacons");
-        for (BeaconDevice bd: list) {
-            int lastDistance = getLastDistance(bd);
-            if (lastDistance == bd.getProximity().ordinal()) {
-                //Distance from beacon hasn't changed, no update needed
-                //Log.d(TAG,"Beacon distance didn't change for "+ getBeaconId(bd)+"("+lastDistance+","+bd.getProximity().name()+")");
-            } else {
-                //Beacon distance changed, send update
-                boolean saved = saveDistance(bd);
-                sendUpdate(bd);
-                Log.d(TAG,"Beacon status updated, and saved ("+saved+") for "+getBeaconId(bd));
+
+        //Only the closest beacon is interesting
+        BeaconDevice closestBeacon = getClosestBeacon(list);
+
+        if (currentClosestBeacon == null) {
+            //No currently close beacon is saved (user exited the last one)
+           if (closestBeacon.getProximity() != Proximity.FAR) {
+               //If it's close enough, it's saved as current closest
+               currentClosestBeacon = closestBeacon;
+
+               // Entering new closest beacon
+               sendUpdate(closestBeacon, BeaconProximityChange.ENTER);
+           }
+        } else if (closestBeacon.getMajor() == currentClosestBeacon.getMajor()
+                && closestBeacon.getMinor() == currentClosestBeacon.getMinor()) {
+            //The closest beacon hasn't changed, but maybe it's further away
+            if (closestBeacon.getProximity() == Proximity.FAR) {
+                sendUpdate(closestBeacon,BeaconProximityChange.EXIT);
+                currentClosestBeacon = null;
             }
+        } else {
+            //Closest beacon has changed
+
+            // Exiting previous closest beacon
+            // Check for new data
+            for (BeaconDevice bd : list) {
+                if (bd.getMajor() == currentClosestBeacon.getMajor()
+                        && bd.getMinor() == currentClosestBeacon.getMinor()) {
+                    currentClosestBeacon = bd;
+                    break;
+                }
+            }
+            sendUpdate(currentClosestBeacon,BeaconProximityChange.EXIT);
+
+            // Entering new closest beacon
+            sendUpdate(closestBeacon,BeaconProximityChange.ENTER);
+
+            currentClosestBeacon=closestBeacon;
         }
     }
 
@@ -104,22 +144,54 @@ public class BeaconMonitorListener extends Service implements MonitoringListener
      * @param beaconDevice
      */
     @Override
-    public void onBeaconAppeared(Region region, BeaconDevice beaconDevice) {
-        Log.d(TAG,"ONBA " + region.getIdentifier());
-        sendUpdate(beaconDevice);
-        saveDistance(beaconDevice);
+    public synchronized  void onBeaconAppeared(Region region, BeaconDevice beaconDevice) {
         String msg = "Beacon appeared: "+getBeaconId(beaconDevice) + " - " + beaconDevice.getProximity().name();
         Log.d(TAG,msg);
+
+        if (currentClosestBeacon == null) {
+            if (beaconDevice.getProximity() != Proximity.FAR) {
+                currentClosestBeacon = beaconDevice;
+                sendUpdate(currentClosestBeacon,BeaconProximityChange.ENTER);
+            }
+        } else if (compareBeacons(beaconDevice,currentClosestBeacon) == -1 ){
+            //The new beacon is closer
+
+            //Exit previous closest
+            sendUpdate(currentClosestBeacon,BeaconProximityChange.EXIT);
+
+            // Entering new closest beacon
+            sendUpdate(beaconDevice,BeaconProximityChange.ENTER);
+            currentClosestBeacon = beaconDevice;
+        }
+
     }
 
     @Override
     public void onRegionEntered(Region region) {
+        String msg = "Region entered: "+region.getIdentifier()+ "("+region.getProximity().toString()+"-"+region.getMajor()+"-"+region.getMinor()+")";
+        Log.d(TAG,msg);
 
     }
 
     @Override
     public void onRegionAbandoned(Region region) {
+        String msg = "Region abandoned: "+region.getIdentifier()+ "("+region.getProximity().toString()+"-"+region.getMajor()+"-"+region.getMinor()+")";
+        Log.d(TAG,msg);
+    }
 
+    //for testing
+    private void sendNotification(String title, String msg) {
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.notfication_icon)
+                        .setContentTitle(title)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(msg))
+                        .setAutoCancel(true)
+                        .setDefaults(Notification.DEFAULT_VIBRATE)
+                        .setContentText(msg);
+        mNotificationManager.notify(1,mBuilder.build());
     }
 
     /**
@@ -184,13 +256,16 @@ public class BeaconMonitorListener extends Service implements MonitoringListener
         super.onCreate();
         Log.d(TAG,"Created");
 
-        regionUUID = UUID.fromString(getString(R.string.beacon_region_uuid));
+        regionUUID = UUID.fromString(getString(R.string.config_beacon_region_uuid));
 
         init(this);
 
-        SharedPreferences prefs = getSharedPreferences(getString(R.string.config_sharedpref_id),Context.MODE_PRIVATE);
-        userId = prefs.getString("id",null); //User id
-        updateURL = String.format(getString(R.string.config_server_address) + getString(R.string.config_rest_locationupdate), userId);
+        Configuration configuration =  Configuration.getInstance();
+
+        SharedPreferences prefs = getSharedPreferences(configuration.getSharedPreferencesId(),Context.MODE_PRIVATE);
+        userId = prefs.getString(configuration.getSpUserIdKey(),null); //User id
+        updateURL = configuration.getLocationREST(userId);
+        numberOfRegions = prefs.getInt(configuration.getSpRegionNumberKey(),0);
 
         dbHelper = new BeaconDataHelper(this);
     }
@@ -217,6 +292,13 @@ public class BeaconMonitorListener extends Service implements MonitoringListener
                 @Override
                 public void onServiceBound() {
                     try {
+//                        Region tmp;
+//                        Set<Region> regions = new HashSet<Region>();
+//                        for (int i = 1; i<=numberOfRegions;i++) {
+//                            tmp = new Region(regionUUID,i,0,"Region "+i);
+//                            regions.add(tmp);
+//                        }
+//                        beaconManager.startMonitoring(regions);
                         beaconManager.startMonitoring();
                     } catch (RemoteException e) {
                        Log.e(TAG,"Error trying to start monitoring",e);
@@ -272,9 +354,69 @@ public class BeaconMonitorListener extends Service implements MonitoringListener
         return (res != -1);
     }
 
-    public void sendUpdate(BeaconDevice beaconDevice) {
-        String beaconId = getBeaconId(beaconDevice);
+    public void sendUpdate(BeaconDevice beaconDevice, BeaconProximityChange change) {
         String proximity = beaconDevice.getProximity().name().toLowerCase();
-        new LocationUpdateTask().execute(updateURL,beaconId,proximity); //new AsyncTask needed for every request
+        new LocationUpdateTask().execute(updateURL,Integer.toString(beaconDevice.getMajor()),Integer.toString(beaconDevice.getMinor()),proximity,change.name().toLowerCase()); //new AsyncTask needed for every request
+    }
+
+    private BeaconProximityChange getProximityChange(Proximity current, Proximity old) {
+        if (current == old) {
+            return BeaconProximityChange.IGNORE;
+        }
+
+        boolean isCloseNow = (current == Proximity.NEAR || current == Proximity.IMMEDIATE);
+        boolean wasFarBefore = (old == Proximity.FAR);
+        if (old == Proximity.FAR && (current == Proximity.NEAR || current == Proximity.IMMEDIATE)) {
+            return BeaconProximityChange.ENTER;
+        } else {
+            return BeaconProximityChange.IGNORE;
+        }
+    }
+
+    private Proximity getProximity(int ordinal) {
+        switch (ordinal) {
+            case 0:
+                return Proximity.IMMEDIATE;
+            case 1:
+                return Proximity.NEAR;
+            case 2:
+                return Proximity.FAR;
+            default:
+                return Proximity.UNKNOWN;
+        }
+    }
+
+    private BeaconDevice getClosestBeacon(List<BeaconDevice> list) {
+        BeaconDevice closest = list.get(0);
+        BeaconDevice tmp;
+        for (int i = 1; i < list.size(); i++) {
+            tmp = list.get(i);
+            if (compareBeacons(tmp,closest) == -1) {
+                closest = tmp;
+                continue;
+            }
+        }
+        Log.d(TAG,"Closest beacon is "+getBeaconId(closest)+"("+closest.getProximity().name()+" - "+closest.getAccuracy()+")");
+        return closest;
+    }
+
+    /**
+     *
+     * @param a
+     * @param b
+     * @return -1, if a is closer to us then b; 0 if they are equally close; 1 if b is closer to us
+     */
+    private int compareBeacons(BeaconDevice a, BeaconDevice b) {
+        int proximitydiff = a.getProximity().ordinal() - b.getProximity().ordinal();
+        if (proximitydiff == 0) {
+            //Same proximity category
+            return Double.compare(a.getAccuracy(), b.getAccuracy());
+        } else if (proximitydiff < 0) {
+            //a is closer
+            return -1;
+        } else {
+            // >0 => b is closer
+            return 1;
+        }
     }
 }

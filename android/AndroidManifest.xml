@@ -23,7 +23,8 @@
                   android:windowSoftInputMode="adjustPan"/>
         <activity android:name="no.kantega.techex.android.activities.QuestListActivity"
                   android:screenOrientation="portrait"
-                  android:parentActivityName=".activities.WelcomeActivity"/>
+                  android:parentActivityName=".activities.WelcomeActivity"
+                  android:launchMode="singleTop"/>
         <activity android:name=".activities.QuestDetailsActivity"
                   android:screenOrientation="portrait"
                 android:parentActivityName=".activities.QuestListActivity"/>

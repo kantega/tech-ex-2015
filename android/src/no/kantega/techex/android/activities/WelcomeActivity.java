@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.tools.BeaconMonitorListener;
+import no.kantega.techex.android.tools.Configuration;
 
 /**
  * Created by zsuhor on 24.02.2015.
@@ -23,8 +24,10 @@ public class WelcomeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        SharedPreferences prefs = getSharedPreferences(getString(R.string.config_sharedpref_id), Context.MODE_PRIVATE);
-        String name = prefs.getString("nickname",null); //Registered nickname
+        Configuration configuration = Configuration.getInstance();
+
+        SharedPreferences prefs = getSharedPreferences(configuration.getSharedPreferencesId(), Context.MODE_PRIVATE);
+        String name = prefs.getString(configuration.getSpUserNameKey(),null); //Registered nickname
         TextView tv = (TextView)findViewById(R.id.welcome_text);
         tv.setText(String.format(getString(R.string.welcome_text),name));
 

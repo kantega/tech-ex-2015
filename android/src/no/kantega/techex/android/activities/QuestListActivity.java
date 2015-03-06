@@ -2,21 +2,27 @@ package no.kantega.techex.android.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.*;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+import com.kontakt.sdk.android.device.Region;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.data.Quest;
 import no.kantega.techex.android.display.QuestArrayAdapter;
 import no.kantega.techex.android.rest.OnTaskComplete;
+import no.kantega.techex.android.rest.RegionInfoTask;
 import no.kantega.techex.android.rest.UserQuestsTask;
 import no.kantega.techex.android.tools.BeaconMonitorListener;
+import no.kantega.techex.android.tools.Configuration;
 import no.kantega.techex.android.tools.GcmIntentService;
 
 import java.util.ArrayList;
@@ -26,19 +32,24 @@ import java.util.List;
  * Activity for showing all user quests
  *
  * This activity starts the beacon monitoring! Beacon monitoring doesn't start until this activity is created.
+ * The activity also preforms check for Bluetooth and prompts the user to start if it hasn't happened before.
  */
-public class QuestListActivity extends Activity implements OnTaskComplete<List<Quest>> {
-    private final String TAG = QuestListActivity.class.getSimpleName();
+public class QuestListActivity extends Activity {
+    private static final String TAG = QuestListActivity.class.getSimpleName();
 
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 1;
 
     private String id;
 
-    private QuestArrayAdapter questArrayAdapter;
+    private static QuestArrayAdapter questArrayAdapter;
 
-    private List<Quest> questList;
+    private static List<Quest> questList;
 
     private Intent beaconService = null;
+
+    private static ProgressBar spinner;
+
+    private static SharedPreferences prefs;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,10 +57,15 @@ public class QuestListActivity extends Activity implements OnTaskComplete<List<Q
         setContentView(R.layout.questlist);
         Log.d(TAG,"OnCreate call");
 
-        SharedPreferences prefs = getSharedPreferences(getString(R.string.config_sharedpref_id),Context.MODE_PRIVATE);
-        id = prefs.getString("id",null); //User id
+        Configuration configuration = Configuration.getInstance();
+
+        prefs = getSharedPreferences(configuration.getSharedPreferencesId(),Context.MODE_PRIVATE);
+        id = prefs.getString(configuration.getSpUserIdKey(),null); //User id
 
         if (id != null) {
+
+            spinner = (ProgressBar)findViewById(R.id.progressSpinner);
+
             //Setting up quest list display adapter
             questList = new ArrayList<Quest>();
             questArrayAdapter = new QuestArrayAdapter(this,questList);
@@ -67,12 +83,12 @@ public class QuestListActivity extends Activity implements OnTaskComplete<List<Q
             //Fetching list of quests
             updateQuestList();
 
-            //Intent filters for broadcasts
-            IntentFilter brIntentFilters = new IntentFilter();
-            //GCM notification
-            brIntentFilters.addAction(GcmIntentService.BROADCAST_ACTION);
+            //Fetching list of regions
+            RegionInfoTask rit = new RegionInfoTask();
+            rit.setListener(regionTaskCompleter);
+            rit.execute();
 
-            //Start beacon monitoring
+            //Check if bluetooth is available
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (mBluetoothAdapter == null) {
                 // Device does not support Bluetooth
@@ -83,49 +99,68 @@ public class QuestListActivity extends Activity implements OnTaskComplete<List<Q
             } else {
                 if (!mBluetoothAdapter.isEnabled()) {
                     final Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    //TODO custom message
                     startActivityForResult(intent, REQUEST_CODE_ENABLE_BLUETOOTH);
                 } else {
                     //Bluetooth is enabled already
-                    startBeaconServiceIntent();
+                    //Beacon service is started after monitoring region has been fetched
                 }
                 //Creating listener on bluetooth state in case the user
-                brIntentFilters.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+                registerReceiver(mReceiver,new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
             }
 
-            //Receiver for broadcasts
-            registerReceiver(mReceiver, brIntentFilters);
-
-
+            //Receiver for broadcasts (GCM notifications)
+            LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,new IntentFilter(GcmIntentService.BROADCAST_ACTION));
         } else {
             Log.e(TAG, "User ID not found, can't load quest list.");
         }
     }
 
     private void updateQuestList() {
-        String address = String.format(getString(R.string.config_server_address)+getString(R.string.config_rest_allquests),id);
+        spinner.setVisibility(View.VISIBLE);
+        String address = Configuration.getInstance().getAllQuestsREST(id);
         Log.d(TAG, "URL: "+address);
+
         UserQuestsTask uqt = new UserQuestsTask();
-        uqt.setListener(this);
+        uqt.setListener(questTaskCompleter);
         uqt.execute(address);
-        //ProgressDialog?
     }
 
     /**
-     * This function is called when the REST called is finished fetching the list of quests for the user.
+     * This object is called when the REST call is finished fetching the list of quests for the user.
      * @param result List of Quest data
      */
-    @Override
-    public void onTaskComplete(List<Quest> result) {
-        if (result != null) {
-            Log.d(TAG,"Quest list update");
-            questList.clear();
-            questList.addAll(result);
-            questArrayAdapter.notifyDataSetChanged();
-        } else {
-            Log.e(TAG, "No quests to display.");
+    private static OnTaskComplete<List<Quest>> questTaskCompleter = new OnTaskComplete<List<Quest>>() {
+        @Override
+        public void onTaskComplete(List<Quest> result) {
+            if (result != null) {
+                Log.d(TAG, "Quest list update");
+                questList.clear();
+                questList.addAll(result);
+                questArrayAdapter.notifyDataSetChanged();
+            } else {
+                //TODO toast warning
+                Log.e(TAG, "No quests to display.");
+            }
+            spinner.setVisibility(View.GONE);
         }
-    }
+    };
+
+    private OnTaskComplete<Integer> regionTaskCompleter = new OnTaskComplete<Integer>() {
+        @Override
+        public void onTaskComplete(Integer result) {
+            //Save region number
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt(Configuration.getInstance().getSpRegionNumberKey(),result);
+            editor.commit();
+
+            //Enable monitoring if bluetooth is active
+            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
+                startBeaconServiceIntent();
+            }
+        }
+    };
+
 
     @Override
     protected void onDestroy() {

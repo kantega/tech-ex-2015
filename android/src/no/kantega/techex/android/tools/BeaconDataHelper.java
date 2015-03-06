@@ -13,17 +13,17 @@ public class BeaconDataHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "beacons";
 
-    private static final String SQL_CREATE_TABLE = "CREATE TABLE last_data (major INTEGER NOT NULL, minor INTEGER NOT NULL, distance INTEGER, PRIMARY KEY (major,minor) );";
+    private static final String SQL_CREATE_TABLE_BEACONS = "CREATE TABLE last_data (major INTEGER NOT NULL, minor INTEGER NOT NULL, distance INTEGER, time DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (major,minor) );";
 
     /**
      * Save beacons distance
      */
-    public static final String SQL_SAVE_DISTANCE = "INSERT OR REPLACE INTO last_data VALUES (?,?,?);";
+    public static final String SQL_SAVE_DISTANCE = "INSERT OR REPLACE INTO last_data(major, minor, distance) VALUES (?,?,?);";
 
     /**
      * Query last saved beacon distance
      */
-    public static final String SQL_QUERY_DISTANCE = "SELECT distance FROM last_data WHERE major=? AND minor=?";
+    public static final String SQL_QUERY_DISTANCE = "SELECT * FROM last_data WHERE major=? AND minor=?";
 
 
     BeaconDataHelper(Context context) {
@@ -32,7 +32,7 @@ public class BeaconDataHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(SQL_CREATE_TABLE);
+        db.execSQL(SQL_CREATE_TABLE_BEACONS);
     }
 
     @Override

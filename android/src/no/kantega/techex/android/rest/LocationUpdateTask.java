@@ -26,18 +26,21 @@ public class LocationUpdateTask extends AbstractRESTTask<Boolean> {
      */
     @Override
     protected HttpRequestBase createHttpRequest(String... params) {
-        if (params.length != 3) {
+        if (params.length != 5) {
             Log.e(TAG,"Missing parameters, can't create location update");
             return null;
         }
 
         String URL =params [0];
-        String beaconId = params[1];
-        String proximity = params[2];
+        String major = params[1];
+        String minor = params[2];
+        String proximity = params[3];
+        String change = params[4];
+
         try {
             HttpRequestBase request = new HttpPost(URL);
 
-            String json = createJSONData(beaconId, proximity);
+            String json = createJSONData(major,minor, proximity,change);
             Log.d(TAG,"Location update: "+json);
 
             StringEntity se = new StringEntity(json, "UTF-8");
@@ -68,11 +71,13 @@ public class LocationUpdateTask extends AbstractRESTTask<Boolean> {
         return null;
     }
 
-    private String createJSONData(String beaconId, String proximity) {
+    private String createJSONData(String major, String minor, String proximity, String change) {
         JSONObject data = new JSONObject();
         try {
-            data.put("beaconId", beaconId);
+            data.put("major", major);
+            data.put("minor", minor);
             data.put("proximity", proximity);
+            data.put("activity", change);
             return data.toString();
         } catch (JSONException e) {
             Log.e(TAG, "Error trying to create JSON data");

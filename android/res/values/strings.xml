@@ -22,7 +22,9 @@
 
     <!-- Quest list -->
     <string name="questlist_title">Quests</string>
-    <string name="beacon_destroy_warning">Location monitoring stopped.</string>
+    <string name="questlist_progress_title">Downloading quests</string>
+
+    <string name="beacon_destroy_warning">Location monitoring stopped.</string> <!-- ??? -->
 
     <!-- beacon monitoring -->
     <string name="bluetooth_unavailable_msg">The application requires Bluetooth connection to determine the location. Unfortunately your device is not capable of running the application.</string>

@@ -114,5 +114,21 @@ public class Quest implements Parcelable{
         }
     };
 
+    /**
+     * Convenience function for the quest details UI. If this quest has an achievement with the given ID,
+     * it will set its status to "achieved".
+     * @param achievement
+     * @return
+     */
+    public boolean updateAchievement(String achievement) {
+        for (Achievement a : achievements) {
+            if (a.getId().equalsIgnoreCase(achievement)) {
+                a.setAchieved(true);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }

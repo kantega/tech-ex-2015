@@ -7,14 +7,22 @@
     <string name="config_rest_registration">/players</string>
     <string name="config_rest_allquests">/quests/player/%1$s</string>
     <string name="config_rest_locationupdate">/location/%1$s</string>
+    <string name="config_rest_regioninfo">/beaconregions</string>
 
     <!-- Other config -->
     <string name="config_sharedpref_id">no.kantega.techex.android</string>
+    <string name="config_sharedpref_useridkey">id</string>
+    <string name="config_sharedpref_usernamekey">nickname</string>
+    <string name="config_sharedpref_gcmauthkey">gcm_id</string>
 
-    <!-- Beacon config -->
-    <string name="beacon_region_uuid">f7826da6-4fa2-4e98-8024-bc5b71e0893e</string>
+    <!-- Beacon config TODO delete when we fetch regions from server -->
+    <string name="config_beacon_region_uuid">f7826da6-4fa2-4e98-8024-bc5b71e0893e</string>
+    <string name="config_beacon_monitoring_active">5</string> <!-- in seconds, min. 5 -->
+    <string name="config_beacon_monitoring_passive">25</string>
+    <string name="config_sharedpref_region_number">regions</string>
+
 
     <!-- GCM -->
-    <string name="gcm_project_id">902599159415</string>
+    <string name="config_gcm_project_id">902599159415</string>
 
 </resources>

@@ -8,7 +8,7 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_weight="1.3">
         <include layout="@layout/header"/>
     </LinearLayout>
 
@@ -16,7 +16,7 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="1.3"
             android:gravity="top|center_horizontal">
         <EditText
                 android:id="@+id/nickname"
@@ -35,28 +35,20 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1">
-        <ScrollView
-                android:id="@+id/SCROLLER_ID"
-                style="@style/DisclaimerBox"
-                android:scrollbars="vertical"
-                android:fillViewport="true"
-                android:layout_weight="1"
-                android:layout_gravity="center">
+
             <LinearLayout
                     android:orientation="vertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-        <TextView android:text="@string/register_disclaimer_title"
-                  android:id="@+id/disclaimer_title"
-                  style="@style/DisclaimerTitle"
-                />
-        <TextView style="@style/DisclaimerContent"
-                  android:text="@string/register_disclaimer_text"
-                  android:id="@+id/disclaimer_box"
-                />
+                    style="@style/DisclaimerBox">
+                <TextView android:text="@string/register_disclaimer_title"
+                          android:id="@+id/disclaimer_title"
+                          style="@style/DisclaimerTitle"
+                        />
+                <TextView style="@style/DisclaimerContent"
+                          android:text="@string/register_disclaimer_text"
+                          android:id="@+id/disclaimer_box"
+                        />
             </LinearLayout>
 
-        </ScrollView>
 
 
     </LinearLayout>

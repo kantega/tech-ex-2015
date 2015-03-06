@@ -10,19 +10,24 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import no.kantega.techex.android.R;
+import no.kantega.techex.android.tools.Configuration;
 
 import java.io.IOException;
 
 /**
  * Main activity
  *
- * Doesn't do anything, just redirects based on whether the user has registered before.
+ * This is opened first when application is started. It has no UI, but does some setup functions:
+ * * Registers for GCM
+ *
+ * It automatically redirects to
+ * * RegisterActivity if user is not registered yet
+ * * QuestListActivity if user is already registered
  */
 public class LaunchScreen extends Activity {
 
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    private final static String PROPERTY_REG_ID = "gcm_id";
+    private static String PROPERTY_REG_ID;
 
     private final String TAG = LaunchScreen.class.getSimpleName();
 
@@ -39,9 +44,14 @@ public class LaunchScreen extends Activity {
         super.onCreate(savedInstanceState);
         Log.d(TAG,"Main activity created");
 
-        prefs = getSharedPreferences(getString(R.string.config_sharedpref_id),Context.MODE_PRIVATE);
-        String id = prefs.getString("id",null); //If registered, we received an ID from the server
+        Configuration configuration = Configuration.getInstance();
+        configuration.init(this); //Very first time initialization
+
+        prefs = getSharedPreferences(configuration.getSharedPreferencesId(),Context.MODE_PRIVATE);
+        String id = prefs.getString(configuration.getSpUserIdKey(),null); //If registered, we received an ID from the server
         String registrationId = getRegistrationId();
+
+        PROPERTY_REG_ID = configuration.getSpGcmAuthKey();
 
 
        // Check device for Play Services APK.
@@ -49,7 +59,7 @@ public class LaunchScreen extends Activity {
             // GCM is available
             gcm = GoogleCloudMessaging.getInstance(this);
             context = getApplicationContext();
-            gcmProjectId = getString(R.string.gcm_project_id);
+            gcmProjectId = configuration.getGcmProjectId();
             if (registrationId.isEmpty()) {
                 //The device hasn't registered for the GCM yet or it needs to be updated
                 registerInBackground();
@@ -124,7 +134,6 @@ public class LaunchScreen extends Activity {
      * <p>
      * Stores the registration ID and app versionCode in the application's
      * shared preferences.
-     * TODO move the asynctask out from here
      */
     private void registerInBackground() {
         new AsyncTask<Void,Void,String>() {
@@ -135,6 +144,7 @@ public class LaunchScreen extends Activity {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
+                    Log.d(TAG,"gcmprojectid "+gcmProjectId);
                     String regid = gcm.register(gcmProjectId);
                     msg = "Device registered, registration ID=" + regid;
 
