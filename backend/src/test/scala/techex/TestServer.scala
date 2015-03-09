@@ -1,5 +1,7 @@
 package techex
 
+import javax.servlet.http.HttpServlet
+
 import argonaut.Argonaut._
 import argonaut.{Json, Parse}
 import com.typesafe.config.ConfigFactory
@@ -22,13 +24,16 @@ object TestServer {
     ExecutionContext.fromExecutor(pool)*/
 
 
-  val server = JettyBuilder
-    .bindHttp(8080)
-    .mountServlet(new InitingServlet(),"/*")
+  val server = for {
+    servlets <- bootOps.servlets(Map("db_type"->"mem"))
+    serv <- mountServlets(servlets)(JettyBuilder.bindHttp(8080)).start
+  } yield serv
 
-  val h = host("localhost", 8080)
 
-  val prod = host("techex.kantega.no")
+  val test     = host("localhost", 8090)
+  val local     = host("localhost", 8080)
+  val prod     = host("techex.kantega.no").secure
+  val h        = local
 
   val decodeId =
     jdecode1L((value: String) => value)("id")
@@ -51,7 +56,7 @@ object TestServer {
           res.map(PlayerId(_)).toEither
 
         if (either.isLeft)
-          throw new Exception("Invalid response " + response.toString)
+          throw new Exception("Invalid response " + response.getResponseBody)
         else
           either.right.get
 
@@ -61,8 +66,15 @@ object TestServer {
 
     response
   }
-  def beaconAt(a: Area) = areas.beaconsAt(a).head
-  def putObservation(playerId: PlayerId, beacon: BeaconId, proximity: Proximity) =
-    Http(((h / "location" / playerId.value) << "{'major':'" + 1 + "','minor':" + beacon.minor +",'proximity':'" + proximity.toString + "','activity':'enter'}").POST)
 
+  def beaconAt(a: Area) = areas.beaconsAt(a).head
+
+  def putObservation(playerId: PlayerId, beacon: BeaconId, proximity: Proximity) =
+    Http(((h / "location" / playerId.value) << "{'major':'" + 1 + "','minor':" + beacon.minor + ",'proximity':'" + proximity.toString + "','activity':'enter'}").POST)
+
+  def mountServlets(servlets: List[(String, HttpServlet)]): JettyBuilder => JettyBuilder = {
+    builder => servlets.foldLeft(builder) { (builder, pair) =>
+      builder.mountServlet(pair._2, pair._1, None)
+    }
+  }
 }

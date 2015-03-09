@@ -10,7 +10,7 @@ import techex.domain.{Near, Nick}
 class BeAtScheduledLocationSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 

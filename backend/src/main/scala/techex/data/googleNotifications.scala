@@ -25,13 +25,13 @@ object googleNotifications {
   val key =
     scala.io.Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("googleapikey.txt")).mkString
 
-  def sendMessage(token: DeviceToken, txt: String): Task[Unit] = {
+  def sendMessage(token: DeviceToken, txt: String, id: String): Task[Unit] = {
 
 
     val json: Json =
       Json(
         "registration_ids" -> Json.array(jString(token.value)),
-        "data" -> Json("message" -> jString(txt))
+        "data" -> Json("message" -> jString(txt), "id" -> jString(id))
       )
 
     Task.async(register => {

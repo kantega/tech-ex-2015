@@ -20,6 +20,7 @@ object eventstreams {
 
 trait InputMessage{
   val msgType:String
+  val instant:Instant
 }
 trait Command extends InputMessage
 case class EnterObservation(beacon: BeaconId, playerId: PlayerId, instant: Instant, proximity: Proximity) extends InputMessage{
@@ -28,11 +29,13 @@ case class EnterObservation(beacon: BeaconId, playerId: PlayerId, instant: Insta
 case class ExitObservation(playerId:PlayerId,instant:Instant) extends InputMessage{
   val msgType = "ExitObservation"
 }
-case class CreatePlayer(data:CreatePlayerData) extends Command{
+case class CreatePlayer(data:CreatePlayerData,instant:Instant) extends Command{
   val msgType = "CreatePlayer"
 }
 
-case class StartEntry(entryId: ScId) extends Command{val msgType="StartEntry"}
-case class EndEntry(entryId: ScId) extends Command{val msgType="EndEntry"}
-case class AddEntry(entry: ScheduleEntry) extends Command{val msgType="AddEntry"}
-case class RemoveEntry(entryId: ScId) extends Command{val msgType="RemoveEntry"}
+case class StartEntry(entryId: ScId,instant:Instant) extends Command{val msgType="StartEntry"}
+case class EndEntry(entryId: ScId,instant:Instant) extends Command{val msgType="EndEntry"}
+case class AddEntry(entry: ScheduleEntry,instant:Instant) extends Command{
+  val msgType="AddEntry"
+}
+case class RemoveEntry(entryId: ScId,instant:Instant) extends Command{val msgType="RemoveEntry"}

@@ -12,7 +12,7 @@ class GetRegionsSpec extends Specification {
 
   try {
     val runningserver =
-      server.start.run
+      server.run
 
     "The webserwer" should {
       "yield a json structure of all the schedule entries" in {

@@ -1,6 +1,7 @@
 package techex.cases
 
 import org.http4s.dsl._
+import org.joda.time.Instant
 import techex._
 import techex.data._
 import techex.domain._
@@ -16,7 +17,7 @@ object startSession {
     case req@POST -> Root / "sessions" / "start" / sessionId => {
       for {
         exists <- Storage.run(State.gets(sch => sch.schedule.get(ScId(sessionId)).isDefined))
-        result <- if(exists) topic.publishOne(StartEntry(ScId(sessionId))) *> Ok() else NotFound()
+        result <- if(exists) topic.publishOne(StartEntry(ScId(sessionId),Instant.now())) *> Ok() else NotFound()
       } yield result
     }
   }

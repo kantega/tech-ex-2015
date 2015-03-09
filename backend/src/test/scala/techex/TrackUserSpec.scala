@@ -6,21 +6,23 @@ import org.specs2.mutable._
 import techex.TestServer._
 import techex.domain._
 import areas._
+import scalaz._,Scalaz._
+import scalaz.concurrent.Task
 
 class TrackUserSpec extends Specification {
 
 
   try {
     val runningserver =
-      server.start.run
+      server.run
 
     "The webserwer" should {
       "consume a list of locationupdates" in {
         val quests =
           for {
-            playerId <- putPlayer(Nick("balle"))
-            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
-            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
+            playerId <- putPlayer(Nick("phalle"))
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near) *> Future{Thread.sleep(40000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near) *> Future{Thread.sleep(40000)}
             _ <- putObservation(playerId, beaconAt(desk1), Near)
             _ <- putObservation(playerId, beaconAt(desk2), Near)
             _ <- putObservation(playerId, beaconAt(desk3), Near)

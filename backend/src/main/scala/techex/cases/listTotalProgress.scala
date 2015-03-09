@@ -19,7 +19,7 @@ object listTotalProgress {
     ctx.players.filter(data => data.achievements.exists(_ === badge)).map(data => data.player.nick)
 
 
-  def read: State[Storage, Task[Response]] =
+  def readProgress: State[Storage, Task[Response]] =
     State.gets(
       ctx => {
         val players =
@@ -48,9 +48,21 @@ object listTotalProgress {
       }
     )
 
+  def readRankList:State[Storage, Task[Response]] =
+  State.gets(storage =>{
+   val rankList =
+     storage.players
+       .map(playerData=>RankEntry(playerData.player.nick.value,playerData.achievements.size))
+       .sortBy(entry=>entry.noOfBadges)
+
+    Ok(rankList.asJson)
+  })
+
   val restApi: WebHandler = {
-    case req@GET -> Root / "quests" =>
-      Storage.run(read).flatMap(i => i)
+    case req@GET -> Root /"stats" / "progress" =>
+      Storage.run(readProgress).flatMap(i => i)
+    case req@GET -> Root / "stats" / "badges" =>
+      Storage.run(readRankList).flatMap(i => i)
   }
 
 }

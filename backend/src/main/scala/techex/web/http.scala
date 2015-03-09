@@ -1,17 +1,12 @@
 package techex.web
 
-import org.http4s.MediaType._
-import org.http4s._
 import _root_.argonaut._
-import Argonaut._
+import argonaut.Argonaut._
+import org.http4s.MediaType._
 import org.http4s.argonaut._
 import org.http4s.dsl._
 import org.http4s.headers.`Content-Type`
-import org.http4s.server._
-import org.http4s.server.websocket._
-import org.http4s.websocket.WebsocketBits.{Text, WebSocketFrame}
 import techex.WebHandler
-import techex.cases.playerSignup
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

@@ -11,7 +11,7 @@ import techex.domain.{Near, Nick}
 class LoadTotalProgressSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 
@@ -44,7 +44,7 @@ class LoadTotalProgressSpec extends Specification {
         Thread.sleep(5000)
 
         val questR =
-          Http(h / "quests")
+          Http(h / "stats" / "progress")
 
         val response =
           questR()

@@ -6,6 +6,7 @@ import com.typesafe.config.Config
 import doobie.util.process
 import doobie.util.transactor.Transactor
 import org.http4s.server._
+import org.joda.time.Instant
 import techex._
 import streams._
 import techex.data._
@@ -15,7 +16,6 @@ import techex.web.test
 import scalaz._, Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream._
-import scalaz.stream.async.mutable.Topic
 
 object startup {
   val streamRunner =
@@ -46,7 +46,9 @@ object startup {
 
     val handleStoreToDatabase =
       storeToDatabaseQueue.dequeue to
-        process.sink[Task, InputMessage]((input: InputMessage) => {txor.transact(InputMessageDAO.storeObservation(input))})
+        process.sink[Task, InputMessage]((input: InputMessage) => {
+          txor.transact(InputMessageDAO.storeObservation(input))
+        })
 
     val handleInputStream =
       inputHandlerQueue.dequeue pipe
@@ -76,7 +78,7 @@ object startup {
 
   def setupSchedule: Task[Unit] = {
     val commands =
-      scheduling.scheduleEntries.map(AddEntry).toSeq
+      scheduling.scheduleEntries.map(entry => AddEntry(entry,Instant.now())).toSeq
 
     val t: Process[Task, Command] =
       Process.emitAll(commands)
@@ -90,13 +92,13 @@ object startup {
   def setup(cfg: Config): Task[(HttpService, WSHandler)] = {
 
     val dbConfig =
-      if (getStringOr(cfg, "db.type", "mem") == "mysql")
-        db.mysqlConfig(cfg.getString("db.username"), cfg.getString("db.password"))
+      if (getStringOr(cfg, "db_type", "mem") == "mysql")
+        db.mysqlConfig(cfg.getString("db_username"), cfg.getString("db_password"))
       else
         db.inMemConfig
 
     for {
-      _ <- slack.sendMessage("Starting up server", Attention)
+      _ <- slack.sendMessage("Starting up server with " + getStringOr(cfg, "db_type", "mem"), Attention)
       ds <- db.ds(dbConfig)
       _ <- ds.transact(InputMessageDAO.createObservationtable)
       _ <- setupStream(ds)
@@ -115,8 +117,9 @@ object startup {
         endSession.restApi(eventstreams.events) orElse
         listSchedule.restApi orElse
         serveHelptext.restApi orElse
-        getBeaconRegions.restApi
-    ), updateStream.wsApi(eventstreams.factUdpates))
+        getBeaconRegions.restApi orElse
+        getAreas.restApi
+    ), getUpdateStream.wsApi(eventstreams.factUdpates))
 
   }
 }

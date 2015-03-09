@@ -49,6 +49,7 @@ object InputMessageDAO {
             instant BIGINT NOT NULL,
             type VARCHAR(200) NOT NULL,
             payload TEXT NOT NULL,
+            recordedtime varchar(255) not null,
             PRIMARY KEY (id)
           );
           """.update.run
@@ -56,8 +57,8 @@ object InputMessageDAO {
 
   def storeObservation(input: InputMessage): ConnectionIO[Unit] = {
     sql"""
-          INSERT INTO observations (instant,type,payload)
-          VALUES (${Instant.now().getMillis},${input.msgType},${input.asJson.nospaces} )
+          INSERT INTO observations (instant,type,payload,recordedtime)
+          VALUES (${input.instant.getMillis},${input.msgType},${input.asJson.nospaces},${input.instant.toString} )
     """.update.run.map(x=>Unit)
   }
 

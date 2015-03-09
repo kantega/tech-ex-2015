@@ -16,13 +16,13 @@ import scalaz.concurrent.Task
 import scalaz.stream._
 import scalaz.stream.async.mutable.Topic
 import codecJson._
-object updateStream {
+object getUpdateStream {
 
   implicit val executor: ScheduledExecutorService =
     Executors.newSingleThreadScheduledExecutor()
 
   def wsApi(factUdpates: Topic[Fact]): WSHandler = {
-    case req@GET -> Root / "ws" / "observations" =>
+    case req@GET -> Root / "observations" =>
 
       // Print received Text frames, and, on completion, notify the console
       val sink: Sink[Task, WebSocketFrame] = process.sink[Task, WebSocketFrame] {

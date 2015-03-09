@@ -35,7 +35,7 @@ class StreamWebsocketCreator(f: WSHandler,
 
 
   def createWebSocket(req: ServletUpgradeRequest, resp: ServletUpgradeResponse): AnyRef = {
-    resp.setAcceptedSubProtocol("text")
+    //resp.setAcceptedSubProtocol("text")
     val requestresult =
       toRequest(req.getHttpServletRequest)
 
@@ -82,6 +82,7 @@ class Http4sWebsocket(ws: WebSocket) extends WebSocketListener {
   }
 
   override def onWebSocketConnect(session: Session): Unit = {
+    session.setIdleTimeout(3600000*24)
     (ws.source to process.sink(send(session))).onHalt(onHalt(session)).run.runAsync(_.toString)
     (topic.subscribe to ws.sink).run.runAsync(_.toString)
   }

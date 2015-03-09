@@ -2,17 +2,17 @@ package techex
 
 import javax.servlet._
 import javax.servlet.annotation.WebListener
-import javax.servlet.http.{HttpServlet, HttpServletRequest}
+import javax.servlet.http.HttpServlet
 
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory, ConfigObject}
-import org.http4s.server.HttpService
-import org.http4s.server.blaze.BlazeBuilder
+import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.http4s.servlet.Http4sServlet
-import techex.cases.{updateStream, startup}
+import techex.cases.startup
 import techex.data.slack
-import techex.domain.{Alert, Good, Notification, Slack}
-import techex.web.{WebsocketServiceServlet, Http4sWebsocket}
+import techex.domain.{Alert, Good}
+import techex.web.WebsocketServiceServlet
+
 import scala.collection.JavaConversions._
+import scalaz.concurrent.Task
 
 @WebListener
 class Bootstrap extends ServletContextListener {
@@ -20,20 +20,32 @@ class Bootstrap extends ServletContextListener {
   override def contextInitialized(sce: ServletContextEvent): Unit = {
     println("Starting up app")
 
+    val dbName =
+      sce.getServletContext.getInitParameter("db_type")
 
-    /*BlazeBuilder.bindHttp(8090)
-      .mountService(HttpService(updateStream.wsApi), "/stream")
-      .run.awaitShutdown()
-    */
+    val username =
+      sce.getServletContext.getInitParameter("db_username")
+
+    val pw =
+      sce.getServletContext.getInitParameter("db_password")
+
+    val cfgMap =
+      Map("db_type" -> dbName, "db_username" -> username, "db_password" -> pw)
+
+    val servlets =
+      bootOps.servlets(cfgMap).run
 
     val ctx =
       sce.getServletContext
 
-    val registration =
-      ctx.addServlet("example", new InitingServlet())
 
-    registration.addMapping("/*")
-    registration.setAsyncSupported(true)
+    servlets.foreach{ case (path,servlet) =>
+      val restRegistration =
+        ctx.addServlet(path +"api", servlet)
+      restRegistration.addMapping(path)
+      restRegistration.setAsyncSupported(true)
+    }
+
   }
 
   override def contextDestroyed(sce: ServletContextEvent): Unit = {
@@ -42,34 +54,11 @@ class Bootstrap extends ServletContextListener {
   }
 }
 
-class InitingServlet extends HttpServlet {
+object bootOps {
 
-  var wrapped  : Option[Http4sServlet]           = None
-  var wsWrapped: Option[WebsocketServiceServlet] = None
-
-  override def destroy(): Unit = {
-    wrapped.foreach(_.destroy())
-  }
-
-  override def getServletConfig: ServletConfig = {
-    wrapped.orNull
-  }
-
-  override def init(config: ServletConfig): Unit = {
-
-    val dbName =
-      config.getInitParameter("db.type")
-
-    val username =
-      config.getInitParameter("db.username")
-
-    val pw =
-      config.getInitParameter("db.password")
-
-    val cfgMap =
-      Map("db.type" -> dbName, "db.username" -> username, "db.password" -> pw)
-
-    val cfg = ConfigFactory.load().withFallback(ConfigValueFactory.fromMap(cfgMap))
+  def servlets(cfgMap: Map[String, String]): Task[List[(String, HttpServlet)]] = {
+    val cfg =
+      ConfigValueFactory.fromMap(cfgMap).toConfig.withFallback(ConfigFactory.load())
 
     val services =
       startup.setup(cfg)
@@ -78,22 +67,17 @@ class InitingServlet extends HttpServlet {
           slack.sendMessage("Server failed to start: " + maybeErr.get.getMessage, Alert)
         else
           slack.sendMessage("Server started", Good)
-        ).run
+        ).map(x =>
+        List(
+          "/*" -> new Http4sServlet(x._1),
+          "/ws/*" -> new WebsocketServiceServlet(x._2)
+        )
+        )
 
-    wrapped = Some(new Http4sServlet(services._1))
-    wsWrapped = Some(new WebsocketServiceServlet(services._2))
-    wrapped.foreach(_.init(config))
-    wsWrapped.foreach(_.init(config))
+    services
+
   }
 
-  override def getServletInfo: String = {
-    "Wrapper around " + wrapped.map(_.getServletInfo).getOrElse(" unknown servlet ")
-  }
 
-  override def service(req: ServletRequest, res: ServletResponse): Unit = {
-    if (req.asInstanceOf[HttpServletRequest].getPathInfo startsWith "/ws")
-      wsWrapped.foreach(_.service(req, res))
-    else
-      wrapped.foreach(_.service(req, res))
-  }
+
 }

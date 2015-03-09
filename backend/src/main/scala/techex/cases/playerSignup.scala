@@ -27,11 +27,11 @@ object playerSignup {
   case class NickTaken(nick: Nick) extends Signupresult
 
   val toFact: PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
-    case CreatePlayer(data) => State{ctx =>
+    case CreatePlayer(data,instant) => State{ctx =>
       val playerData =
         ctx.players.find(entry => entry.player.nick === data.nick)
 
-      (ctx,List(PlayerCreated(playerData.get,Instant.now())))}
+      (ctx,List(PlayerCreated(playerData.get,instant)))}
   }
 
   val getNick: String => Task[Nick] =
@@ -115,7 +115,7 @@ object playerSignup {
               _ <- result match {
                 case ok@SignupOk(playerData) =>
                   Storage.run(updateContext(playerData)) *>
-                    topic.publishOne(CreatePlayer(createPlayerData))
+                    topic.publishOne(CreatePlayer(createPlayerData,Instant.now()))
 
                 case _                       => Task {}
               }

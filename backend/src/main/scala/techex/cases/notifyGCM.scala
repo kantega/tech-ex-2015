@@ -25,10 +25,10 @@ object notifyGCM {
 
 
   def handleFact: Fact => Task[Unit] = {
-    case AwardedBadge(playerData, badge,_) => playerData.platform match {
+    case AwardedBadge(playerData, badge, _) => playerData.platform match {
       case Android(Some(token)) =>
-        googleNotifications.sendMessage(token, "You have been awarded the " + badge.achievement.name + " badge")
-      case _                => Task {}
+        googleNotifications.sendMessage(token, "You have been awarded the " + badge.achievement.name + " badge", badge.achievement.id.value)
+      case _                    => Task {}
     }
 
     case any: Fact => Task {}

@@ -9,7 +9,7 @@ import techex.domain.{Near, Nick}
 class MetOtherPlayerSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 

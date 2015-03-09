@@ -122,7 +122,7 @@ object codecJson {
     CodecJson((instant: Instant) => JsonLong(instant.getMillis).asJsonOrNull, c => c.as[Long].map(l => new Instant(l)))
 
   implicit val codecCrateUser: CodecJson[CreatePlayer] =
-    casecodec1(CreatePlayer.apply, CreatePlayer.unapply)("data")
+    casecodec2(CreatePlayer.apply, CreatePlayer.unapply)("data", "instant")
 
   implicit val codecObservation: CodecJson[EnterObservation] =
     casecodec4(EnterObservation.apply, EnterObservation.unapply)("beacon", "playerId", "instant", "proximity")
@@ -130,11 +130,14 @@ object codecJson {
   implicit val codecExitObservation: CodecJson[ExitObservation] =
     casecodec2(ExitObservation.apply, ExitObservation.unapply)("playerId", "instant")
 
+
   implicit val codecInputMessage: CodecJson[InputMessage] =
     CodecJson(
       (input: InputMessage) => input match {
-        case cp: CreatePlayer => codecCrateUser.encode(cp)
-        case _                => jEmptyObject
+        case cp: CreatePlayer      => codecCrateUser.encode(cp)
+        case eo: EnterObservation  => codecObservation.encode(eo)
+        case exit: ExitObservation => codecExitObservation.encode(exit)
+        case _                     => ("msg" := "No codec registered in codecInputMessage") ->: jEmptyObject
       },
       (json) => null
     )
@@ -145,8 +148,8 @@ object codecJson {
       case LeftActivityEarly(player, event, instant)     => ("activity" := "leftEarly") ->: ("event" := event.id.value) ->: ("area" := event.area.name) ->: ("instant" := instant) ->: jEmptyObject
       case JoinedOnStart(player, event, instant)         => ("activity" := "arrivedOnTime") ->: ("event" := event.id.value) ->: ("area" := event.area.name) ->: ("instant" := instant) ->: jEmptyObject
       case LeftOnEnd(player, event, instant)             => ("activity" := "leftOnTime") ->: ("event" := event.id.value) ->: ("area" := event.area.name) ->: ("instant" := instant) ->: jEmptyObject
-      case EnteredArea(player, area, instant)          => ("activity" := "arrivedAtArea") ->: ("area" := area.name) ->: ("instant" := instant) ->: jEmptyObject
-      case LeftArea(player, area, instant)             => ("activity" := "leftFromArea") ->: ("area" := area.name) ->: ("instant" := instant) ->: jEmptyObject
+      case EnteredArea(player, area, instant)            => ("activity" := "arrivedAtArea") ->: ("player" := player.player.nick.value) ->: ("area" := area.name) ->: ("instant" := instant) ->: jEmptyObject
+      case LeftArea(player, area, instant)               => ("activity" := "leftFromArea") ->: ("player" := player.player.nick.value) ->: ("area" := area.name) ->: ("instant" := instant) ->: jEmptyObject
       case MetPlayer(player, otherPlayer, instant)       => ("activity" := "metOther") ->: ("player" := player.player.nick.value) ->: ("other" := otherPlayer.player.nick.value) ->: ("instant" := instant) ->: jEmptyObject
       case EarnedAchievemnt(player, achievemnt, instant) => ("activity" := "earnedAchievement") ->: ("player" := player.player.nick.value) ->: ("badge" := achievemnt.id.value) ->: ("instant" := instant) ->: jEmptyObject
       case AwardedBadge(player, badge, instant)          => ("activity" := "earnedBadge") ->: ("player" := player.player.nick.value) ->: ("badge" := badge.achievement.id.value) ->: ("instant" := instant) ->: jEmptyObject
@@ -155,6 +158,8 @@ object codecJson {
       case Ended(entry, instant)                         => ("activity" := "eventEnded") ->: ("event" := entry.id.value) ->: ("area" := entry.area.name) ->: ("instant" := instant) ->: jEmptyObject
       case Added(entry, instant)                         => ("activity" := "eventAdded") ->: ("event" := entry.id.value) ->: ("area" := entry.area.name) ->: ("instant" := instant) ->: jEmptyObject
       case Removed(entry, instant)                       => ("activity" := "eventRemoved") ->: ("event" := entry.id.value) ->: ("area" := entry.area.name) ->: ("instant" := instant) ->: jEmptyObject
+      case StartOfDay(instant)                           => ("activity" := "startOfDay") ->: ("instant" := instant) ->: jEmptyObject
+      case EndOfDay(instant)                             => ("activity" := "endOfDay") ->: ("instant" := instant) ->: jEmptyObject
       case _                                             => jEmptyObject
     }
 

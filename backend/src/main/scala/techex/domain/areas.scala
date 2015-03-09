@@ -27,17 +27,21 @@ object areas {
   val auditoriumExit  = Area("Auditorium exit")
   val coffeeStand     = Area("Coffee stand")
   val storhubben      = Area("Storhubben")
+  val meeting         = Area("MR")
   val mrtTuring       = Area("Turing")
   val mrtTesla        = Area("Tesla")
   val mrtEngelbart    = Area("Engelbart")
   val mrtAda          = Area("Ada")
   val mrtHopper       = Area("Hopper")
+  val team            = Area("Team")
   val mrtCurie        = Area("Curie")
   val desk1           = Area("desk1")
   val desk2           = Area("desk2")
   val desk3           = Area("desk3")
+  val coffeeMachines  = Area("Coffee")
   val kantegaCoffeeUp = Area("kantegaCoffeeUpstairs")
   val kantegaCoffeeDn = Area("kantegaCoffeeDownstairs")
+  val kantegaFelles   = Area("felles")
   val kantegaKantine  = Area("kantegaKantine")
   val kantegaOffice   = Area("KantegaOffice")
   val meetingPoint    = Area("Meetingpoint")
@@ -67,36 +71,44 @@ object areas {
       beaconPlacementFor(kantegaKantine, 15, Far))
 
 
-  val locationHierarcy: Tree[Area] =
-    somewhere.node(
-      technoport2015.node(
-        samfundet.node(
-          kjelleren.leaf,
-          bar.leaf,
-          toiletAtSamf.leaf,
-          foyer.leaf),
-        seminarArea.node(
-          auditorium.node(
-            stage.leaf),
-          kantegaStand.leaf,
-          technoportStand.leaf,
-          auditoriumExit.leaf,
-          toiletAtSeminar.leaf,
-          coffeeStand.leaf,
-          meetingPoint.leaf)),
-      kantegaOffice.node(
+  val technoportLocationTree: Tree[Area] =
+    technoport2015.node(
+      samfundet.node(
+        kjelleren.leaf,
+        bar.leaf,
+        toiletAtSamf.leaf,
+        foyer.leaf),
+      seminarArea.node(
+        auditorium.node(
+          stage.leaf),
+        kantegaStand.leaf,
+        technoportStand.leaf,
+        auditoriumExit.leaf,
+        toiletAtSeminar.leaf,
+        coffeeStand.leaf,
+        meetingPoint.leaf))
+
+  val kantegaLocationTree: Tree[Area] =
+    kantegaOffice.node(
+      meeting.node(
         mrtTuring.leaf,
         mrtTesla.leaf,
         mrtAda.leaf,
         mrtHopper.leaf,
-        mrtCurie.leaf,
+        mrtCurie.leaf),
+      team.node(
         desk1.leaf,
         desk2.leaf,
-        desk3.leaf,
+        desk3.leaf),
+      coffeeMachines.node(
         kantegaCoffeeUp.leaf,
-        kantegaCoffeeDn.leaf,
-        kantegaKantine.leaf
-      ))
+        kantegaCoffeeDn.leaf),
+      kantegaFelles.node(
+        kantegaKantine.leaf)
+    )
+
+  val locationHierarcy: Tree[Area] =
+    somewhere.node(technoportLocationTree, kantegaLocationTree)
 
   def contains(parent: Area, other: Area): Boolean = {
     if (parent === other)
@@ -198,10 +210,10 @@ object Direction {
 case object Enter extends Direction
 case object Exit extends Direction
 
-case class ObservationData(major: Option[Int], minor: Option[Int], proximity: Proximity, activity: String) {
+case class ObservationData(major: Option[Int], minor: Option[Int], proximity: Option[Proximity], activity: String) {
   def toObservation(playerId: PlayerId, instant: Instant): EnterObservation \/ ExitObservation =
     Direction(activity) match {
-      case Enter => -\/(EnterObservation(BeaconId(minor.get), playerId, instant, proximity))
+      case Enter => -\/(EnterObservation(BeaconId(minor.get), playerId, instant, proximity.get))
       case Exit  => \/-(ExitObservation(playerId, instant))
     }
 

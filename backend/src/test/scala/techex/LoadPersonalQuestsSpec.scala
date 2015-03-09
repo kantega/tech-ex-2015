@@ -11,7 +11,7 @@ import _root_.argonaut._, Argonaut._
 class LoadPersonalQuestsSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 

@@ -1,5 +1,6 @@
 package techex.domain
 
+import argonaut.{Argonaut, CodecJson}
 import org.joda.time.Minutes._
 import org.joda.time._
 import techex._
@@ -434,6 +435,12 @@ case class TotalQuestProgress(quest: Quest, achievemnt: List[TotalAchievementPro
     updatedMap.toList.map(_._2).sortBy(_.progression)
   }
 
+}
+
+case class RankEntry(player: String, noOfBadges: Int)
+object RankEntry {
+  implicit def rankEntryCodec: CodecJson[RankEntry] =
+    Argonaut.casecodec2(RankEntry.apply, RankEntry.unapply)("player", "noOfBadges")
 }
 
 

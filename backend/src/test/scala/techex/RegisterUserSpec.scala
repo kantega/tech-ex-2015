@@ -11,7 +11,7 @@ class RegisterUserSpec extends Specification {
 
 
   val runningserver =
-    server.start.run
+    server.run
 
 
   "The webserwer" should {
