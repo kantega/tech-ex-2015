@@ -21,13 +21,13 @@
 		5746526E1A8A281300D70F9F /* Quest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525F1A8A281300D70F9F /* Quest.swift */; };
 		5746526F1A8A281300D70F9F /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652611A8A281300D70F9F /* KeychainService.swift */; };
 		574652761A8C8ED700D70F9F /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652751A8C8ED700D70F9F /* Config.swift */; };
-		574652781A8C93F900D70F9F /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652771A8C93F900D70F9F /* LocationService.swift */; };
 		574652B41A8CE12E00D70F9F /* QuestTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652B31A8CE12E00D70F9F /* QuestTableViewCell.swift */; };
 		574652B81A94C5F800D70F9F /* TechexTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652B71A94C5F800D70F9F /* TechexTextField.swift */; };
 		574652BC1A960EB000D70F9F /* QuestTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652BB1A960EB000D70F9F /* QuestTableViewController.swift */; };
 		574652BE1A96117100D70F9F /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652BD1A96117100D70F9F /* Achievement.swift */; };
 		574652C41A971EDB00D70F9F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 574652C31A971EDB00D70F9F /* LaunchScreen.storyboard */; };
 		574AA6EE1A9B2B240042C69C /* BadgeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574AA6ED1A9B2B240042C69C /* BadgeListView.swift */; };
+		5752A9921AA8952D001B585E /* BeaconList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5752A9911AA8952D001B585E /* BeaconList.swift */; };
 		579262B81A97620A0010AC45 /* BadgeTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579262B71A97620A0010AC45 /* BadgeTableViewCell.swift */; };
 		579C6D6F1A9B84F800483004 /* UIViewController+Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579C6D6E1A9B84F800483004 /* UIViewController+Background.swift */; };
 		579C6D751A9B8CAF00483004 /* BackgroundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579C6D741A9B8CAF00483004 /* BackgroundViewController.swift */; };
@@ -64,13 +64,13 @@
 		5746525F1A8A281300D70F9F /* Quest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Quest.swift; sourceTree = "<group>"; };
 		574652611A8A281300D70F9F /* KeychainService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		574652751A8C8ED700D70F9F /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
-		574652771A8C93F900D70F9F /* LocationService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		574652B31A8CE12E00D70F9F /* QuestTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QuestTableViewCell.swift; path = views/QuestTableViewCell.swift; sourceTree = "<group>"; };
 		574652B71A94C5F800D70F9F /* TechexTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TechexTextField.swift; path = views/TechexTextField.swift; sourceTree = "<group>"; };
 		574652BB1A960EB000D70F9F /* QuestTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuestTableViewController.swift; sourceTree = "<group>"; };
 		574652BD1A96117100D70F9F /* Achievement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
 		574652C31A971EDB00D70F9F /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		574AA6ED1A9B2B240042C69C /* BadgeListView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BadgeListView.swift; path = views/BadgeListView.swift; sourceTree = "<group>"; };
+		5752A9911AA8952D001B585E /* BeaconList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaconList.swift; sourceTree = "<group>"; };
 		579262B71A97620A0010AC45 /* BadgeTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BadgeTableViewCell.swift; path = views/BadgeTableViewCell.swift; sourceTree = "<group>"; };
 		579C6D6E1A9B84F800483004 /* UIViewController+Background.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIViewController+Background.swift"; path = "../UIViewController+Background.swift"; sourceTree = "<group>"; };
 		579C6D741A9B8CAF00483004 /* BackgroundViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundViewController.swift; sourceTree = "<group>"; };
@@ -177,6 +177,7 @@
 			children = (
 				5746525F1A8A281300D70F9F /* Quest.swift */,
 				574652BD1A96117100D70F9F /* Achievement.swift */,
+				5752A9911AA8952D001B585E /* BeaconList.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -184,7 +185,6 @@
 		574652601A8A281300D70F9F /* services */ = {
 			isa = PBXGroup;
 			children = (
-				574652771A8C93F900D70F9F /* LocationService.swift */,
 				574652611A8A281300D70F9F /* KeychainService.swift */,
 				574652751A8C8ED700D70F9F /* Config.swift */,
 			);
@@ -322,6 +322,7 @@
 				574652671A8A281300D70F9F /* LoginAndRegistrationViewController.swift in Sources */,
 				5746526F1A8A281300D70F9F /* KeychainService.swift in Sources */,
 				574652761A8C8ED700D70F9F /* Config.swift in Sources */,
+				5752A9921AA8952D001B585E /* BeaconList.swift in Sources */,
 				5746526B1A8A281300D70F9F /* Almofire.swift in Sources */,
 				5746526C1A8A281300D70F9F /* SwiftyJSON.swift in Sources */,
 				57F9D8CD1AA44E3800B8FCBC /* HelpViewController.swift in Sources */,
@@ -330,7 +331,6 @@
 				574652B41A8CE12E00D70F9F /* QuestTableViewCell.swift in Sources */,
 				5746526E1A8A281300D70F9F /* Quest.swift in Sources */,
 				579C6D771A9CAB6E00483004 /* BadgeAwardViewController.swift in Sources */,
-				574652781A8C93F900D70F9F /* LocationService.swift in Sources */,
 				574652BC1A960EB000D70F9F /* QuestTableViewController.swift in Sources */,
 				579C6D751A9B8CAF00483004 /* BackgroundViewController.swift in Sources */,
 				5746526D1A8A281300D70F9F /* LoadingOverlay.swift in Sources */,

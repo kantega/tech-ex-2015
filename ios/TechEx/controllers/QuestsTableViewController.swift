@@ -61,8 +61,14 @@ class QuestsTableViewController: UITableViewController{
         request(.GET, requestUrl)
             .responseJSON { (req, resp, j, error) in
                 if resp == nil || resp?.statusCode != 200 {
-                    Alert.shared.showAlert("Unable to load quests. Please try again later.", title: "Error", buttonText: "OK", parent: self);
-                    println("Error when loading quests: \(error)");
+                    var errorMsg:String
+                    if (resp?.statusCode == 404) {
+                        errorMsg = "Unrecognized player. Please delete the app, reinstall it, and register again."
+                    } else {
+                        errorMsg = "Unable to load quests. Please try again later."
+                    }
+                    Alert.shared.showAlert(errorMsg, title: "Error", buttonText: "OK", parent: self);
+                    NSLog("Error when loading quests: \(error). HTTP response: \(resp)");
                 } else {
                     let userQuests = JSON(j!)
                     self.quests = Array<Quest>()
@@ -101,7 +107,7 @@ class QuestsTableViewController: UITableViewController{
     
     func startDetectingBeacons() {
         let appDelegate = UIApplication.sharedApplication().delegate as AppDelegate
-        appDelegate.startTrackingIBeacons()
+        appDelegate.startDetectingBeacons(self)
     }
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {

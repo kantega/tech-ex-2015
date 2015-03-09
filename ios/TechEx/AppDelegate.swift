@@ -7,14 +7,21 @@
 //
 
 import UIKit
+import CoreLocation
 
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate  {
 
     var window: UIWindow?
-    let locationService = LocationService()
+
+    var baseApiUrl = ""
+    var playerId = "";
+    let locationManager = CLLocationManager()
    
+    var beaconList = BeaconList()
+   
+    
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Delete keychain data from previous installs.
         if (NSUserDefaults.standardUserDefaults().objectForKey("appInitialized") == nil) {
@@ -39,10 +46,92 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     
-    func startTrackingIBeacons() {
-        println("Initiating LocationService")
-        locationService.startDetectingBeacons();
+    // IBEACONS
+    
+    func startDetectingBeacons(initializingView: UIViewController) {
+
+        baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
+        locationManager.delegate = self
+        playerId = KeychainService.load(.PlayerId)!
+        if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.Authorized) {
+            // The 'when in use' authorization only allows you to use location services while the app is in the foreground,
+            // whereas the 'always' authorization lets you access location services at any time, even waking up and starting the app in response to some event
+            locationManager.requestAlwaysAuthorization()
+        }
+
+        request(.GET, "\(baseApiUrl)/beaconregions")
+            .responseJSON { (req, resp, j, error) in
+                if error != nil || resp == nil || resp?.statusCode != 200 {
+                    Alert.shared.showAlert("Error when communicating with server. Please try again later", title: "Error", buttonText: "OK", parent: initializingView);
+                    NSLog("Error when fetching beacon regions: \(error). HTTP response: \(resp)");
+                    
+                } else {
+                    let r = JSON(j!)
+                    let numberOfRegions = r["numberOfRegions"].intValue
+                    NSLog("Setting up \(numberOfRegions) beacon regions")
+                    for i in 1...numberOfRegions {
+                        let region = CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "f7826da6-4fa2-4e98-8024-bc5b71e0893e"), major: CLBeaconMajorValue(i), identifier: "Region \(i)")
+                        self.locationManager.startMonitoringForRegion(region)
+                        self.locationManager.startRangingBeaconsInRegion(region)
+                    }
+                }
+        }
+
     }
+    
+    
+    func locationManager(manager: CLLocationManager!, didEnterRegion region: CLRegion!) {
+        NSLog("Device entered \(region.identifier)")
+        locationManager.startRangingBeaconsInRegion(region as CLBeaconRegion)
+    }
+    
+    func locationManager(manager: CLLocationManager!, didExitRegion region: CLRegion!) {
+        let beaconRegion = region as CLBeaconRegion
+        NSLog("Device left \(region.identifier)")
+        locationManager.stopRangingBeaconsInRegion(beaconRegion)
+        beaconList.remove(beaconRegion.major.integerValue)
+        updateLocation(["activity": "exit"])
+    }
+    
+    func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
+        var clBeacons = beacons.map({$0 as CLBeacon}).filter({$0.proximity != CLProximity.Unknown })
+
+        if (clBeacons.count > 0) {
+            beaconList.insert(clBeacons)
+            let minorIds = clBeacons.map {$0.minor}
+            let nearestIds = beaconList.beacons.map{$0.minor}
+            NSLog("Location update: Found beacons \(minorIds) in region \(region!.major). Beacons in sight now: \(nearestIds).")
+            
+            if beaconList.nearestHasChanged() {
+                let nearestBeacon = beaconList.nearest()
+                NSLog("Nearest beacon has changed. Current nearest is \(nearestBeacon.minor)")
+                let parameters = [
+                    "major": "\(nearestBeacon.major)",
+                    "minor": "\(nearestBeacon.minor)",
+                    "proximity": "\(nearestBeacon.proximity.rawValue)",
+                    "activity": "enter"
+                ];
+                updateLocation(parameters)
+            }
+        }
+    }
+    
+    
+    func updateLocation(parameters: [String: AnyObject]) {
+        NSLog("Location update: Sending data to server. Parameters: \(parameters)")
+        request(.POST, "\(baseApiUrl)/location/\(playerId)", parameters: parameters, encoding: .JSON)
+            .responseString { (req, resp, s, error) in
+                if error != nil {
+                    NSLog("Location update: Error \(error)");
+                } else {
+                    NSLog("Location update: Response code \(resp!.statusCode). Response body: \(s!)")
+                }
+        }
+    }
+    
+    
+    
+    // NOTIFICATIONS
 
     func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
         let token = tokenAsString(deviceToken)
@@ -77,16 +166,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        NSLog("App did enter background")
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
-
+        NSLog("App did enter foreground")
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
     }
 
     func applicationWillTerminate(application: UIApplication) {
