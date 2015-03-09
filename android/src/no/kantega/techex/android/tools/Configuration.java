@@ -57,6 +57,8 @@ public class Configuration {
 
     private int beaconMonitoringPassive;
 
+    private String regionUUID;
+
     private Configuration() {
 
     }
@@ -86,6 +88,7 @@ public class Configuration {
 
         beaconMonitoringActive = Integer.valueOf(context.getString(R.string.config_beacon_monitoring_active));
         beaconMonitoringPassive = Integer.valueOf(context.getString(R.string.config_beacon_monitoring_passive));
+        regionUUID = context.getString(R.string.config_beacon_region_uuid);
     }
 
     /**
@@ -148,5 +151,9 @@ public class Configuration {
 
     public String getSpRegionNumberKey() {
         return spRegionNumberKey;
+    }
+
+    public String getRegionUUID() {
+        return regionUUID;
     }
 }

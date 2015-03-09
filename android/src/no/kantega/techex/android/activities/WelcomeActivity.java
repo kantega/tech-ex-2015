@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import no.kantega.techex.android.R;
-import no.kantega.techex.android.tools.BeaconMonitorListener;
 import no.kantega.techex.android.tools.Configuration;
 
 /**

@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.*;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -14,14 +15,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-import com.kontakt.sdk.android.device.Region;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.data.Quest;
 import no.kantega.techex.android.display.QuestArrayAdapter;
 import no.kantega.techex.android.rest.OnTaskComplete;
 import no.kantega.techex.android.rest.RegionInfoTask;
 import no.kantega.techex.android.rest.UserQuestsTask;
-import no.kantega.techex.android.tools.BeaconMonitorListener;
+import no.kantega.techex.android.tools.AltBeaconMonitorListener;
 import no.kantega.techex.android.tools.Configuration;
 import no.kantega.techex.android.tools.GcmIntentService;
 
@@ -45,7 +45,7 @@ public class QuestListActivity extends Activity {
 
     private static List<Quest> questList;
 
-    private Intent beaconService = null;
+    private boolean isServiceBound = false;
 
     private static ProgressBar spinner;
 
@@ -83,11 +83,6 @@ public class QuestListActivity extends Activity {
             //Fetching list of quests
             updateQuestList();
 
-            //Fetching list of regions
-            RegionInfoTask rit = new RegionInfoTask();
-            rit.setListener(regionTaskCompleter);
-            rit.execute();
-
             //Check if bluetooth is available
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (mBluetoothAdapter == null) {
@@ -102,7 +97,7 @@ public class QuestListActivity extends Activity {
                     startActivityForResult(intent, REQUEST_CODE_ENABLE_BLUETOOTH);
                 } else {
                     //Bluetooth is enabled already
-                    //Beacon service is started after monitoring region has been fetched
+                    startBeaconServiceIntent();
                 }
                 //Creating listener on bluetooth state in case the user
                 registerReceiver(mReceiver,new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
@@ -145,31 +140,16 @@ public class QuestListActivity extends Activity {
         }
     };
 
-    private OnTaskComplete<Integer> regionTaskCompleter = new OnTaskComplete<Integer>() {
-        @Override
-        public void onTaskComplete(Integer result) {
-            //Save region number
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putInt(Configuration.getInstance().getSpRegionNumberKey(),result);
-            editor.commit();
-
-            //Enable monitoring if bluetooth is active
-            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
-                startBeaconServiceIntent();
-            }
-        }
-    };
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG,"onDestroy call , issb: "+isServiceBound);
         // Unregister broadcast listeners
         unregisterReceiver(mReceiver);
         //Stop beacon monitoring
-        if (beaconService != null) {
-            stopService(beaconService);
+        if (isServiceBound) {
+            unbindService(mConnection);
+            isServiceBound=false;
         }
     }
 
@@ -209,13 +189,23 @@ public class QuestListActivity extends Activity {
     }
 
     private void startBeaconServiceIntent() {
-
-            if (beaconService == null) {
-                beaconService = new Intent(QuestListActivity.this, BeaconMonitorListener.class);
-                startService(beaconService);
-            }
-
+        if (!isServiceBound) {
+            Intent intent = new Intent(this, AltBeaconMonitorListener.class);
+            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        }
     }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            isServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isServiceBound = false;
+        }
+    };
 
     /**
      * Receiver fo handling bluetooth state change
@@ -235,10 +225,10 @@ public class QuestListActivity extends Activity {
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         Log.i(TAG,"Bluetooth is getting turned off, beacon monitoring stopped.");
-                        stopService(beaconService);
+                        //stopService(beaconService); TODO check
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        Log.i(TAG,"Blutetooth is turned on, starting beacon monitoring.");
+                        Log.i(TAG,"Bluetooth is turned on, starting beacon monitoring.");
                         startBeaconServiceIntent();
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:

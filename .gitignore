@@ -35,7 +35,8 @@ mockbackend/node_modules
 
 # Android
 android/.idea
-android/out
+android/out/*
+!android/out/production/techexp/techexp.apk
 android/bin
 android/build.xml
 android/local.properties

@@ -1,7 +1,6 @@
 package no.kantega.techex.android.activities;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +9,6 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.ListView;
-import android.widget.TextView;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.data.Quest;
 import no.kantega.techex.android.display.AchievementArrayAdapter;
@@ -59,7 +57,7 @@ public class QuestDetailsActivity extends Activity {
             if(action.equals(GcmIntentService.BROADCAST_ACTION)) {
                 Log.d(TAG,"GCM Broadcast received");
                 //Check & update if achievement is for this quest
-                String newAchievement = intent.getStringExtra(GcmIntentService.EXTRA_BADGE_ID);
+                String newAchievement = intent.getStringExtra(GcmIntentService.BROADCAST_EXTRA_BADGE_ID);
                 if (quest.updateAchievement(newAchievement)) {
                     //The new achievement as for this quest, update the UI
                     adapter.notifyDataSetChanged();

@@ -2,6 +2,7 @@ package no.kantega.techex.android.rest;
 
 import android.os.AsyncTask;
 import android.util.Log;
+import no.kantega.techex.android.tools.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -31,13 +32,14 @@ public class LocationUpdateTask extends AbstractRESTTask<Boolean> {
             return null;
         }
 
-        String URL =params [0];
+        String userId =params [0];
         String major = params[1];
         String minor = params[2];
         String proximity = params[3];
         String change = params[4];
 
         try {
+            String URL = Configuration.getInstance().getLocationREST(userId);
             HttpRequestBase request = new HttpPost(URL);
 
             String json = createJSONData(major,minor, proximity,change);

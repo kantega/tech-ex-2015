@@ -5,13 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.Gravity;
-import android.widget.Toast;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.activities.QuestListActivity;
@@ -26,9 +22,7 @@ public class GcmIntentService extends IntentService {
     // Defines a custom Intent action used for broadcasting that user information has changed
     public static final String BROADCAST_ACTION = "no.kantega.techex.android.BROADCAST";
 
-    public static final String BROADCAST_DATA = "no.kantega.techex.android.BROADCAST";
-
-    public static final String EXTRA_BADGE_ID = "badge";
+    public static final String BROADCAST_EXTRA_BADGE_ID = "badge";
 
    private int notificationId;
 
@@ -53,7 +47,7 @@ public class GcmIntentService extends IntentService {
 
             //Intent to advertise data update (can have extras if needed)
             Intent localIntent = new Intent(BROADCAST_ACTION);
-            localIntent.putExtra(EXTRA_BADGE_ID,id);
+            localIntent.putExtra(BROADCAST_EXTRA_BADGE_ID,id);
             // Broadcasts the Intent to receivers in this app.
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
@@ -80,7 +74,7 @@ public class GcmIntentService extends IntentService {
                         .setContentText(msg);
         // Creates an explicit intent for an Activity in your app
         Intent resultIntent = new Intent(this, QuestListActivity.class);
-        resultIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT); //loads the already running instance of the QuestList
+        resultIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //loads the already running instance of the QuestList
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         // Adds the back stack

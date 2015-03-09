@@ -2,7 +2,6 @@ package no.kantega.techex.android.rest;
 
 import android.graphics.Bitmap;
 import android.util.Log;
-import com.kontakt.sdk.android.device.Region;
 import no.kantega.techex.android.tools.Configuration;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;

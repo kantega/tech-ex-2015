@@ -16,7 +16,6 @@ import no.kantega.techex.android.R;
 import no.kantega.techex.android.rest.OnTaskComplete;
 import no.kantega.techex.android.rest.RegisterTask;
 import no.kantega.techex.android.rest.wrapper.RegistrationResult;
-import no.kantega.techex.android.tools.BeaconMonitorListener;
 import no.kantega.techex.android.tools.Configuration;
 
 /**
