@@ -48,7 +48,7 @@ class KeychainService: NSObject {
     * Internal methods for querying the keychain.
     */
     private class func save(service: NSString, key: KeychainKey, value: NSString) {
-        NSLog("About to save \(key) in Keychain")
+       
         let valueData: NSData = value.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
         let keyData: NSData = keyAsString(key).dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!
         
@@ -72,12 +72,7 @@ class KeychainService: NSObject {
         let keychainQuery: NSMutableDictionary = NSMutableDictionary(objects: [kSecClassGenericPasswordValue, service, keyString, kCFBooleanTrue, kSecMatchLimitOneValue], forKeys: [kSecClassValue, kSecAttrServiceValue, kSecAttrAccountValue, kSecReturnDataValue, kSecMatchLimitValue])
         
         var dataTypeRef :Unmanaged<AnyObject>?
-        NSLog("About to call SecItemCopyMatching with key chain query \(keychainQuery)")
-        // Search for the keychain items
-        
-        
         var contentsOfKeychain: NSString?
-        
         var result: AnyObject?
         var status = withUnsafeMutablePointer(&result) {
             SecItemCopyMatching(keychainQuery, UnsafeMutablePointer($0))
