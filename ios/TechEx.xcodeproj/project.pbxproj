@@ -20,7 +20,6 @@
 		5746526D1A8A281300D70F9F /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525D1A8A281300D70F9F /* LoadingOverlay.swift */; };
 		5746526E1A8A281300D70F9F /* Quest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5746525F1A8A281300D70F9F /* Quest.swift */; };
 		5746526F1A8A281300D70F9F /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652611A8A281300D70F9F /* KeychainService.swift */; };
-		574652761A8C8ED700D70F9F /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652751A8C8ED700D70F9F /* Config.swift */; };
 		574652B41A8CE12E00D70F9F /* QuestTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652B31A8CE12E00D70F9F /* QuestTableViewCell.swift */; };
 		574652B81A94C5F800D70F9F /* TechexTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652B71A94C5F800D70F9F /* TechexTextField.swift */; };
 		574652BC1A960EB000D70F9F /* QuestTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574652BB1A960EB000D70F9F /* QuestTableViewController.swift */; };
@@ -63,7 +62,6 @@
 		5746525D1A8A281300D70F9F /* LoadingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingOverlay.swift; sourceTree = "<group>"; };
 		5746525F1A8A281300D70F9F /* Quest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Quest.swift; sourceTree = "<group>"; };
 		574652611A8A281300D70F9F /* KeychainService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
-		574652751A8C8ED700D70F9F /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		574652B31A8CE12E00D70F9F /* QuestTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QuestTableViewCell.swift; path = views/QuestTableViewCell.swift; sourceTree = "<group>"; };
 		574652B71A94C5F800D70F9F /* TechexTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TechexTextField.swift; path = views/TechexTextField.swift; sourceTree = "<group>"; };
 		574652BB1A960EB000D70F9F /* QuestTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuestTableViewController.swift; sourceTree = "<group>"; };
@@ -186,7 +184,6 @@
 			isa = PBXGroup;
 			children = (
 				574652611A8A281300D70F9F /* KeychainService.swift */,
-				574652751A8C8ED700D70F9F /* Config.swift */,
 			);
 			path = services;
 			sourceTree = "<group>";
@@ -321,7 +318,6 @@
 				574652631A8A281300D70F9F /* AppDelegate.swift in Sources */,
 				574652671A8A281300D70F9F /* LoginAndRegistrationViewController.swift in Sources */,
 				5746526F1A8A281300D70F9F /* KeychainService.swift in Sources */,
-				574652761A8C8ED700D70F9F /* Config.swift in Sources */,
 				5752A9921AA8952D001B585E /* BeaconList.swift in Sources */,
 				5746526B1A8A281300D70F9F /* Almofire.swift in Sources */,
 				5746526C1A8A281300D70F9F /* SwiftyJSON.swift in Sources */,
