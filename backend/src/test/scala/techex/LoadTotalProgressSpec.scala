@@ -5,12 +5,13 @@ import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
+import techex.domain.areas._
 import techex.domain.{Near, Nick}
 
 class LoadTotalProgressSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 
@@ -22,27 +23,28 @@ class LoadTotalProgressSpec extends Specification {
             playerBalleId <- putPlayer(Nick("aaaaa"))
             playerFalleId <- putPlayer(Nick("bbbbb"))
             playerKalleId <- putPlayer(Nick("ccccc"))
-            _ <- putObservation(playerBalleId, "58796:18570", Near)
-            _ <- putObservation(playerFalleId, "58796:18570", Near)
-            _ <- putObservation(playerBalleId, "j", Near)
-            _ <- putObservation(playerFalleId, "j", Near)
-            _ <- putObservation(playerKalleId, "j", Near)
-            _ <- putObservation(playerBalleId, "51194:16395", Near)
-            _ <- putObservation(playerBalleId, "58796:18570", Near)
-            _ <- putObservation(playerBalleId, "58796:18570", Near)
-            _ <- putObservation(playerBalleId, "54803:59488", Near)
-            _ <- putObservation(playerBalleId, "58796:18570", Near)
-            reply <- putObservation(playerBalleId, "58796:18570", Near)
+            _ <- putObservation(playerBalleId,  beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerFalleId,  beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerBalleId,  beaconAt(desk1), Near)
+            _ <- putObservation(playerFalleId,  beaconAt(desk1), Near)
+            _ <- putObservation(playerKalleId,  beaconAt(mrtAda), Near)
+            _ <- putObservation(playerBalleId,  beaconAt(desk2), Near)
+            _ <- putObservation(playerBalleId,  beaconAt(mrtTuring), Near)
+            _ <- putObservation(playerBalleId,  beaconAt(desk3), Near)
+            _ <- putObservation(playerBalleId,  beaconAt(kantegaCoffeeUp), Near)
+            _ <- putObservation(playerBalleId,  beaconAt(mrtTuring), Near)
+            reply <- putObservation(playerBalleId,  beaconAt(mrtEngelbart), Near)
           } yield reply
 
 
 
-        quests()
+        val putResponse =
+          quests()
 
-        Thread.sleep(15000)
+        Thread.sleep(5000)
 
         val questR =
-          Http(h / "quests")
+          Http(h / "stats" / "progress")
 
         val response =
           questR()
@@ -50,7 +52,7 @@ class LoadTotalProgressSpec extends Specification {
         val json =
           Parse.parse(response.getResponseBody).map(_.spaces4).fold(x => x, y => y)
 
-        json ! (response.getStatusCode must_== 200)
+        putResponse.getResponseBody+"-\n"+ json ! (response.getStatusCode must_== 200)
       }
 
     }

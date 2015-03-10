@@ -4,12 +4,13 @@ import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
+import techex.domain.areas._
 import techex.domain.{Near, Nick}
 
 class BeAtScheduledLocationSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 
@@ -20,11 +21,11 @@ class BeAtScheduledLocationSpec extends Specification {
           for {
             playerBalleId <- putPlayer(Nick("aaaaa"))
             playerFalleId <- putPlayer(Nick("bbbbb"))
-            _ <- putObservation(playerBalleId, "58796:18570", Near)
-            _ <- putObservation(playerFalleId, "58796:18570", Near)
-            _ <- putObservation(playerBalleId, "m", Near)
+            _ <- putObservation(playerBalleId, beaconAt(kantegaCoffeeDn),Near)
+            _ <- putObservation(playerFalleId, beaconAt(kantegaCoffeeDn),Near)
+            _ <- putObservation(playerBalleId, beaconAt(kantegaCoffeeDn),Near)
             reply <- Http((h / "sessions" / "start" / "1") POST)
-            _ <- putObservation(playerFalleId, "m", Near)
+            _ <- putObservation(playerFalleId,beaconAt(kantegaCoffeeDn), Near)
           } yield reply
 
 

@@ -11,7 +11,7 @@ import scalaz._
 class LoadPersonalBadgesSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 

@@ -88,3 +88,4 @@ hs_err_pid*
 #Dont share certificates
 *.pem
 *.p12
+src/main/resources/googleapikey.txt

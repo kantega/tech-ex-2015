@@ -27,11 +27,11 @@ object playerSignup {
   case class NickTaken(nick: Nick) extends Signupresult
 
   val toFact: PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
-    case CreatePlayer(data) => State{ctx =>
+    case CreatePlayer(data,instant) => State{ctx =>
       val playerData =
         ctx.players.find(entry => entry.player.nick === data.nick)
 
-      (ctx,List(PlayerCreated(playerData.get,Instant.now())))}
+      (ctx,List(PlayerCreated(playerData.get,instant)))}
   }
 
   val getNick: String => Task[Nick] =
@@ -56,14 +56,15 @@ object playerSignup {
     }
 
   def selectPersonalQuests(nick: Nick): List[Quest] = {
-    val rand = Random
+    /*val rand = Random
     rand.setSeed(nick.value.hashCode)
     val index =
       rand.nextInt(quests.questPermutations.length - 1)
     val perm =
       quests.questPermutations(index)
 
-    List(perm._1, perm._2)
+    List(perm._1, perm._2)*/
+    quests.quests //TODO:All quests for now
   }
 
   val updateContext: PlayerData => State[Storage, PlayerData] =
@@ -83,12 +84,12 @@ object playerSignup {
           else SignupOk(PlayerData(
             player,
             Set(),
-            Vector(),
+            LocationUpdate(player.id,areas.somewhere,Instant.now()),
             Vector(),
             player.privateQuests
               .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
-              .foldLeft(PatternOutput.zero[Achievement])(_ and _),
+              .foldLeft(progresstracker.zero[Achievement])(_ and _),
             createData.platform.toPlatform
           )))
       } yield rsult
@@ -114,7 +115,7 @@ object playerSignup {
               _ <- result match {
                 case ok@SignupOk(playerData) =>
                   Storage.run(updateContext(playerData)) *>
-                    topic.publishOne(CreatePlayer(createPlayerData))
+                    topic.publishOne(CreatePlayer(createPlayerData,Instant.now()))
 
                 case _                       => Task {}
               }
@@ -130,7 +131,7 @@ object playerSignup {
     def toPlatform =
       plattformType.toLowerCase match {
         case "ios"     => iOS(deviceToken.map(t => DeviceToken(t)))
-        case "android" => Android()
+        case "android" => Android(deviceToken.map(t => DeviceToken(t)))
         case _         => Web()
       }
   }

@@ -6,6 +6,7 @@ import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
+import techex.domain.areas._
 import techex.domain.{Near, Nick}
 
 class WebsocketStreamSpec  extends Specification {
@@ -13,7 +14,7 @@ class WebsocketStreamSpec  extends Specification {
 
   try {
     val runningserver =
-      server.start.run
+      server.run
 
     "The webserwer" should {
       "yield a stream of events through the websocket api" in {
@@ -43,24 +44,58 @@ class WebsocketStreamSpec  extends Specification {
                 }
               }).build()).get()
 
+
         val quests =
           for {
-            playerId <- putPlayer(Nick("balle"))
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "51194:16395", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "54803:59488", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "k", Near)
-            response <- putObservation(playerId, "58796:18570", Near)
+            playerId <- putPlayer(Nick("qqalle"))
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- Future{Thread.sleep(500)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
+            _ <- Future{Thread.sleep(500)}
+            _ <- putObservation(playerId, beaconAt(mrtTesla), Near)
+            _ <- Future{Thread.sleep(1000)}
+            _ <- putObservation(playerId, beaconAt(mrtTuring), Near)
+            _ <- Future{Thread.sleep(10)}
+            _ <- putObservation(playerId, beaconAt(mrtEngelbart), Near)
+            _ <- Future{Thread.sleep(2000)}
+            _ <- putObservation(playerId, beaconAt(mrtAda), Near)
+            _ <- Future{Thread.sleep(1000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- Future{Thread.sleep(1000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
+            _ <- Future{Thread.sleep(5000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTesla), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTuring), Near)
+            _ <- putObservation(playerId, beaconAt(mrtEngelbart), Near)
+            _ <- putObservation(playerId, beaconAt(mrtAda), Near)
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
+            _ <- Future{Thread.sleep(5000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTesla), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTuring), Near)
+            _ <- putObservation(playerId, beaconAt(mrtEngelbart), Near)
+            _ <- putObservation(playerId, beaconAt(mrtAda), Near)
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
+            _ <- Future{Thread.sleep(5000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTesla), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTuring), Near)
+            _ <- putObservation(playerId, beaconAt(mrtEngelbart), Near)
+            _ <- putObservation(playerId, beaconAt(mrtAda), Near)
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
+            _ <- Future{Thread.sleep(5000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
+            response <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near)
           } yield response
 
         Thread.sleep(5000)
 
-        quests() must contain("200")
+
+        quests().getStatusCode must_== 200
       }
 
     }

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MainTheme" parent="@android:style/Theme.Holo.NoActionBar.TranslucentDecor">
+        <item name="android:windowBackground">@drawable/background</item>
+        <item name="android:fitsSystemWindows">true</item>
+
+        <!-- These are only available from platform version 19 (KitKat) -->
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
+
+    <!-- REGISTER PAGE -->
+    <style name="RegisterButton"  parent="@android:style/Widget.Button">
+        <item name="android:layout_width" >190dp</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:background">@color/magenta</item>
+        <item name="android:gravity" >center</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:padding" >6dp</item>
+    </style>
+
+    <style name="RegisterInput" parent="@android:style/Widget.EditText">
+        <item name="android:textCursorDrawable">@null</item>
+        <item name="android:layout_width" >190dp</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/magenta</item>
+        <item name="android:textColorHint" >@color/magenta</item>
+        <item name="android:background">@color/white</item>
+        <item name="android:gravity" >center</item>
+        <item name="android:padding" >6dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:layout_marginBottom">3dp</item>
+    </style>
+
+    <style name="DisclaimerBox" parent="@android:style/Widget.ScrollView">
+        <item name="android:background">@color/white_opaque</item>
+        <item name="android:layout_width">300dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">40dp</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
+    <style name="DisclaimerTitle" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity" >center</item>
+        <item name="android:layout_gravity" >center</item>
+    </style>
+
+    <style name="DisclaimerContent" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:gravity" >center</item>
+        <item name="android:layout_gravity" >center</item>
+
+    </style>
+
+
+    <!-- WELCOME PAGE -->
+    <style name="WelcomeText" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >210dp</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/light_green</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:gravity" >center</item>
+        <item name="android:layout_gravity" >center</item>
+        <item name="android:padding">10dp</item>
+    </style>
+
+    <!-- Quest and Achievement -->
+    <style name="QuestTitle" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">18dp</item>
+    </style>
+
+    <style name="AchievementTitle" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">18dp</item>
+    </style>
+
+    <style name="AchievementDescription" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">12dp</item>
+    </style>
+
+    <style name="QAListView" parent="@android:style/Widget.ListView">
+        <item name="android:layout_width" >fill_parent</item>
+        <item name="android:layout_height" >fill_parent</item>
+        <item name="android:paddingLeft" >20dp</item>
+        <item name="android:paddingRight" >20dp</item>
+    </style>
+
+    <style name="ListViewRow">
+        <item name="android:layout_width" >match_parent</item>
+        <item name="android:layout_height" >match_parent</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+
+</resources>

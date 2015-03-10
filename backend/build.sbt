@@ -47,7 +47,7 @@ libraryDependencies ++= {
     "javax.servlet" % "javax.servlet-api" % "3.1.0",
     "com.h2database" % "h2" % "1.4.182", //Inmem database for testing
     "mysql" % "mysql-connector-java" % "5.1.34",
-    "com.zaxxer" % "HikariCP" % "2.2.5",
+    "com.zaxxer" % "HikariCP" % "2.3.3",
     "com.github.nscala-time" %% "nscala-time" % "1.8.0",
     "com.typesafe" % "config" % "1.2.1", //config
     "io.argonaut" %% "argonaut" % "6.1-M4", //json

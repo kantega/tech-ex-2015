@@ -16,26 +16,8 @@ object sqlmappers {
   implicit val uuidAtom: Atom[UUID] =
     Atom.fromScalaType[String].xmap(UUID.fromString, _.toString)
 
-  implicit val beaconAtom: Atom[Beacon] =
-    Atom.fromScalaType[String].xmap(Beacon, _.id)
-
-  implicit val playerIdAtom: Atom[PlayerId] =
-    Atom.fromScalaType[String].xmap(PlayerId(_), _.value)
-
-  implicit val eatAtom: Atom[Eat] =
-    Atom.fromScalaType[String].xmap[Eat](Eat(_), _.asString)
-
-  implicit val drinkAtom: Atom[Drink] =
-    Atom.fromScalaType[String].xmap[Drink](Drink(_), _.asString)
-
-  implicit val questListAtom: Atom[List[QuestId]] =
-    Atom.fromScalaType[String].xmap(str => str.split(",").toList.map(QuestId), ids => ids.map(_.value).mkString(","))
-
   implicit val instantAtom: Atom[Instant] =
     Atom.fromScalaType[Long].xmap(new Instant(_), _.getMillis)
-
-  implicit val locationAtom: Atom[Area] =
-    Atom.fromScalaType[String].xmap(Area.apply, _.id)
 
   implicit val proximityAtom: Atom[Proximity] =
     Atom.fromScalaType[String].xmap(str => str.toLowerCase match {
@@ -67,23 +49,19 @@ object InputMessageDAO {
             instant BIGINT NOT NULL,
             type VARCHAR(200) NOT NULL,
             payload TEXT NOT NULL,
+            recordedtime varchar(255) not null,
             PRIMARY KEY (id)
           );
           """.update.run
   }
 
-  def storeObservation(input: InputMessage): ConnectionIO[Int] = {
+  def storeObservation(input: InputMessage): ConnectionIO[Unit] = {
     sql"""
-          INSERT INTO observations
-          VALUES (${Instant.now().getMillis},${input.msgType},${input.asJson.nospaces}  )
-    """.update.run
+          INSERT INTO observations (instant,type,payload,recordedtime)
+          VALUES (${input.instant.getMillis},${input.msgType},${input.asJson.nospaces},${input.instant.toString} )
+    """.update.run.map(x=>Unit)
   }
 
-  def loadObservationForPlayer(playerId: PlayerId): Process[ConnectionIO, (Long, Long, String, String)] = {
-    sql"""
-          SELECT * FROM PLAYERS WHERE playerId = ${playerId} ORDER BY instant
-    """.query[(Long, Long, String, String)].process
-  }
 }
 
 

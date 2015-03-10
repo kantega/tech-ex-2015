@@ -3,12 +3,13 @@ package techex
 import org.specs2.mutable.Specification
 import techex.TestServer._
 import dispatch._, Defaults._
+import techex.domain.areas._
 import techex.domain.{Near, Nick}
 
 class MetOtherPlayerSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
 
 
@@ -19,11 +20,11 @@ class MetOtherPlayerSpec extends Specification {
             playerBalleId <- putPlayer(Nick("balle"))
             playerFalleId <- putPlayer(Nick("falle"))
             playerKalleId <- putPlayer(Nick("kalle"))
-            response1 <- putObservation(playerBalleId, "58796:18570", Near)
-            response2 <- putObservation(playerFalleId, "58796:18570", Near)
-            response3 <- putObservation(playerBalleId, "64915:4698", Near)
-            response4 <- putObservation(playerFalleId, "64915:4698", Near)
-            response6 <- putObservation(playerKalleId, "64915:4698", Near)
+            response1 <- putObservation(playerBalleId, beaconAt(mrtAda), Near)
+            response2 <- putObservation(playerFalleId, beaconAt(mrtAda), Near)
+            response3 <- putObservation(playerBalleId, beaconAt(kantegaCoffeeDn), Near)
+            response4 <- putObservation(playerFalleId, beaconAt(kantegaCoffeeDn), Near)
+            response6 <- putObservation(playerKalleId, beaconAt(kantegaCoffeeDn), Near)
           } yield response1 // + response2// + response3 + response4
 
 
@@ -33,7 +34,7 @@ class MetOtherPlayerSpec extends Specification {
 
         println(result)
 
-        result must contain("200")
+        result.getStatusCode must_== 200
       }
 
     }

@@ -7,12 +7,17 @@ import scalaz.concurrent.Task
 
 object appleNotifications {
 
-  lazy val service =
+  lazy val prodService =
+    APNS.newService()
+      .withCert(getClass.getClassLoader.getResourceAsStream("iphone_prod.p12"), "balle")
+      .withProductionDestination()
+      .build()
+
+  lazy val devService =
     APNS.newService()
       .withCert(getClass.getClassLoader.getResourceAsStream("iphone_dev.p12"), "balle")
       .withSandboxDestination()
       .build()
-
 
   def sendNotification(token: DeviceToken, msg: String): Task[Unit] =
     Task {
@@ -22,7 +27,8 @@ object appleNotifications {
           .alertBody(msg)
           .build()
 
-      service.push(token.value, payload)
+      prodService.push(token.value, payload)
+      devService.push(token.value, payload)
 
     }
 }

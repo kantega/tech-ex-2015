@@ -7,7 +7,7 @@ import techex.TestServer._
 class LoadAllAchievementsSpec extends Specification {
   try {
     val runningserver =
-      server.start.run
+      server.run
 
     "The webserwer" should {
       "yield a list of achievemnts" in {

@@ -10,7 +10,7 @@ class StartsessionSpec  extends Specification {
 
   try {
     val runningserver =
-      server.start.run
+      server.run
 
     "The webserwer" should {
       "consume a list of locationupdates" in {

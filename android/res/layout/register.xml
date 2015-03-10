@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+        >
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1.3">
+        <include layout="@layout/header"/>
+    </LinearLayout>
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1.3"
+            android:gravity="top|center_horizontal">
+        <EditText
+                android:id="@+id/nickname"
+                android:hint="@string/nick_hint"
+                android:inputType="text"
+                style="@style/RegisterInput"/>
+        <Button
+                style="@style/RegisterButton"
+                android:text="@string/register_button"
+                android:id="@+id/btnRegister"/>
+                />
+    </LinearLayout>
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                    android:orientation="vertical"
+                    style="@style/DisclaimerBox">
+                <TextView android:text="@string/register_disclaimer_title"
+                          android:id="@+id/disclaimer_title"
+                          style="@style/DisclaimerTitle"
+                        />
+                <TextView style="@style/DisclaimerContent"
+                          android:text="@string/register_disclaimer_text"
+                          android:id="@+id/disclaimer_box"
+                        />
+            </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+</LinearLayout>
+

@@ -3,14 +3,14 @@ package techex.domain
 import java.util.UUID
 
 import org.joda.time.{Duration, DateTime, Instant}
-import techex.data.{Observation, InputMessage}
+import techex.data.{ExitObservation, EnterObservation, InputMessage}
 import scalaz._, Scalaz._
 import scalaz.Tree
 
 
 object areas {
 
-  val allAreas = Area("everywhere")
+  val somewhere = Area("somewhere")
 
   val foyer           = Area("foyer")
   val toiletAtSamf    = Area("toilet @ Samfundet")
@@ -27,70 +27,88 @@ object areas {
   val auditoriumExit  = Area("Auditorium exit")
   val coffeeStand     = Area("Coffee stand")
   val storhubben      = Area("Storhubben")
+  val meeting         = Area("MR")
   val mrtTuring       = Area("Turing")
   val mrtTesla        = Area("Tesla")
   val mrtEngelbart    = Area("Engelbart")
   val mrtAda          = Area("Ada")
   val mrtHopper       = Area("Hopper")
+  val team            = Area("Team")
   val mrtCurie        = Area("Curie")
-  val testArea1       = Area("Stand1")
-  val testArea2       = Area("Stand2")
-  val testArea3       = Area("Stand3")
-  val kantegaCoffee   = Area("kantegaCoffee")
+  val desk1           = Area("desk1")
+  val desk2           = Area("desk2")
+  val desk3           = Area("desk3")
+  val coffeeMachines  = Area("Coffee")
+  val kantegaCoffeeUp = Area("kantegaCoffeeUpstairs")
+  val kantegaCoffeeDn = Area("kantegaCoffeeDownstairs")
+  val kantegaFelles   = Area("felles")
+  val kantegaKantine  = Area("kantegaKantine")
   val kantegaOffice   = Area("KantegaOffice")
   val meetingPoint    = Area("Meetingpoint")
 
-  val beaconPlacement: Map[Beacon, (Proximity, Area)] =
-    Map(
-      Beacon("a") ->(Near, foyer),
-      Beacon("b") ->(Near, toiletAtSamf),
-      Beacon("c") ->(Near, toiletAtSamf),
-      Beacon("d") ->(Near, stage),
-      Beacon("e") ->(Near, bar),
-      Beacon("f") ->(Near, technoportStand),
-      Beacon("gg") ->(Near, kantegaStand),
-      Beacon("58796:18570") ->(Near, testArea1),
-      Beacon("51194:16395") ->(Near, testArea2),
-      Beacon("54803:59488") ->(Near, testArea3),
-      Beacon("64915:4698") ->(Near, kantegaCoffee),
-      Beacon("k") ->(Near, coffeeStand),
-      Beacon("l") ->(Near, meetingPoint),
-      Beacon("40647:50232") ->(Near, mrtTuring),
-      Beacon("11910:28667") ->(Near, mrtTesla),
-      Beacon("33505:43782") ->(Near, mrtEngelbart),
-      Beacon("23114:24160") ->(Near, mrtAda),
-      Beacon("27012:1190") ->(Near, mrtHopper),
-      Beacon("31470: 23971") ->(Near, mrtCurie),
-      Beacon("m") ->(Far, auditorium))
+  def beaconPlacementFor(r: Area, minor: Int, prox: Proximity): (BeaconId, (Proximity, Area)) =
+    BeaconId(minor) ->(prox, r)
 
-  val locationHierarcy: Tree[Area] =
-    allAreas.node(
-      technoport2015.node(
-        samfundet.node(
-          kjelleren.leaf,
-          bar.leaf,
-          toiletAtSamf.leaf,
-          foyer.leaf),
-        seminarArea.node(
-          auditorium.node(
-            stage.leaf),
-          kantegaStand.leaf,
-          technoportStand.leaf,
-          auditoriumExit.leaf,
-          toiletAtSeminar.leaf,
-          coffeeStand.leaf,
-          meetingPoint.leaf)),
-      kantegaOffice.node(
+  def beaconsAt(r: Area) =
+    beaconPlacement.toList.filter(_._2._2 === r).map(_._1)
+
+  val beaconPlacement: Map[BeaconId, (Proximity, Area)] =
+    Map(
+      beaconPlacementFor(desk1, 1, Near),
+      beaconPlacementFor(desk2, 2, Near),
+      beaconPlacementFor(desk3, 3, Near),
+      beaconPlacementFor(kantegaCoffeeDn, 4, Near),
+      beaconPlacementFor(kantegaCoffeeUp, 5, Near),
+      beaconPlacementFor(mrtTuring, 6, Near),
+      beaconPlacementFor(mrtTesla, 7, Near),
+      beaconPlacementFor(mrtEngelbart, 8, Near),
+      beaconPlacementFor(mrtAda, 9, Near),
+      beaconPlacementFor(mrtHopper, 10, Near),
+      beaconPlacementFor(mrtCurie, 11, Near),
+      beaconPlacementFor(kantegaKantine, 12, Far),
+      beaconPlacementFor(kantegaKantine, 13, Far),
+      beaconPlacementFor(kantegaKantine, 14, Far),
+      beaconPlacementFor(kantegaKantine, 15, Far))
+
+
+  val technoportLocationTree: Tree[Area] =
+    technoport2015.node(
+      samfundet.node(
+        kjelleren.leaf,
+        bar.leaf,
+        toiletAtSamf.leaf,
+        foyer.leaf),
+      seminarArea.node(
+        auditorium.node(
+          stage.leaf),
+        kantegaStand.leaf,
+        technoportStand.leaf,
+        auditoriumExit.leaf,
+        toiletAtSeminar.leaf,
+        coffeeStand.leaf,
+        meetingPoint.leaf))
+
+  val kantegaLocationTree: Tree[Area] =
+    kantegaOffice.node(
+      meeting.node(
         mrtTuring.leaf,
         mrtTesla.leaf,
         mrtAda.leaf,
         mrtHopper.leaf,
-        mrtCurie.leaf,
-        testArea1.leaf,
-        testArea2.leaf,
-        testArea3.leaf,
-        kantegaCoffee.leaf
-      ))
+        mrtCurie.leaf),
+      team.node(
+        desk1.leaf,
+        desk2.leaf,
+        desk3.leaf),
+      coffeeMachines.node(
+        kantegaCoffeeUp.leaf,
+        kantegaCoffeeDn.leaf),
+      kantegaFelles.node(
+        kantegaKantine.leaf)
+    )
+
+  val locationHierarcy: Tree[Area] =
+    somewhere.node(technoportLocationTree, kantegaLocationTree)
 
   def contains(parent: Area, other: Area): Boolean = {
     if (parent === other)
@@ -127,7 +145,7 @@ object areas {
 
 case class LocationId(value: String)
 
-case class Area(id: String) {
+case class Area(name: String) {
   def contains(other: Area) =
     areas.contains(this, other)
 
@@ -137,12 +155,12 @@ case class Area(id: String) {
 
 object Area {
   implicit val areaEqual: Equal[Area] =
-    Equal[String].contramap(_.id)
+    Equal[String].contramap(_.name)
 }
 
-case class Beacon(id: String)
+case class BeaconId(minor: Int)
 
-trait Proximity {
+sealed trait Proximity {
   def isSameOrCloserThan(other: Proximity) =
     (this, other) match {
       case (Immediate, _)     => true
@@ -166,14 +184,39 @@ object Proximity {
     case _                 => Far
   }
 
+  def unapply(p: Proximity) = Option(p.asString)
+
 }
 case object Near extends Proximity
 case object Far extends Proximity
 case object Immediate extends Proximity
 
-case class ObservationData(beacon: Beacon, proximity: Proximity) {
-  def toObservation(playerId: PlayerId, instant: Instant) =
-    Observation(beacon, playerId, instant, proximity)
+
+sealed trait Direction {
+  def asString = this match {
+    case Exit => "exit"
+    case _    => "enter"
+  }
+}
+object Direction {
+  def apply(value: String) = value.toLowerCase match {
+    case "exit" => Exit
+    case _      => Enter
+  }
+
+
+  def unapply(d: Direction) = Option(d.asString)
+}
+case object Enter extends Direction
+case object Exit extends Direction
+
+case class ObservationData(major: Option[Int], minor: Option[Int], proximity: Option[Proximity], activity: String) {
+  def toObservation(playerId: PlayerId, instant: Instant): EnterObservation \/ ExitObservation =
+    Direction(activity) match {
+      case Enter => -\/(EnterObservation(BeaconId(minor.get), playerId, instant, proximity.get))
+      case Exit  => \/-(ExitObservation(playerId, instant))
+    }
+
 }
 
 case class Timed[A](timestamp: Instant, value: A)

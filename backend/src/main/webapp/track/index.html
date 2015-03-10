@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <link type="text/css" rel="stylesheet" href="style.css"/>
+    <style type="text/css">
+
+        path.arc {
+            cursor: move;
+            fill: #fff;
+        }
+
+        .node {
+            font-size: 10px;
+        }
+
+        .node:hover {
+            fill: #1f77b4;
+        }
+
+        .link {
+            fill: none;
+            stroke: #1f77b4;
+            stroke-opacity: .4;
+            pointer-events: none;
+        }
+
+        .link.source, .link.target {
+            stroke-opacity: 1;
+            stroke-width: 2px;
+        }
+
+        .node.target {
+            fill: #d62728 !important;
+        }
+
+        .link.source {
+            stroke: #d62728;
+        }
+
+        .node.source {
+            fill: #2ca02c;
+        }
+
+        .link.target {
+            stroke: #2ca02c;
+        }
+
+    </style>
+</head>
+<body>
+
+
+<script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.4.0/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script>
+
+    var width = $("body").width(),
+            height = $("body").height(),
+            radius = Math.min(width, height) / 2;
+
+    var baseColor = d3.scale.category10();
+
+    var dataKey = function (d) {
+        if (d.parent)
+            return d.parent.name + d.name;
+        else
+           return  d.name;
+    };
+    var color = function (d) {
+        if (d.isPlayer)
+            return d.isPresent ? "yellow" : "#111";
+        else
+            return d.depth <= 1 ? d3.rgb(baseColor(d.name)).darker() : d3.rgb(baseColor(d.parent.name)).darker().darker();
+    }
+    var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height * .52 + ")");
+
+    var partition = d3.layout.partition()
+            .sort(null)
+            .size([2 * Math.PI, radius])
+            .value(function (d) {
+                return 1;
+            });
+
+    var yScale = d3.scale.linear()
+            .range([0, radius]);
+
+    var arc = d3.svg.arc()
+            .startAngle(function (d) {
+                return d.x;
+            })
+            .endAngle(function (d) {
+                return d.x + d.dx;
+            })
+            .innerRadius(function (d) {
+                return (radius / 3) + ((d.y) / 4);
+            })
+            .outerRadius(function (d) {
+                if (d.isPlayer)
+                    return (radius / 3) + ((d.y) / 4) + d.dy/4;
+                else
+                    return (radius / 3) + ((d.y) / 4) + d.dy/4;
+            });
+
+    var players = [];
+
+    d3.json("https://techex.kantega.no/areas/kantega", function (error, root) {
+        var selection = svg.selectAll("path");
+
+        var update =
+                selection.data(partition.nodes(annotateAreas(root)),dataKey);
+
+        update.enter().append("path")
+                .attr("display", function (d) {
+                    return d.depth ? null : "none";
+                }) // hide inner ring
+                .attr("d", arc)
+                .style("stroke", "#000")
+                .style("fill", color)
+                .style("fill-rule", "evenodd")
+                .each(stash);
+
+
+        var websocket = new WebSocket("wss://techex.kantega.no/ws/observations")
+        websocket.onopen = function (evt) {
+            console.log("Opened websocket")
+        };
+        websocket.onclose = function (evt) {
+            console.log("Closed websocket")
+        };
+        websocket.onmessage = function (evt) {
+            var data = JSON.parse(evt.data);
+            onMessage(selection, root, data)
+        };
+        websocket.onerror = function (evt) {
+            console.error(evt)
+        };
+
+
+    });
+
+    function exitTuring(selection, root) {
+        setTimeout(function () {
+            onMessage(selection, root, {activity: "leftFromArea", player: "arne", area: "Turing"});
+
+            enterHopper(selection, root);
+        }, 2000)
+    }
+
+    function enterTuring(path, root) {
+        setTimeout(function () {
+            onMessage(path, root, {activity: "arrivedAtArea", player: "arne", area: "Turing"});
+
+            exitTuring(path, root);
+        }, 2000)
+    }
+
+    function enterHopper(selection, root) {
+        setTimeout(function () {
+            onMessage(selection, root, {activity: "arrivedAtArea", player: "arne", area: "Hopper"});
+
+            exitHopper(selection, root);
+        }, 2000)
+    }
+
+    function exitHopper(selection, root) {
+        setTimeout(function () {
+            onMessage(selection, root, {activity: "leftFromArea", player: "arne", area: "Hopper"});
+
+            enterTuring(selection, root);
+        }, 2000)
+    }
+
+    // Stash the old values for transition.
+    function stash(d) {
+        d.x0 = d.x;
+        d.dx0 = d.dx;
+    }
+
+    function onMessage(selection, root, data) {
+        console.log(data);
+
+        if (data.activity == "arrivedAtArea")
+            playerEnter(root, asPlayer(data), data.area);
+        else if (data.activity == "leftFromArea")
+            playerExit(root, asPlayer(data), data.area);
+        else
+            return;
+
+        var update =
+                 svg.selectAll("path").data(partition.nodes(root),dataKey);
+
+        var transition =
+                update
+                        .transition()
+                        .style("fill", color)
+                        .attrTween("d", arcTween);
+
+        var enter =
+                update.enter().append("path")
+                        .attr("display", function (d) {
+                            return d.depth ? null : "none";
+                        }) // hide inner ring
+                        .attr("d", arc)
+                        .style("stroke", "#000")
+                        .style("fill", color)
+                        .style("fill-rule", "evenodd")
+                        .each(stash);
+
+        var exit =
+                update.exit().remove();
+
+        console.log("Update")
+
+    }
+
+    function playerEnter(root, player, area) {
+        if (!existsPlayer(player)) {
+            players.push(player);
+            updatePlayersAddPlayer(player)(root)
+        }
+        updatePlayersOnEnter(player, area)(root)
+    }
+
+    function playerExit(root, player, area) {
+        if (existsPlayer(player)) {
+            updatePlayersTreeOnExit(player)(root)
+        }
+        updatePlayersTreeOnExit(player, area)(root)
+    }
+
+    // Interpolate the arcs in data space.
+    function arcTween(a) {
+        var i = d3.interpolate({x: a.x0, dx: a.dx0}, a);
+        return function (t) {
+            var b = i(t);
+            a.x0 = b.x;
+            a.dx0 = b.dx;
+            return arc(b);
+        };
+    }
+
+
+    function annotateAreas(root) {
+        root.area = true;
+        if (!root.children || root.children.length == 0) {
+            //root.children = [asPlayer({player: "dummy"})];
+            root.place = true
+        } else {
+            root.children.forEach(annotateAreas);
+        }
+        return root
+    }
+
+    function asPlayer(msg) {
+        return {
+            name: msg.player,
+            isPresent: false,
+            isPlayer: true
+        }
+    }
+
+    function existsPlayer(player) {
+        var foind = _.some(players, playerEq(player));
+        return (foind) == true
+    }
+
+    function updatePlayersAddPlayer(player) {
+        return function (root) {
+            if (root.place) {
+                if (!root.children)
+                    root.children = [];
+                root.children.push(_.clone(player));
+            }
+            else
+                root.children.forEach(updatePlayersAddPlayer(player));
+
+            return root
+        }
+    }
+
+    function updatePlayersRemovePlayer(player) {
+        return function (root) {
+            if (root.place)
+                _.remove(root.children, playerEq(player));
+
+            else
+                root.children.forEach(updatePlayersAddPlayer(player));
+
+            return root
+        }
+    }
+
+    function updatePlayersOnEnter(player, area) {
+        return function (root) {
+            if (root.place) {
+                if (areaEq(root.name)(area))
+                    _.find(root.children, playerEq(player)).isPresent = true;
+
+            } else {
+                root.children.forEach(updatePlayersOnEnter(player, area));
+            }
+            return root
+        }
+    }
+
+    function updatePlayersTreeOnExit(player, area) {
+        return function (root) {
+            if (root.place) {
+                if (areaEq(root.name)(area))
+                    _.find(root.children, playerEq(player)).isPresent = false;
+
+            } else {
+                root.children.forEach(updatePlayersTreeOnExit(player, area));
+            }
+            return root
+        }
+    }
+
+    function playerEq(player1) {
+        return function (player2) {
+            var eq = player1.name == player2.name;
+            return eq;
+        }
+    }
+
+    function areaEq(area1) {
+        return function (area2) {
+            return area1 == area2
+        }
+    }
+
+    d3.select(self.frameElement).style("height", height + "px");
+
+</script>
+</body>
+</html>

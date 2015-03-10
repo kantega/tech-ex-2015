@@ -1,7 +1,7 @@
 package techex.cases
 
 import doobie.util.process
-import techex.data.slack
+import techex.data.{EnterObservation, slack}
 import techex.domain._
 import techex.streams
 
@@ -13,9 +13,9 @@ import scalaz.stream.{Process, Sink}
 object notifySlack {
 
   val notificationQueue =
-    scalaz.stream.async.unboundedQueue[Fact]
+    scalaz.stream.async.unboundedQueue[AnyRef]
 
-  def setup(facts: Process[Task, Fact]): Task[Unit] =
+  def setup(facts: Process[Task, AnyRef]): Task[Unit] =
     Task {
       (facts to notificationQueue.enqueue).run.runAsync(println(_))
       (notificationQueue.dequeue to sender)
@@ -23,21 +23,21 @@ object notifySlack {
         .run.runAsync(println(_))
     }
 
-  def sender: Sink[Task, Fact] =
+  def sender: Sink[Task, AnyRef] =
     process.sink(handleFact)
 
 
-  def handleFact: Fact => Task[Unit] = {
-    case AwardedBadge(player, badge,_)        =>
-      slack.sendMessage(":star: *" + player.player.nick.value + "* was awarded the _" + badge.achievement.name + "_ badge", Good)
-    case ArrivedAtArea(player, area,_) =>
-      slack.sendMessage("*" + player.player.nick.value + "* visited _" + area.id +"_")
-    case PlayerCreated(player,_) =>
-      slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* just signed up with quests _" + player.player.privateQuests.map(_.name).mkString("_ and _") + "_", Good)
-    case JoinedActivityLate(player,event,_) =>
-      slack.sendMessage(":thumbsdown: *" + player.player.nick.value + "* came _late_ for _" + event.name+ "_")
-    case JoinedOnStart(player,event,_) =>
-      slack.sendMessage(":thumbsup: *" + player.player.nick.value + "* came _early_ for _" + event.name+ "_")
-    case any: Fact                     => Task {}
+  def handleFact: AnyRef => Task[Unit] = {
+    case AwardedBadge(player, badge, _)                         =>
+      slack.sendMessage("*" + player.player.nick.value + "* earned the _" + badge.achievement.name + "_ badge :star:", Good)
+    case EnteredArea(player, area, _) if area ≠ areas.somewhere =>
+      slack.sendMessage("*" + player.player.nick.value + "* visited _" + area.name + "_")
+    case PlayerCreated(player, _)                               =>
+      slack.sendMessage("*" + player.player.nick.value + "* just signed up with quests _" + player.player.privateQuests.map(_.name).mkString("_, _") + "_ :thumbsup:", Good)
+    case JoinedActivityLate(player, event, _)                   =>
+      slack.sendMessage("*" + player.player.nick.value + "* came _late_ for _" + event.name + "_ :thumbsdown: ")
+    case JoinedOnStart(player, event, _)                        =>
+      slack.sendMessage("*" + player.player.nick.value + "* came _early_ for _" + event.name + "_ :thumbsup: ")
+    case any: AnyRef                                            => Task {}
   }
 }

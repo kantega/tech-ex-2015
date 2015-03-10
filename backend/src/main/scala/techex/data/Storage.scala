@@ -52,7 +52,7 @@ case class Storage(playerData: Map[PlayerId, PlayerData], schedule: Map[ScId, Sc
     copy(playerData = playerData + (id -> data))
 
   def updatePlayerData(id: PlayerId, f: PlayerData => PlayerData): Storage =
-    copy(playerData = playerData.updated(id, f(playerData(id))))
+    playerData.get(id).fold(this){data => copy(playerData = playerData.updated(id, f(data)))}
 
   def removePlayer(id: PlayerId) = {
     copy(playerData = playerData - id)
@@ -73,7 +73,7 @@ case class Storage(playerData: Map[PlayerId, PlayerData], schedule: Map[ScId, Sc
 
   def playersPresentAt(area: Area) = {
     players
-      .filter(_.movements.headOption.exists(lu => lu.area === area))
+      .filter(_.lastLocation.area === area)
   }
 
   def addEntry(scheduleEntry: ScheduleEntry) =
@@ -96,24 +96,16 @@ case class Storage(playerData: Map[PlayerId, PlayerData], schedule: Map[ScId, Sc
 case class PlayerData(
   player: Player,
   achievements: Set[Achievement],
-  movements: Vector[LocationUpdate],
+  lastLocation: LocationUpdate,
   activities: Vector[FactAboutPlayer],
-  progress: PatternOutput[Achievement],
+  progress: PatternTracker[Achievement],
   platform: NotificationTarget) {
 
   def addAchievement(achievemnt: Achievement): PlayerData =
     copy(achievements = achievements + achievemnt)
 
   def addMovement(location: LocationUpdate): PlayerData =
-    copy(movements = {
-      val updated =
-        location +: movements
-
-      if (updated.size > Storage.historySize)
-        updated.init
-      else
-        updated
-    })
+    copy(lastLocation = location)
 
   def addActivities(activities: List[FactAboutPlayer]): PlayerData =
     activities.foldRight(this) { (activity, data) => data.addFact(activity)}
@@ -130,7 +122,7 @@ object PlayerData {
   implicit val playerDataEqual: Equal[PlayerData] =
     Equal.equalA[String].contramap((pd: PlayerData) => pd.player.id.value)
 
-  def updateProgess: PatternOutput[Achievement] => PlayerData => PlayerData =
+  def updateProgess: PatternTracker[Achievement] => PlayerData => PlayerData =
     progress => data => data.copy(progress = progress)
 
 }

@@ -4,35 +4,38 @@ import dispatch.Defaults._
 import dispatch._
 import org.specs2.mutable._
 import techex.TestServer._
-import techex.domain.{Near, Nick}
+import techex.domain._
+import areas._
+import scalaz._,Scalaz._
+import scalaz.concurrent.Task
 
 class TrackUserSpec extends Specification {
 
 
   try {
     val runningserver =
-      server.start.run
+      server.run
 
     "The webserwer" should {
       "consume a list of locationupdates" in {
         val quests =
           for {
-            playerId <- putPlayer(Nick("balle"))
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "51194:16395", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "54803:59488", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "58796:18570", Near)
-            _ <- putObservation(playerId, "k", Near)
-            response <- putObservation(playerId, "58796:18570", Near)
+            playerId <- putPlayer(Nick("phalle"))
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near) *> Future{Thread.sleep(40000)}
+            _ <- putObservation(playerId, beaconAt(kantegaCoffeeUp), Near) *> Future{Thread.sleep(40000)}
+            _ <- putObservation(playerId, beaconAt(desk1), Near)
+            _ <- putObservation(playerId, beaconAt(desk2), Near)
+            _ <- putObservation(playerId, beaconAt(desk3), Near)
+            _ <- putObservation(playerId, beaconAt(mrtEngelbart), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTuring), Near)
+            _ <- putObservation(playerId, beaconAt(mrtAda), Near)
+            _ <- putObservation(playerId, beaconAt(mrtTesla), Near)
+            response <- putObservation(playerId, beaconAt(kantegaCoffeeDn), Near)
           } yield response
 
         Thread.sleep(5000)
 
-        quests() must contain("200")
+        quests().getStatusCode must_== 200
       }
 
     }

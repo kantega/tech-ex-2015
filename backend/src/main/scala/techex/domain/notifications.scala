@@ -6,7 +6,7 @@ object notifications {
 
 case class DeviceToken(value:String)
 sealed trait NotificationTarget
-case class Android() extends NotificationTarget
+case class Android(maybeToken:Option[DeviceToken]) extends NotificationTarget
 case class iOS(maybeToken:Option[DeviceToken]) extends NotificationTarget
 case class Web() extends NotificationTarget
 case class Slack() extends NotificationTarget
