@@ -33,7 +33,6 @@ class BadgeListView: UIView {
     }
     
     func updateAchievedBadges() {
-        NSLog("Updating achieved badges: \(achievedBadges):\(totalBadges)")
         for i in 0 ..< achievedBadges {
             let badgeView = self.subviews[i] as UIImageView
             badgeView.image = UIImage(named: "BadgeCompletedSmall")
