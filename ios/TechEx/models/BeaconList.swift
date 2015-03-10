@@ -12,7 +12,6 @@ import CoreLocation
 class BeaconList {
     
     var beacons:Array<CLBeacon>
-    var nearestMinorId = -1
     
     
     init() {
@@ -46,25 +45,25 @@ class BeaconList {
         beacons = beacons.filter { $0.major != withMajor }
     }
     
-    func objectAtIndex(index: Int) -> CLBeacon {
-        return beacons[index]
-    }
-    
-    func count() -> Int {
-        return beacons.count
-    }
-    
-    func nearest() -> CLBeacon {
+    func nearest() -> CLBeacon? {
+        if beacons.isEmpty {
+            return Optional<CLBeacon>()
+        }
         return beacons[0]
     }
     
-    func nearestHasChanged() -> Bool {
-        if nearestMinorId != beacons.first?.minor.integerValue {
-            nearestMinorId = beacons.first!.minor.integerValue
-            return true
-        } else {
-            return false
-        }
+    
+    func hasLeftAllRegions() -> Bool {
+        return beacons.count == 0
     }
     
+    func currentRegions() -> Array<Int> {
+        var regions = Array<Int>()
+        for b in beacons {
+            if !contains(regions, b.major.integerValue) {
+                regions.append(b.major.integerValue)
+            }
+        }
+        return regions
+    }
 }

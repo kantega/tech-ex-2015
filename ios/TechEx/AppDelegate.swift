@@ -81,34 +81,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     
     
     func locationManager(manager: CLLocationManager!, didEnterRegion region: CLRegion!) {
-        NSLog("Device entered \(region.identifier)")
+        NSLog("Device entered \(region.identifier). Inside regions \(beaconList.currentRegions()) before entering.")
         locationManager.startRangingBeaconsInRegion(region as CLBeaconRegion)
     }
     
     func locationManager(manager: CLLocationManager!, didExitRegion region: CLRegion!) {
         let beaconRegion = region as CLBeaconRegion
-        NSLog("Device left \(region.identifier)")
+        NSLog("Device left \(region.identifier).  Inside regions \(beaconList.currentRegions()) before leaving.")
         locationManager.stopRangingBeaconsInRegion(beaconRegion)
         beaconList.remove(beaconRegion.major.integerValue)
-        updateLocation(["activity": "exit"])
+        if beaconList.hasLeftAllRegions() {
+            NSLog("Device has left all regions. Sending exit message.")
+            updateLocation(["activity": "exit"])
+        }
     }
     
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
         var clBeacons = beacons.map({$0 as CLBeacon}).filter({$0.proximity != CLProximity.Unknown })
 
         if (clBeacons.count > 0) {
+            let currentNearest = beaconList.nearest()
             beaconList.insert(clBeacons)
+            let newNearest = beaconList.nearest()
+
             let minorIds = clBeacons.map {$0.minor}
             let nearestIds = beaconList.beacons.map{$0.minor}
-            NSLog("Location update: Found beacons \(minorIds) in region \(region!.major). Beacons in sight now: \(nearestIds).")
+            //NSLog("Location update: Found beacons \(minorIds) in region \(region!.major). Beacons in sight now: \(nearestIds).")
             
-            if beaconList.nearestHasChanged() {
-                let nearestBeacon = beaconList.nearest()
-                NSLog("Nearest beacon has changed. Current nearest is \(nearestBeacon.minor)")
+            if (currentNearest?.minor != newNearest?.minor || currentNearest?.proximity.rawValue > newNearest!.proximity.rawValue) {// Location has changed
+                NSLog("Nearest beacon has changed. Current nearest is \(newNearest!.minor)")
                 let parameters = [
-                    "major": "\(nearestBeacon.major)",
-                    "minor": "\(nearestBeacon.minor)",
-                    "proximity": "\(nearestBeacon.proximity.rawValue)",
+                    "major": "\(newNearest!.major)",
+                    "minor": "\(newNearest!.minor)",
+                    "proximity": "\(newNearest!.proximity.rawValue)",
                     "activity": "enter"
                 ];
                 updateLocation(parameters)
@@ -174,7 +179,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
-
+        
     }
 
     func applicationWillTerminate(application: UIApplication) {
