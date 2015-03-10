@@ -28,6 +28,7 @@ class QuestsTableViewController: UITableViewController{
         self.setTechExBackgroundImage()
 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("showAwardView:"), name: "badgeReceived", object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("loadQuests"), name: "applicationActivated", object: nil)
         
         self.refreshControl = UIRefreshControl()
         self.refreshControl?.tintColor = UIColor.whiteColor()

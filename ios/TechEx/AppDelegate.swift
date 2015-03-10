@@ -179,7 +179,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
-        
+        NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: "applicationActivated", object: nil))
     }
 
     func applicationWillTerminate(application: UIApplication) {
