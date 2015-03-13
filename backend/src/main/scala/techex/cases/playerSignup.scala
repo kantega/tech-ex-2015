@@ -57,7 +57,7 @@ object playerSignup {
 
   def selectPersonalQuests(venue:String,nick: Nick): List[Quest] = {
     venue match{
-      case "kantega" => quests.kq.quests
+      case "kantega" => quests.kantegaQuests
       case _ => {
         val rand = Random
         rand.setSeed(nick.value.hashCode)
@@ -105,7 +105,7 @@ object playerSignup {
 
   def restApi(venue:String,topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "players"  =>
-      req.decode[String]{body => {
+      req.decode[String](body => {
         val maybeCreatePlayerData =
           toJsonQuotes(body).decodeValidation[CreatePlayerData]
 
@@ -127,7 +127,7 @@ object playerSignup {
           }
         )
 
-      }}
+      })
   }
 
   case class PlatformData(plattformType: String, deviceToken: Option[String]) {

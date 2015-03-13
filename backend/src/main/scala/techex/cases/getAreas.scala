@@ -36,7 +36,7 @@ object getAreas {
       (location match {
         case "kantega" => getResponseFor(areas.kantegaLocationTree)
         case _         => getResponseFor(areas.technoportLocationTree)
-      }).withHeaders(Header("Access-Control-Allow-Origin","*"))
+      })
 
   }
 

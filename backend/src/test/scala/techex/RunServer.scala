@@ -6,8 +6,8 @@ object RunServer extends App {
 
 
   val server = for {
-    servlets <- bootOps.servlets(Map())
-    serv <- TestServer.mountServlets(servlets)(JettyBuilder.bindHttp(8080)).start
+    servlets <- bootOps.servlets(Map("db_type"->"mem","venue"->"kantega"))
+    serv <- TestServer.mountServlets(servlets)(JettyBuilder.bindHttp(8080,"172.16.0.26")).start
   } yield serv
 
 

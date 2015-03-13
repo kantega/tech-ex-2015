@@ -263,16 +263,18 @@ object quests {
         meetingRoomStayer
       )
 
-    val quests =
-      List(
-        kq.coffeeHero,
-        kq.earlybird,
-        kq.meetinghero,
-        kq.stayer,
-        kq.roamer
-      )
+
 
   }
+
+  val kantegaQuests =
+    List(
+      kq.coffeeHero,
+      kq.earlybird,
+      kq.meetinghero,
+      kq.stayer,
+      kq.roamer
+    )
 
   //Quests
   val seeAllTalks       = Quest(Qid("seealltalks"), "See all the Talks", "Maximize your smart, see them all", Public, List(seetalksiron, seetalksbronze, seetalkssilver, seetalksgold))
