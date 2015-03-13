@@ -26,8 +26,6 @@ object googleNotifications {
     scala.io.Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("googleapikey.txt")).mkString
 
   def sendMessage(token: DeviceToken, txt: String, id: String): Task[Unit] = {
-
-
     val json: Json =
       Json(
         "registration_ids" -> Json.array(jString(token.value)),
@@ -43,7 +41,6 @@ object googleNotifications {
         .onComplete(
           tr => {
             val v = tr.transform[Throwable \/ String]((resp: Response) => Try(\/-(resp.getResponseBody)), (fail: Throwable) => Try(-\/(fail)))
-            println(v.get)
             register(v.get.map(x => x.toString))
           })
 

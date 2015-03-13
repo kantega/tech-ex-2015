@@ -31,7 +31,7 @@ class MessagesSpec extends Specification {
       val T = new DateTime(2015, 3, 5, 7, 0).toInstant
 
       val task = for {
-        result <- Storage.run(playerSignup.createPlayerIfNickAvailable(createPlayerData))
+        result <- Storage.run(playerSignup.createPlayerIfNickAvailable("kantega")(createPlayerData))
         data <- result match {
           case SignupOk(playerData) => Task(playerData)
         }

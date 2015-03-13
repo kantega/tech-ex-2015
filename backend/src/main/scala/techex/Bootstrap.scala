@@ -29,8 +29,11 @@ class Bootstrap extends ServletContextListener {
     val pw =
       sce.getServletContext.getInitParameter("db_password")
 
+    val venue =
+      Option(sce.getServletContext.getInitParameter("venue")).getOrElse("kantega")
+
     val cfgMap =
-      Map("db_type" -> dbName, "db_username" -> username, "db_password" -> pw)
+      Map("venue"->venue, "db_type" -> dbName, "db_username" -> username, "db_password" -> pw)
 
     val servlets =
       bootOps.servlets(cfgMap).run

@@ -7,27 +7,38 @@ import org.joda.time.{Duration => Dur, _}
 import techex.data.{Command, InputMessage}
 import techex.domain.areas._
 
-import scalaz._,Scalaz._
+import scalaz._, Scalaz._
 
 object scheduling {
 
-  val keyNote      = ScheduleEntry(ScId("1"), "Keynote", IntervalBounds(new DateTime(2015, 3, 18, 9, 0), minutes(20)), kantegaKantine)
-  val session1     = ScheduleEntry(ScId("2"), "Session 1", IntervalBounds(new DateTime(2015, 3, 18, 9, 30), minutes(60)), kantegaKantine)
-  val session2     = ScheduleEntry(ScId("3"), "Session 2", IntervalBounds(new DateTime(2015, 3, 18, 11, 0), minutes(60)), kantegaKantine)
-  val session3     = ScheduleEntry(ScId("4"), "Session 3", IntervalBounds(new DateTime(2015, 3, 18, 12, 30), minutes(60)), kantegaKantine)
-  val session4     = ScheduleEntry(ScId("5"), "Session 4", IntervalBounds(new DateTime(2015, 3, 18, 15, 0), minutes(60)), kantegaKantine)
-  val session5     = ScheduleEntry(ScId("6"), "Session 5", IntervalBounds(new DateTime(2015, 3, 18, 16, 30), minutes(60)), kantegaKantine)
-  val crowdFunding = ScheduleEntry(ScId("7"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 18, 19, 0), minutes(90)), kantegaKantine)
+  /*
+  The Entrepreneurial state of mind 1200-1330
+Peace, Love and Entrepreneurship 1350-1520
+Blood, SWOT and Tears 15:50-1710
+Imagine 1730-1830
+
+Crowdfunding 1730-1830
+
+Appetite for Construction 0900-1000
+The Kick Inside 1020-1200
+   */
+  val session0 = ScheduleEntry(ScId("1"), "The Entrepreneurial state of mind", IntervalBounds(new DateTime(2015, 3, 17, 12, 0), minutes(90)), kantegaKantine)
+  val session1 = ScheduleEntry(ScId("2"), "Peace, Love and Entrepreneurship 1350-1520", IntervalBounds(new DateTime(2015, 3, 17, 13, 50), minutes(90)), kantegaKantine)
+  val session2 = ScheduleEntry(ScId("3"), "Blood, SWOT and Tears", IntervalBounds(new DateTime(2015, 3, 17, 15, 50), minutes(80)), kantegaKantine)
+  val session3 = ScheduleEntry(ScId("4"), "Imagine", IntervalBounds(new DateTime(2015, 3, 17, 17, 30), minutes(60)), kantegaKantine)
+  val session4 = ScheduleEntry(ScId("5"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 17, 17, 30), minutes(60)), kantegaKantine)
+  val session5 = ScheduleEntry(ScId("6"), "Appetite for Construction", IntervalBounds(new DateTime(2015, 3, 18, 9, 0), minutes(60)), kantegaKantine)
+  val session6 = ScheduleEntry(ScId("7"), "The Kick Inside", IntervalBounds(new DateTime(2015, 3, 18, 10, 20), minutes(100)), kantegaKantine)
 
   val scheduleEntries =
     List(
-      keyNote,
+      session0,
       session1,
       session2,
       session3,
       session4,
       session5,
-      crowdFunding)
+      session6)
 
 }
 

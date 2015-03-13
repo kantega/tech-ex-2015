@@ -4,7 +4,9 @@ object notifications {
 
 }
 
-case class DeviceToken(value:String)
+case class DeviceToken(value:String){
+  override def toString = "DeviceToken("+value.take(10)+")"
+}
 sealed trait NotificationTarget
 case class Android(maybeToken:Option[DeviceToken]) extends NotificationTarget
 case class iOS(maybeToken:Option[DeviceToken]) extends NotificationTarget

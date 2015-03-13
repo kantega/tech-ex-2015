@@ -37,7 +37,7 @@ object quests {
 
 
   def time(t: DateTime => Boolean): Pred[Fact] =
-    fact => t(fact.instant.toDateTime)
+    fact => t(fact.instant.toDateTime.toDateTime(DateTimeZone.forOffsetHours(1)))
 
   def size(t: Int): Pred[List[Fact]] =
     list => (list.length >= t)
@@ -261,6 +261,15 @@ object quests {
       progresstracker.value(
         (stayforTwoHours(atAnyMeetingRoom) xor halt(on[EndOfDay])).times(1),
         meetingRoomStayer
+      )
+
+    val quests =
+      List(
+        kq.coffeeHero,
+        kq.earlybird,
+        kq.meetinghero,
+        kq.stayer,
+        kq.roamer
       )
 
   }

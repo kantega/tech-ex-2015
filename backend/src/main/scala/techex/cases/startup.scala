@@ -105,7 +105,7 @@ object startup {
       _ <- setupSchedule
 
     } yield (HttpService(
-      playerSignup.restApi(eventstreams.events) orElse
+      playerSignup.restApi(getStringOr(cfg,"venue","technoport"),eventstreams.events) orElse
         test.testApi orElse
         listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse
