@@ -20,6 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     let locationManager = CLLocationManager()
    
     var beaconList = BeaconList()
+    var regions = Array<CLBeaconRegion>()
    
     
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
@@ -71,24 +72,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                     NSLog("Setting up \(numberOfRegions) beacon regions")
                     for i in 1...numberOfRegions {
                         let region = CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "f7826da6-4fa2-4e98-8024-bc5b71e0893e"), major: CLBeaconMajorValue(i), identifier: "Region \(i)")
+                        region.notifyEntryStateOnDisplay = true
+                        self.regions.append(region)
                         self.locationManager.startMonitoringForRegion(region)
-                        self.locationManager.startRangingBeaconsInRegion(region)
                     }
+                    self.startRangingAllRegions()
                 }
         }
 
     }
     
+    func startRangingAllRegions() {
+        NSLog("Start ranging all regions")
+        for r in regions {
+            self.locationManager.startRangingBeaconsInRegion(r)
+        }
+        requestStateForAllRegions()
+    }
+    
+    func requestStateForAllRegions() {
+        NSLog("Requesting state for all regions")
+        for r in regions {
+            self.locationManager.requestStateForRegion(r)
+        }
+    }
     
     func locationManager(manager: CLLocationManager!, didEnterRegion region: CLRegion!) {
-        NSLog("Device entered \(region.identifier). Inside regions \(beaconList.currentRegions()) before entering.")
-        locationManager.startRangingBeaconsInRegion(region as CLBeaconRegion)
+        //NSLog("Device entered \(region.identifier). Inside regions \(beaconList.currentRegions()) before entering.")
+        NSLog("Device entered \(region.identifier).")
+        startRangingAllRegions()
     }
     
     func locationManager(manager: CLLocationManager!, didExitRegion region: CLRegion!) {
         let beaconRegion = region as CLBeaconRegion
-        NSLog("Device left \(region.identifier).  Inside regions \(beaconList.currentRegions()) before leaving.")
+        //NSLog("Device left \(region.identifier).  Inside regions \(beaconList.currentRegions()) before leaving.")
+        NSLog("Device left \(region.identifier).")
         locationManager.stopRangingBeaconsInRegion(beaconRegion)
+        self.requestStateForAllRegions()
         beaconList.remove(beaconRegion.major.integerValue)
         if beaconList.hasLeftAllRegions() {
             NSLog("Device has left all regions. Sending exit message.")
@@ -96,11 +116,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         }
     }
     
+    func locationManager(manager: CLLocationManager!, didDetermineState state: CLRegionState, forRegion region: CLRegion!) {
+        let beaconRegion = region as CLBeaconRegion
+        var st = ""
+        switch state {
+        case .Inside:
+            st = "Inside. Start ranging in this region."
+            locationManager.startRangingBeaconsInRegion(beaconRegion)
+        case .Outside:
+            st = "Outside"
+        case .Unknown:
+            st = "Unknown"
+        }
+        NSLog("Did determine state: Region \(beaconRegion.major): \(st)")
+    }
+    
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
         var clBeacons = beacons.map({$0 as CLBeacon}).filter({$0.proximity != CLProximity.Unknown })
 
         if (clBeacons.count > 0) {
             let currentNearest = beaconList.nearest()
+            //Remove all beacons in this region.
+            beaconList.remove(region.major.integerValue)
+            // Add only the ones we now have in range.
             beaconList.insert(clBeacons)
             let newNearest = beaconList.nearest()
 
@@ -109,7 +147,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             //NSLog("Location update: Found beacons \(minorIds) in region \(region!.major). Beacons in sight now: \(nearestIds).")
             
             if (currentNearest?.minor != newNearest?.minor || currentNearest?.proximity.rawValue > newNearest!.proximity.rawValue) {// Location has changed
-                NSLog("Nearest beacon has changed. Current nearest is \(newNearest!.minor)")
+
+                NSLog("Nearest beacon has changed. Nearest is now beacon \(newNearest!.minor)")
                 let parameters = [
                     "major": "\(newNearest!.major)",
                     "minor": "\(newNearest!.minor)",
@@ -179,6 +218,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
+        NSLog("App did become active")
         NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: "applicationActivated", object: nil))
     }
 
