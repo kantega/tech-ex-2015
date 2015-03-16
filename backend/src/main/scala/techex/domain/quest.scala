@@ -263,8 +263,6 @@ object quests {
         meetingRoomStayer
       )
 
-
-
   }
 
   val kantegaQuests =
@@ -276,12 +274,14 @@ object quests {
       kq.roamer
     )
 
+
   //Quests
-  val seeAllTalks       = Quest(Qid("seealltalks"), "See all the Talks", "Maximize your smart, see them all", Public, List(seetalksiron, seetalksbronze, seetalkssilver, seetalksgold))
-  val attendAllSessions = Quest(Qid("visitallsessions"), "Attend all the Talks", "Maximize your smart, see them all", Public, List(firstsession, kreatorsession, fundingsession))
-  val visitAllStands    = Quest(Qid("visitthestands"), "Visit the stands", "Visit as many stands you can", Public, List())
-  val eagerNess         = Quest(Qid("beEager"), "The early bird", "Be on time", Public, List(earlybird, ontime))
-  val antihero          = Quest(Qid("antihero"), "The Antihero", "No, you dont want to be good here", Secret, List(keepsringing, placestogo, tinyjavabladder, smalljavabladder))
+  val questInSearchForInspiration  = Quest(Qid("inSearchForInsp"), "In search for inspiration", "", Public, List(seetalksiron, seetalksbronze, seetalkssilver, seetalksgold))
+  val questIWantUsToSeeOtherPeople = Quest(Qid("iwantustoseeother"), "I want us to see other people", "", Public, List(firstsession, kreatorsession, fundingsession))
+  val questStayer                  = Quest(Qid("stayer"), "Be the stayer", "", Public, List())
+  val questTechHead                = Quest(Qid("techhead"), "You are the tech-head", "", Public, List(earlybird, ontime))
+  val questForScience              = Quest(Qid("forscience"), "Explore for science!", "", Secret, List(keepsringing, placestogo, tinyjavabladder, smalljavabladder))
+  val questForiNnovationAndBeyond  = Quest(Qid("forinnovationAndBeyond"), "For innovation and beyond!", "", Public, List())
 
 
   val ontimePred =

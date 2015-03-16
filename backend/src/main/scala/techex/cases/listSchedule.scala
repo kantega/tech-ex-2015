@@ -26,7 +26,7 @@ object listSchedule {
         bounds.duration.getMillis.toString))("year","month","day","hour","minute","duration")
 
   implicit val echeduleEntryCodec: CodecJson[ScheduleEntry] =
-    casecodec5(ScheduleEntry.withStringId, ScheduleEntry.unapplyWithStringId)("id","name","time","area","started")
+    casecodec6(ScheduleEntry.withStringId, ScheduleEntry.unapplyWithStringId)("id","name","time","area","started","ended")
 
   def restApi: WebHandler = {
     case req@GET -> Root / "sessions" => {
