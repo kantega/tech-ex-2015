@@ -30,6 +30,16 @@ The Kick Inside 1020-1200
   val session5 = ScheduleEntry(ScId("6"), "Appetite for Construction", IntervalBounds(new DateTime(2015, 3, 18, 9, 0), minutes(60)), kantegaKantine)
   val session6 = ScheduleEntry(ScId("7"), "The Kick Inside", IntervalBounds(new DateTime(2015, 3, 18, 10, 20), minutes(100)), kantegaKantine)
 
+  val talkAnnaKjaer = ScheduleEntry(ScId("8"),"Talk: Anna Kjær Reichert",IntervalBounds(new DateTime(2015,3,17,14,24),minutes(18)),auditorium)
+  val talkSteffenWellinger = ScheduleEntry(ScId("9"),"Talk: Steffen Weillinger",IntervalBounds(new DateTime(2015,3,17,14,50),minutes(15)),auditorium)
+  val talkPaulIske = ScheduleEntry(ScId("10"),"Talk: Paul Iske",IntervalBounds(new DateTime(2015,3,17,15,45),minutes(20)),auditorium)
+  val talkSamQuist =  ScheduleEntry(ScId("11"),"Talk: Sam Quist",IntervalBounds(new DateTime(2015,3,17,16,6),minutes(16)),auditorium)
+  val talkTobyStone =  ScheduleEntry(ScId("12"),"Talk: Toby Stone",IntervalBounds(new DateTime(2015,3,17,16,25),minutes(18)),auditorium)
+  val talkMartinKupp =  ScheduleEntry(ScId("13"),"Talk: Martin Kupp",IntervalBounds(new DateTime(2015,3,18,10,29),minutes(17)),auditorium)
+  val talkLuiseHelliksen =  ScheduleEntry(ScId("14"),"Talk: Luise Helliksen",IntervalBounds(new DateTime(2015,3,18,10,47),minutes(15)),auditorium)
+  val talkJeffSkinner =  ScheduleEntry(ScId("15"),"Talk: Jeff Skinner",IntervalBounds(new DateTime(2015,3,18,11,3),minutes(15)),auditorium)
+  val talkVilleKairamo =  ScheduleEntry(ScId("16"),"Talk: Ville Kairamo",IntervalBounds(new DateTime(2015,3,18,11,19),minutes(15)),auditorium)
+
   val scheduleEntries =
     List(
       session0,
