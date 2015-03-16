@@ -26,12 +26,12 @@ object TestServer {
 
   val server = for {
     servlets <- bootOps.servlets(Map("db_type"->"mem","venue"->"kantega"))
-    serv <- mountServlets(servlets)(JettyBuilder.bindHttp(8080,"172.16.0.26")).start
+    serv <- mountServlets(servlets)(JettyBuilder.bindHttp(8080)).start
   } yield serv
 
 
   val test     = host("localhost", 8090)
-  val local     = host("172.16.0.26", 8080)
+  val local     = host("localhost", 8080)
   val prod     = host("techex.kantega.no").secure
   val h        = local
 

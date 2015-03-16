@@ -29,7 +29,6 @@ object calculatAchievements {
       val nextCtx =
         ctx
           .updatePlayerData(fap.player.player.id, PlayerData.updateProgess(next))
-          .addFacts(facts)
           .addAchievements(facts)
 
       (nextCtx, facts)
@@ -47,10 +46,8 @@ object calculatAchievements {
         else
           List()
 
-      val nxtctx =
-        ctx.addFacts(facts)
 
-      (nxtctx, facts)
+      (ctx, facts)
     }
     case _: Fact              => State.state(nil)
   }

@@ -4,7 +4,7 @@ import java.util.concurrent.{TimeUnit, ScheduledExecutorService}
 
 import org.joda.time._
 import techex._
-import techex.domain.{EndOfDay, StartOfDay, Ticks}
+import techex.domain._
 
 import scalaz.concurrent.{Strategy, Task}
 import scalaz.stream._
@@ -18,9 +18,12 @@ object produceTicks {
   def toMidnight(time: DateTime) =
     time.withTime(0, 0, 0, 0).plusDays(1)
 
+
   val days: Process[Task, Ticks] =
-    //awakeEvery(DateTime.now().toInstant, Seconds.ONE, i => StartOfDay(i),i=>EndOfDay(i))
     awakeEvery(toMidnight(DateTime.now()).toInstant, Days.ONE, i => StartOfDay(i),i=>EndOfDay(i))
+
+  val tenSecs:Process[Task,Ticks] =
+    awakeEvery(Instant.now(),Seconds.seconds(10),inst => StartOfTenSecs(inst),inst=>EndOfTenSecs(inst))
 
   def awakeEvery(start: Instant, d: ReadablePeriod, begin: Instant => Ticks, end: Instant => Ticks)(
     implicit S: Strategy): Process[Task, Ticks] = {

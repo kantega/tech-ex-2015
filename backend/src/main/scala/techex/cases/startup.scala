@@ -33,6 +33,9 @@ object startup {
     val handleTicks =
       produceTicks.days to eventstreams.events.publish
 
+    val handleTenSecs =
+      produceTicks.tenSecs to eventstreams.events.publish
+
     val inputHandlerQueue =
       async.unboundedQueue[InputMessage]
 
@@ -60,6 +63,7 @@ object startup {
 
     Task {
       handleTicks.run.runAsync(_.toString)
+      handleTenSecs.run.runAsync(_.toString)
       notifyGCM.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       notifySlack.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       printFactsToLog.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)

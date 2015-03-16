@@ -9,7 +9,7 @@ import techex.TestServer._
 import techex.cases.playerSignup
 import techex.cases.playerSignup.{SignupOk, PlatformData, CreatePlayerData}
 import techex.data._
-import techex.domain.{Far, Web, Near, Nick}
+import techex.domain._
 import techex.domain.areas._
 
 import scalaz.concurrent.Task
@@ -36,7 +36,7 @@ class MessagesSpec extends Specification {
           case SignupOk(playerData) => Task(playerData)
         }
         _ <- Storage.run(playerSignup.updateContext(data))
-        _ <- eventstreams.events.publishOne(CreatePlayer(createPlayerData,T))
+        _ <- eventstreams.events.publishOne(CreatePlayer(createPlayerData,T,PlayerId("knhuibky6")))
         _ <- eventstreams.events.publishOne(EnterObservation(beaconAt(kantegaCoffeeDn), data.player.id, T, Far))
         _ <- eventstreams.events.publishOne(EnterObservation(beaconAt(kantegaCoffeeDn), data.player.id, T.plus(seconds(5)), Near))
         _ <- eventstreams.events.publishOne(ExitObservation(data.player.id, T.plus(seconds(10))))

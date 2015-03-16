@@ -17,7 +17,16 @@ package object techex {
   type WSHandler = PartialFunction[Request,Task[WebSocket]]
   type Val[A] = Validation[String, A]
 
+  trait UntilBuilder{
+    def until(to:ReadableInstant):Interval
+  }
+
+
   implicit def toDuration(period:ReadablePeriod) = period.toPeriod.toStandardDuration
+
+  implicit def toUntilBuilder(inst:ReadableInstant) = new UntilBuilder{
+    def until(to:ReadableInstant) = new Interval(inst,to)
+  }
 
   def succ[A](a: A): Task[A] =
     Task.now(a)

@@ -26,8 +26,18 @@ object trackPlayer {
       } yield b ::: c ::: d
 
     case exitObservation: ExitObservation => movedToUnknown(exitObservation)
-
+    case endOfTenSecs: EndOfTenSecs       => stayAtArea(endOfTenSecs)
   }
+
+  def stayAtArea: EndOfTenSecs => State[Storage, List[Fact]] =
+    tick => State.gets {
+      ctx => {
+        ctx.players.map(player => {
+          val arrived = player.lastLocation.instant
+          AtArea(player, player.lastLocation.area, tick.instant, durationBetween(arrived, tick.instant))
+        })
+      }
+    }
 
   def movedToUnknown: ExitObservation => State[Storage, List[Fact]] =
     exit => State {
@@ -44,7 +54,7 @@ object trackPlayer {
             player.lastLocation
 
           val nextLocation =
-            LocationUpdate(player.player.id,areas.somewhere,exit.instant)
+            LocationUpdate(player.player.id, areas.somewhere, exit.instant)
 
           val left =
             LeftArea(player, lastLocation.area, exit.instant)
@@ -55,7 +65,7 @@ object trackPlayer {
           val updates =
             left :: arrived :: Nil
 
-          (ctx.addFacts(updates).updatePlayerData(exit.playerId, _.addMovement(nextLocation)), updates)
+          (ctx.updatePlayerData(exit.playerId, _.addMovement(nextLocation)), updates)
         }
 
       }
@@ -105,6 +115,9 @@ object trackPlayer {
           val nextLocation =
             locationUpdate
 
+          val at =
+            AtArea(player,lastLocation.area,locationUpdate.instant,durationBetween(lastLocation.instant,locationUpdate.instant))
+
           val left =
             LeftArea(player, lastLocation.area, locationUpdate.instant)
 
@@ -112,9 +125,9 @@ object trackPlayer {
             EnteredArea(player, nextLocation.area, locationUpdate.instant)
 
           val updates =
-            left :: arrived :: Nil
+            at :: left :: arrived :: Nil
 
-          (ctx.addFacts(updates).updatePlayerData(locationUpdate.playerId, _.addMovement(locationUpdate)), updates)
+          (ctx.updatePlayerData(locationUpdate.playerId, _.addMovement(locationUpdate)), updates)
         }
 
       }
@@ -137,11 +150,9 @@ object trackPlayer {
                   MetPlayer(other, playerData, location.instant)))
             else nil
 
-          val nextState =
-            ctx.addFacts(facts)
 
 
-          (nextState, facts)
+          (ctx, facts)
         }
 
     }
