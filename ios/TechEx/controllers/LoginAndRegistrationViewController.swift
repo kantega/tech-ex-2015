@@ -70,9 +70,10 @@ class LoginAndRegistrationViewController: UIViewController {
         ]
 
         let baseApiUrl = NSBundle.mainBundle().objectForInfoDictionaryKey("serverUrl") as String
-        NSLog("POSTing player with parameters \(parameters)")
-        
-        request(.POST, "\(baseApiUrl)/players", parameters: parameters, encoding: .JSON)
+        let registrationUrl = "\(baseApiUrl)/players"
+        NSLog("POSTing player with parameters \(parameters), registration url: \(registrationUrl)")
+
+        request(.POST, registrationUrl, parameters: parameters, encoding: .JSON)
             .responseJSON { (req, resp, j, error) in
                 NSLog("Register user response received.")
                 if error != nil || resp == nil || resp?.statusCode != 200 {
