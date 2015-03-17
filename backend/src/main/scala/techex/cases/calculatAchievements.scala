@@ -31,9 +31,36 @@ object calculatAchievements {
           .updatePlayerData(fap.player.player.id, PlayerData.updateProgess(next))
           .addAchievements(facts)
 
+
       (nextCtx, facts)
     }
-    case fact: Fact           => State.state(nil)
+    case fact: Fact           => State { initCtx =>
+
+      initCtx.players.foldLeft((initCtx, nil[Fact])) { (pair, player) =>
+        val ctx =
+          pair._1
+
+        val allfacts =
+          pair._2
+
+        val matcher =
+          ctx.playerData(player.player.id).progress
+
+        val (next, updates) =
+          matcher(fact)
+
+        val facts =
+          updates.map(b => EarnedAchievemnt(player, b, fact.instant))
+
+        val nextCtx =
+          ctx
+            .updatePlayerData(player.player.id, PlayerData.updateProgess(next))
+            .addAchievements(facts)
+
+        (nextCtx, facts:::allfacts)
+      }
+
+    }
 
   }
 
@@ -42,7 +69,7 @@ object calculatAchievements {
 
       val facts =
         if (ab.player.player.privateQuests.exists(_.containsAchievement(ab.achievemnt)))
-          List(AwardedBadge(ab.player, Badge(ab.achievemnt),ab.instant))
+          List(AwardedBadge(ab.player, Badge(ab.achievemnt), ab.instant))
         else
           List()
 

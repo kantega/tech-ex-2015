@@ -9,27 +9,20 @@ import scalaz._
 
 object scheduling {
 
-  val day1 = new Interval(new DateTime(2015, 3, 17, 11, 0).withZone(DateTimeZone.forOffsetHours(1)), new DateTime(2015, 3, 18, 1, 0).withZone(DateTimeZone.forOffsetHours(1)))
-  val day2 = new Interval(new DateTime(2015, 3, 18, 9, 0).withZone(DateTimeZone.forOffsetHours(1)), new DateTime(2015, 3, 18, 12, 20).withZone(DateTimeZone.forOffsetHours(1)))
+  val day1                    = new Interval(new DateTime(2015, 3, 18, 11, 0).withZone(DateTimeZone.forOffsetHours(1)), new DateTime(2015, 3, 19, 1, 0).withZone(DateTimeZone.forOffsetHours(1)))
+  val day2                    = new Interval(new DateTime(2015, 3, 19, 9, 0).withZone(DateTimeZone.forOffsetHours(1)), new DateTime(2015, 3, 19, 12, 20).withZone(DateTimeZone.forOffsetHours(1)))
+  val leaveEarlyFromSamfundet = day1.getEnd.withHourOfDay(22).withMinuteOfHour(15)
+  val arriveearlyOnDay2       = day2.getStart.withHourOfDay(8).withMinuteOfHour(30)
+  val samfundetEnds           = day2.getStart.withHourOfDay(1).withMinuteOfHour(0)
 
-  val sessionEntrStateOfMind = ScheduleEntry(ScId("1"), "The Entrepreneurial state of mind", IntervalBounds(new DateTime(2015, 3, 17, 12, 0).withZone(DateTimeZone.forOffsetHours(1)), minutes(90)), kantegaKantine)
-  val sessionPeaceLoveAndE   = ScheduleEntry(ScId("2"), "Peace, Love and Entrepreneurship", IntervalBounds(new DateTime(2015, 3, 17, 13, 50).withZone(DateTimeZone.forOffsetHours(1)), minutes(90)), kantegaKantine)
-  val sessionBloodSwotTears  = ScheduleEntry(ScId("3"), "Blood, SWOT and Tears", IntervalBounds(new DateTime(2015, 3, 17, 15, 50).withZone(DateTimeZone.forOffsetHours(1)), minutes(80)), kantegaKantine)
-  val sessionImagine         = ScheduleEntry(ScId("4"), "Imagine", IntervalBounds(new DateTime(2015, 3, 17, 17, 30).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), kantegaKantine)
-  val sessionCrowdFund       = ScheduleEntry(ScId("5"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 17, 17, 30).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), kantegaKantine)
-  val sessionAppetiteForC    = ScheduleEntry(ScId("6"), "Appetite for Construction", IntervalBounds(new DateTime(2015, 3, 18, 9, 0).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), kantegaKantine)
-  val sessionKickInside      = ScheduleEntry(ScId("7"), "The Kick Inside", IntervalBounds(new DateTime(2015, 3, 18, 10, 20).withZone(DateTimeZone.forOffsetHours(1)), minutes(100)), kantegaKantine)
-  val lunchDayTwo            = ScheduleEntry(ScId("17"), "Lunch Day 2", IntervalBounds(new DateTime(2015, 3, 18, 12, 0).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), kantegaKantine)
-
-  val talkAnnaKjaer        = ScheduleEntry(ScId("8"), "Talk: Anna Kjær Reichert", IntervalBounds(new DateTime(2015, 3, 17, 14, 24).withZone(DateTimeZone.forOffsetHours(1)), minutes(18)), auditorium)
-  val talkSteffenWellinger = ScheduleEntry(ScId("9"), "Talk: Steffen Weillinger", IntervalBounds(new DateTime(2015, 3, 17, 14, 50).withZone(DateTimeZone.forOffsetHours(1)), minutes(15)), auditorium)
-  val talkPaulIske         = ScheduleEntry(ScId("10"), "Talk: Paul Iske", IntervalBounds(new DateTime(2015, 3, 17, 15, 45).withZone(DateTimeZone.forOffsetHours(1)), minutes(20)), auditorium)
-  val talkSamQuist         = ScheduleEntry(ScId("11"), "Talk: Sam Quist", IntervalBounds(new DateTime(2015, 3, 17, 16, 6).withZone(DateTimeZone.forOffsetHours(1)), minutes(16)), auditorium)
-  val talkTobyStone        = ScheduleEntry(ScId("12"), "Talk: Toby Stone", IntervalBounds(new DateTime(2015, 3, 17, 16, 25).withZone(DateTimeZone.forOffsetHours(1)), minutes(18)), auditorium)
-  val talkMartinKupp       = ScheduleEntry(ScId("13"), "Talk: Martin Kupp", IntervalBounds(new DateTime(2015, 3, 18, 10, 29).withZone(DateTimeZone.forOffsetHours(1)), minutes(17)), auditorium)
-  val talkLuiseHelliksen   = ScheduleEntry(ScId("14"), "Talk: Luise Helliksen", IntervalBounds(new DateTime(2015, 3, 18, 10, 47).withZone(DateTimeZone.forOffsetHours(1)), minutes(15)), auditorium)
-  val talkJeffSkinner      = ScheduleEntry(ScId("15"), "Talk: Jeff Skinner", IntervalBounds(new DateTime(2015, 3, 18, 11, 3).withZone(DateTimeZone.forOffsetHours(1)), minutes(15)), auditorium)
-  val talkVilleKairamo     = ScheduleEntry(ScId("16"), "Talk: Ville Kairamo", IntervalBounds(new DateTime(2015, 3, 18, 11, 19).withZone(DateTimeZone.forOffsetHours(1)), minutes(15)), auditorium)
+  val sessionEntrStateOfMind = ScheduleEntry(ScId("1"), "The Entrepreneurial state of mind", IntervalBounds(new DateTime(2015, 3, 18, 12, 0).withZone(DateTimeZone.forOffsetHours(1)), minutes(90)), auditorium)
+  val sessionPeaceLoveAndE   = ScheduleEntry(ScId("2"), "Peace, Love and Entrepreneurship", IntervalBounds(new DateTime(2015, 3, 18, 13, 50).withZone(DateTimeZone.forOffsetHours(1)), minutes(90)), auditorium)
+  val sessionBloodSwotTears  = ScheduleEntry(ScId("3"), "Blood, SWOT and Tears", IntervalBounds(new DateTime(2015, 3, 18, 15, 50).withZone(DateTimeZone.forOffsetHours(1)), minutes(80)), auditorium)
+  val sessionImagine         = ScheduleEntry(ScId("4"), "Imagine", IntervalBounds(new DateTime(2015, 3, 18, 17, 30).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), auditorium)
+  val sessionCrowdFund       = ScheduleEntry(ScId("5"), "Crowdfunding", IntervalBounds(new DateTime(2015, 3, 18, 18, 30).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), auditorium)
+  val sessionAppetiteForC    = ScheduleEntry(ScId("6"), "Appetite for Construction", IntervalBounds(new DateTime(2015, 3, 19, 9, 0).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), auditorium)
+  val sessionKickInside      = ScheduleEntry(ScId("7"), "The Kick Inside", IntervalBounds(new DateTime(2015, 3, 19, 10, 20).withZone(DateTimeZone.forOffsetHours(1)), minutes(100)), auditorium)
+  val lunchDayTwo            = ScheduleEntry(ScId("17"), "Lunch Day 2", IntervalBounds(new DateTime(2015, 3, 19, 12, 0).withZone(DateTimeZone.forOffsetHours(1)), minutes(60)), auditorium)
 
   val scheduleEntries =
     List(
@@ -40,15 +33,7 @@ object scheduling {
       sessionCrowdFund,
       sessionAppetiteForC,
       sessionKickInside,
-      talkAnnaKjaer,
-      talkSteffenWellinger,
-      talkPaulIske,
-      talkSamQuist,
-      talkTobyStone,
-      talkMartinKupp,
-      talkLuiseHelliksen,
-      talkJeffSkinner,
-      talkVilleKairamo).sortBy(entry => entry.time.start.getMillis)
+      lunchDayTwo).sortBy(entry => entry.time.start.getMillis)
 
 }
 

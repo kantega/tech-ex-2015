@@ -18,6 +18,13 @@ object endSession {
         ok <- Ok()
       } yield ok
     }
+      /*To avoid CORS crap*/
+    case req@GET -> Root / "sessions" / "end" / sessionId => {
+      for {
+        _ <- topic.publishOne(EndEntry(ScId(sessionId),Instant.now()))
+        ok <- Ok()
+      } yield ok
+    }
   }
 
 }

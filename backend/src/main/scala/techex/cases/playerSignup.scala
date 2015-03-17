@@ -92,7 +92,7 @@ object playerSignup {
             player,
             Set(),
             LocationUpdate(player.id,areas.somewhere,Instant.now()),
-            player.privateQuests
+            quests.quests
               .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
               .foldLeft(progresstracker.zero[Achievement])(_ and _),

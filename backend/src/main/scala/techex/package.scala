@@ -54,7 +54,10 @@ package object techex {
       Some(str)
 
   def durationBetween(from:ReadableInstant,to:ReadableInstant) =
+  if(from.isBefore(to))
     new Interval(from,to).toDuration
+  else
+    new Interval(to,from).toDuration
 
   def prln(txt:String) = Task{
     println(txt)

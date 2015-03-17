@@ -20,5 +20,12 @@ object startSession {
         result <- if(exists) topic.publishOne(StartEntry(ScId(sessionId),Instant.now())) *> Ok() else NotFound()
       } yield result
     }
+      /*To avaoid CORS crap*/
+    case req@GET -> Root / "sessions" / "start" / sessionId => {
+      for {
+        exists <- Storage.run(State.gets(sch => sch.schedule.get(ScId(sessionId)).isDefined))
+        result <- if(exists) topic.publishOne(StartEntry(ScId(sessionId),Instant.now())) *> Ok() else NotFound()
+      } yield result
+    }
   }
 }
