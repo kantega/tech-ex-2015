@@ -8,56 +8,74 @@ html {
 }
 
 body {
-  background: #EAECF0;
+  background: #000;
+  color: #fff;
   font-family: 'Klavika light', 'Exo', sans-serif;
   font-size: 15px;
   height: 100%;
 }
 
-.technoport-logo {
-  display: inline-block;
-  height: 16px;
-  width: 16px;
-  background: url("../images/favicon-16x16.png") center center no-repeat;
+h1 {
+  margin-bottom: 40px;
 }
+
 
 .content {
-  box-shadow: 0 0 72px 0 #C7C7C7;
   padding: 2em 1em;
   height: 100%;
-  background: #fff;
+  background: transparent;
 }
 
+.table {
 
-.navbar {
-  background-color: #aaaa97;
-  border-color: #ccc;
-  margin-bottom: 0;
-
-  .navbar-brand {
-    color: #fff;
-  }
-
-  .navbar-nav {
-
-    > li > a {
-      color: #fff;
-    }
-
-    > li > a:hover {
-      color: #000;
-      background-color: #3dc1ba;
-    }
-
-    > .active {
-      a, a:active, a:focus {
-        color: #000;
-        background-color: #97d8de;
-      }
-      a:hover {
-        color: #000;
-        background-color: #3dc1ba;
+  > thead,
+  > tbody,
+  > tfoot {
+    > tr {
+      > th,
+      > td {
+        border-top: none;
+        border-bottom: none;
       }
     }
   }
 }
+
+// Badges column
+.highscores tr > td:first-child {
+  width: 120px;
+}
+
+.techex-badge {
+  display: block;
+  background: transparent center center no-repeat;
+  &.techex-badge-gold {
+    height: 50px;
+    width: 100px;
+    background-size: 34px 50px;
+    background-image: url('../images/badge_gold.png')
+  }
+  &.techex-badge-silver {
+    height: 40px;
+    width: 100px;
+    background-size: 27px 40px;
+    background-image: url('../images/badge_silver.png')
+  }
+  &.techex-badge-bronze {
+    height: 30px;
+    width: 100px;
+    background-size: 20px 30px;
+    background-image: url('../images/badge_bronze.png')
+  }
+}
+
+.session {
+  &.session-active {
+    background: #eee;
+  }
+  &.session-ended {
+    color: #ccc;
+    text-decoration: line-through;
+  }
+}
+

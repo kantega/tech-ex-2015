@@ -1,18 +1,21 @@
 'use strict';
 
-angular.module('techex', ['ngRoute', 'ngResource'])
+angular.module('techex', ['ngRoute', 'ngResource', 'ui.bootstrap'])
+
+    .constant('baseUrl', 'https://kantegex.kantega.no')
+
     .config(['$routeProvider', '$locationProvider', function ($routeProvider, $locationProvider) {
         $routeProvider
-            .when('/', {
-                templateUrl: 'quests/quests.html',
-                controller: 'QuestsCtrl'
+            .when('/highscore', {
+                templateUrl: 'highscore/highscore.html',
+                controller: 'HighscoreController'
             })
-            .when('/badges', {
-                templateUrl: 'badges/badges.html',
-                controller: 'BadgesCtrl'
+            .when('/sessions', {
+                templateUrl: 'sessions/sessions.html',
+                controller: 'SessionsController'
             })
             .otherwise({
-                redirectTo: '/'
+                redirectTo: '/highscore'
             });
 
         // use the HTML5 History API

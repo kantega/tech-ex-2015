@@ -1,0 +1,22 @@
+
+<h1>Sessions and talks</h1>
+
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Planned start</th>
+        <th>Duration</th>
+        <th>Title</th>
+        <th></th>
+        <th></th>
+    </tr>
+    </thead>
+    <tr ng-repeat="s in sessions" class="session" ng-class="{'session-ended': s.ended, 'session-active': (s.started && !s.ended)}">
+        <td>{{s.time.startstamp | date:'EEE HH:mm'}}</td>
+        <td>{{s.time.duration | minutes}}</td>
+        <td>{{s.name}}</td>
+        <td><button class="btn btn-success" ng-click="start(s.id)" ng-disabled="s.started">Start</button></td>
+        <td><button class="btn" ng-click="end(s.id)" ng-disabled="(s.started && s.ended) || (!s.started && !s.ended)" ng-class="{'btn-danger': (s.started && !s.ended)}">End</button></td>
+    </tr>
+</table>
