@@ -41,6 +41,17 @@ h1 {
   }
 }
 
+h1.logo {
+  height: 37px;
+  width: 100%;
+  background: transparent url('../images/logo-with-name.png') center center no-repeat;
+  background-size: 260px 37px;
+}
+h1 {
+  font-size: 28px;
+  text-align: center;
+}
+
 // Badges column
 .highscores tr > td:first-child {
   width: 120px;
@@ -76,6 +87,39 @@ h1 {
   &.session-ended {
     color: #ccc;
     text-decoration: line-through;
+  }
+}
+
+
+.program {
+  padding: 0;
+  width: 450px;
+  margin: 0 auto;
+
+  li {
+    list-style: none;
+  }
+  .session {
+    margin-bottom: 2.5em;
+    .end {
+      margin-right: 2em;
+      &:before {
+        content: "-";
+        margin-right: 0.3em;
+      }
+    }
+
+    .title {
+      font-size: 1.3em;
+    }
+  }
+  .talks {
+    font-size: 0.9em;
+    li {
+      float: left;
+      margin-right: 2em;
+    }
+    clear: both;
   }
 }
 

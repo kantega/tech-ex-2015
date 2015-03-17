@@ -2,6 +2,7 @@
 
 angular.module('techex')
     .controller('HighscoreController', ['$scope', 'Highscore', function ($scope, Highscore) {
+        console.log("HighscoreController initialized");
         $scope.scores = Highscore.query();
     }])
 
