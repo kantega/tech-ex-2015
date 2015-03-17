@@ -58,16 +58,10 @@ case class Storage(playerData: Map[PlayerId, PlayerData], schedule: Map[ScId, Sc
     copy(playerData = playerData - id)
   }
 
-  def addFacts(activities: List[FactAboutPlayer]): Storage =
-    activities match {
-      case Nil          => this
-      case head :: tail => updatePlayerData(head.player.player.id, _.addFact(head)).addFacts(tail)
-    }
-
   def addAchievements(achievements: List[EarnedAchievemnt]): Storage = {
     achievements match {
       case Nil          => this
-      case head :: tail => updatePlayerData(head.player.player.id, _.addAchievement(head.achievemnt)).addFacts(tail)
+      case list@head::tail => updatePlayerData(head.player.player.id, _.addAchievement(head.achievemnt)).addAchievements(tail)
     }
   }
 
@@ -97,21 +91,15 @@ case class PlayerData(
   player: Player,
   achievements: Set[Achievement],
   lastLocation: LocationUpdate,
-  activities: Vector[FactAboutPlayer],
   progress: PatternTracker[Achievement],
   platform: NotificationTarget) {
 
   def addAchievement(achievemnt: Achievement): PlayerData =
     copy(achievements = achievements + achievemnt)
 
+
   def addMovement(location: LocationUpdate): PlayerData =
     copy(lastLocation = location)
-
-  def addActivities(activities: List[FactAboutPlayer]): PlayerData =
-    activities.foldRight(this) { (activity, data) => data.addFact(activity)}
-
-  def addFact(activity: FactAboutPlayer): PlayerData =
-    copy(activities = activity +: activities)
 
   override def toString =
     "Player(" + player.nick.value + ", " + platform + ")"

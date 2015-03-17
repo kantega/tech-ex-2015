@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 import com.typesafe.config.Config
 import doobie.util.process
 import doobie.util.transactor.Transactor
+import org.http4s.Header
 import org.http4s.server._
 import org.joda.time.Instant
 import techex._
@@ -31,6 +32,9 @@ object startup {
 
     val handleTicks =
       produceTicks.days to eventstreams.events.publish
+
+    val handleTenSecs =
+      produceTicks.tenSecs to eventstreams.events.publish
 
     val inputHandlerQueue =
       async.unboundedQueue[InputMessage]
@@ -59,6 +63,7 @@ object startup {
 
     Task {
       handleTicks.run.runAsync(_.toString)
+      handleTenSecs.run.runAsync(_.toString)
       notifyGCM.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       notifySlack.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
       printFactsToLog.setup(eventstreams.factUdpates.subscribe).runAsync(_.toString)
@@ -97,15 +102,15 @@ object startup {
       else
         db.inMemConfig
 
-    for {
-      _ <- slack.sendMessage("Starting up server with " + getStringOr(cfg, "db_type", "mem"), Attention)
+    val task = for {
+      _ <- slack.sendMessage("Starting up server for venue "+ getStringOr(cfg,"venue","technoport") +" with database " + getStringOr(cfg, "db_type", "mem"), Attention)
       ds <- db.ds(dbConfig)
       _ <- ds.transact(InputMessageDAO.createObservationtable)
       _ <- setupStream(ds)
       _ <- setupSchedule
 
     } yield (HttpService(
-      playerSignup.restApi(eventstreams.events) orElse
+        (playerSignup.restApi(getStringOr(cfg,"venue","technoport"),eventstreams.events) orElse
         test.testApi orElse
         listPersonalAchievements.restApi orElse
         listPersonalQuests.restApi orElse
@@ -118,8 +123,8 @@ object startup {
         listSchedule.restApi orElse
         serveHelptext.restApi orElse
         getBeaconRegions.restApi orElse
-        getAreas.restApi
+        getAreas.restApi).andThen(resp => resp.map(r => r.withHeaders(Header("Access-Control-Allow-Origin","*"))))
     ), getUpdateStream.wsApi(eventstreams.factUdpates))
-
+ task
   }
 }

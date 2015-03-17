@@ -116,13 +116,12 @@ trait Matcher[A] {
   def ++[B](a: Matcher[B]) =
     and(a)
 
-  /*
-    def ~>(m: Matcher[A]) =
-      fby(m)
-  */
 
-  def ~><(m: Matcher[A]) =
+  def until[B](m: Matcher[B]): Matcher[(A, B)] =
     and(m.haltAfter)
+
+  def before[B](m: Matcher[B]): Matcher[A] =
+    xor(m.haltOn).collect { case -\/(a) => a}
 
   def ||(m: Matcher[A]) =
     or(m)
@@ -236,7 +235,8 @@ trait Matcher[A] {
 
   def xor[B](other: Matcher[B]): Matcher[A \/ B] =
     (this, other) match {
-      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Halt(), b)                  => b.map(x => \/-(x))
+      case (a, Halt())                  => a.map(x => -\/(x))
       case (Emit(m1, n1), Emit(m2, n2)) => await(p => n1 xor n2)
       case (Emit(m1, n1), b: Await[B])  => Emit(m1.left, n1 xor b)
       case (a: Await[A], Emit(m2, n2))  => Emit(m2.right, a xor n2)
@@ -246,10 +246,11 @@ trait Matcher[A] {
 
   def or[B](other: Matcher[B]): Matcher[(Option[A], Option[B])] =
     (this, other) match {
-      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Halt(), b)                  => b.map(x => (none, x.some))
+      case (a, Halt())                  => a.map(x => (x.some, none))
       case (Emit(m1, n1), Emit(m2, n2)) => Emit((m1.some, m2.some), n1 or n2)
-      case (Emit(m1, n1), b: Await[B])  => Emit((m1.some, none[B]), n1 or b) // await(p => n1.step(p) or b.step(p)))
-      case (a: Await[A], Emit(m2, n2))  => Emit((none[A], m2.some), a or n2) // await(p => a.step(p) or n2.step(p)))
+      case (Emit(m1, n1), b: Await[B])  => Emit((m1.some, none[B]), n1 or b)
+      case (a: Await[A], Emit(m2, n2))  => Emit((none[A], m2.some), a or n2)
       case (a: Await[A], b: Await[B])   => await(p => a.f(p) or b.f(p))
     }
 
@@ -257,8 +258,8 @@ trait Matcher[A] {
     (this, other) match {
       case (Halt(), _) | (_, Halt())    => Halt()
       case (Emit(m1, n1), Emit(m2, n2)) => Emit((m1, m2), n1 and n2)
-      case (Emit(m1, n1), b: Await[B])  => n1 and b //await(n1 + " *and " + b, p => n1.step(p) and b.step(p))
-      case (a: Await[A], Emit(m2, n2))  => a and n2 //await(a + " and* " + n2, p => a.step(p) and n2.step(p))
+      case (Emit(m1, n1), b: Await[B])  => n1 and b
+      case (a: Await[A], Emit(m2, n2))  => a and n2
       case (a: Await[A], b: Await[B])   => await(a + " and " + b, p => a.f(p) and b.f(p))
     }
   }
@@ -278,35 +279,23 @@ trait Matcher[A] {
     }
 
 
-  def fby(other: Matcher[A])(implicit ev1: Order[A]): Matcher[(A, A)] =
+  def fby[B](other: Matcher[B]): Matcher[(A, B)] =
     (this, other) match {
       case (Halt(), _) | (_, Halt())    => Halt()
-      case (Emit(m1, n1), Emit(m2, n2)) => if (m1 lt m2) Emit((m1, m2), n1.fby(n2)) else n1.fby(n2)
-      case (Emit(m1, n1), a2: Await[A]) => n1.fby(a2)
+      case (Emit(m1, n1), Emit(m2, n2)) => n1.fby2(n2, m1)
+      case (Emit(m1, n1), a2: Await[B]) => n1.fby2(a2, m1)
       case (a1: Await[A], Emit(m2, n2)) => a1.fby(n2)
-      case (a1: Await[A], a2: Await[A]) => await(a1 + "~>" + a2, p => a1.f(p).fby(a2.f(p))) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
+      case (a1: Await[A], a2: Await[B]) => await(p => a1.f(p) fby a2)
     }
 
-  /*
-  
-      def fby(other: Matcher, cached: Pattern): Matcher =
-        (this, other) match {
-          case (Halt(), _) | (_, Halt())      => Halt()
-          case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
-          case (Match(m1, n1), a2: Await)     => n1.fby(a2, m1)
-          case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
-          case (a1: Await, a2: Await)         => await(a1 + "/" + cached.facts.head + "~>" + a2, p => a1.f(p).fby(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
-        }
-  
-      def fby2(other: Matcher, cached: Pattern): Matcher =
-        (this, other) match {
-          case (Halt(), _) | (_, Halt())      => Halt()
-          case (Match(m1, n1), Match(m2, n2)) => Match(m2 ++ m1, n1.fby2(n2, m1))
-          case (Match(m1, n1), a2: Await)     => n1.fby2(a2, m1)
-          case (a1: Await, Match(m2, n2))     => Match(m2 ++ cached, a1.fby2(n2, cached))
-          case (a1: Await, a2: Await)         => await(a1 + "//" + cached.facts.head + "~>" + a2, p => a1.fby2(a2.f(p withHistory cached), cached)) //Await(FBy(this, other))//await(p => a1.step(p).fby(a2))  //await(p => a1.step(p).fby(a2))
-        }
-    */
+  def fby2[B](other: Matcher[B], cached: A): Matcher[(A, B)] =
+    (this, other) match {
+      case (Halt(), _) | (_, Halt())    => Halt()
+      case (Emit(m1, n1), Emit(m2, n2)) => Emit((cached, m2), n1.fby2(n2, m1))
+      case (Emit(m1, n1), a2: Await[B]) => n1.fby2(a2, m1)
+      case (a1: Await[A], Emit(m2, n2)) => Emit((cached, m2), a1.fby2(n2, cached))
+      case (a1: Await[A], a2: Await[B]) => await(p => a1.f(p).fby2(a2.f(p), cached))
+    }
 }
 
 

@@ -7,11 +7,15 @@ import techex._
 import techex.domain.patternmatching._
 import techex.domain.preds._
 import areas._
+import techex.domain.scheduling._
 import scalaz.Scalaz._
 import scalaz._
 
 
 object quests {
+
+  implicit val isStayAfterLeft: Pred[(LeftOnEnd, (EnteredArea, LeftArea))] =
+    pair => pair._1.instant.isBefore(pair._2._1.instant)
 
 
   def last(p: Pred[Fact]) =
@@ -35,9 +39,17 @@ object quests {
   def exitOneOf(areas: Area*): Pred[Fact] =
     fact({ case LeftArea(_, area, _) if areas.exists(a => a === area) => true})
 
+  def startOfDayTwo: Matcher[StartOfDay] =
+    on[StartOfDay].filter(time(dt => dt.getDayOfMonth === 18 && dt.getMonthOfYear === 3))
 
   def time(t: DateTime => Boolean): Pred[Fact] =
-    fact => t(fact.instant.toDateTime)
+    fact => t(fact.instant.toDateTime.toDateTime(DateTimeZone.forOffsetHours(1)))
+
+  def within(interval: Interval): Pred[Fact] =
+    fact => interval.contains(fact.instant)
+
+  def ended(event: ScheduleEntry): Matcher[Ended] =
+    on[Ended].filter(evt => evt.entry === event)
 
   def size(t: Int): Pred[List[Fact]] =
     list => (list.length >= t)
@@ -55,25 +67,33 @@ object quests {
   val leftArea =
     fact({ case entered: LeftArea => true})
 
-  def stay(dur: ReadableDuration)(pred: Pred[Area]): Matcher[(EnteredArea, LeftArea)] =
-    (on[EnteredArea].last and on[LeftArea].last).filter {
-      pair => {
-        val enter = pair._1
-        val exit = pair._2
-        val atSameArea = enter.area === exit.area
-        val atCorrectArea = pred(enter.area)
-        val stayLongEnough = durationBetween(enter.instant, exit.instant).isLongerThan(dur)
-        atCorrectArea && atSameArea && stayLongEnough
-      }
+  def stay(dur: ReadableDuration)(pred: Pred[Area]): Matcher[AtArea] =
+    on[AtArea].filter(at => pred(at.area) && at.duration.isLongerThan(dur))
+
+  /*(on[EnteredArea].last and on[LeftArea].last).filter {
+    pair => {
+      val enter = pair._1
+      val exit = pair._2
+      val atSameArea = enter.area === exit.area
+      val atCorrectArea = pred(enter.area)
+      val stayLongEnough = durationBetween(enter.instant, exit.instant).isLongerThan(dur)
+      atCorrectArea && atSameArea && stayLongEnough
     }
+  }*/
+
+  def see(pred: ScheduleEntry => Boolean): Matcher[(JoinedOnStart, LeftOnEnd)] =
+    (on[JoinedOnStart].filter(evt => pred(evt.event)).last and on[LeftOnEnd]).filter(pair => pair._1.event === pair._2.event)
+
+  def seeEntry(entry: ScheduleEntry) =
+    see(evt => evt === entry)
 
   def stayForThirtySecs = stay(Seconds.seconds(30)) _
 
-  def stayForFive = stay(Minutes.minutes(5)) _
+  def stayForFive = stay(minutes(5)) _
 
-  def stayForTen = stay(Minutes.minutes(10)) _
+  def stayForTen = stay(minutes(10)) _
 
-  def stayForThirty = stay(Minutes.minutes(30)) _
+  def stayForThirty = stay(minutes(30)) _
 
   def stayForHour = stay(Hours.ONE) _
 
@@ -240,7 +260,7 @@ object quests {
 
     val meetingRoomRoamerTracker =
       progresstracker.collect(
-        (stayForThirtySecs(atAnyMeetingRoom).map(_._1.area) xor halt(on[EndOfDay])).repeat, (pair: Area \/ EndOfDay) => pair.fold(_.some, ex => none)) {
+        (stayForThirtySecs(atAnyMeetingRoom).map(_.area) xor halt(on[EndOfDay])).repeat, (pair: Area \/ EndOfDay) => pair.fold(_.some, ex => none)) {
         case 4 => meetingRoomRoamer.some
         case _ => none
       }
@@ -265,12 +285,57 @@ object quests {
 
   }
 
+  val kantegaQuests =
+    List(
+      kq.coffeeHero,
+      kq.earlybird,
+      kq.meetinghero,
+      kq.stayer,
+      kq.roamer
+    )
+
+
+  val badgeSeeAppetiteForC            = Achievement(Bid("badgeSeeAppetiteForC"), "Seen Appetitite for Construction", "Be at the session Appetite for Construction")
+  val badgeSeeEntre                   = Achievement(Bid("badgeSeeEntre"), "Seen Entrepreneurial State of Mind", "Be at the session Entrepreneurial State of Mind")
+  val badgeSeeBlodSwotAndTears        = Achievement(Bid("abdgeSeeBlodSwotAndTears"), "Seen Blood Swot and tears", "Be at the session See Blood Swot and tears")
+  val badgeSeeAllSessions             = Achievement(Bid("badgeSeeAllSessions"), "Seen all the sessions", "Be at all the sessions")
+  val badgeEarlyBird                  = Achievement(Bid("badgeEearlyBird"), "The early bird", "Arrived more then 20 minutes prior to program start on day 1 or day 2")
+  val badgeStarStruck                 = Achievement(Bid("badgeStarStruck"), "Starstruck", "Hang around the stage area for more then 6 minutes after the session ended")
+  val badgeComfyChairs                     = Achievement(Bid("comfyChairs"), "Damn! These chairs are comfortable", "Spend an entire brake in the auditorium")
+  val badgeOnTimeLate                 = Achievement(Bid("badgeOnTimeLate"), "If your there right on time your 5 minutes late", "Be present in the room 2 minute before session starts")
+  val badgeVisitAllStands             = Achievement(Bid("badgeVisitAllStands"), "Visit all the stands", "Be in close proximity to all stands once througout the conference")
+  val badgeVisitAllStandsBoth         = Achievement(Bid("badgeVisitAllStandsBoth"), "Visit all the stands on both days", "Be in close proximity to all stands once both days")
+  val badgeHaveACupper                = Achievement(Bid("badgeHaveACupper"), "Have a cupper", "Be in the proximity of coffe stand three times")
+  val badgeMoreCoffee                 = Achievement(Bid("badgeMoreCoffee"), "You should probably blink by now #MoreCoffee?", "Be in close proximity to the coffee stand more then 5 times during one day.")
+  val badgeILoveThisStand             = Achievement(Bid("badgeILoveThisStand"), "Wow! I love this Stand", "Hang around one stand for more then 10 minutes")
+  val badgeBeenThereDoneThat          = Achievement(Bid("badgeBeenThereDoneThat"), "Been there, done that", "Visit all the stands in minium 0.5 minutes each,but not very long")
+  val badgeVisitAllStandsInLunchBreak = Achievement(Bid("badgeVisitAllStandsInLunchBreak"), "Visit all the stands in the lunch break", "Hang around one stand for more then 10 minutes")
+  val badgeNetworker                  = Achievement(Bid("badgeNetworker"), "Super networker", "Meet more than 20 people at the meetingpoints")
+  val badgePartyAnimal                = Achievement(Bid("badgePartyAnimal"), "Party Animal", "Be present at samfunnet after 01:00")
+  val badgeTheResponsible             = Achievement(Bid("badgeTheResponsible"), "The responsible one", "Leave samfunded prior to 22:15")
+  val badgeHeroAtNightAndDay          = Achievement(Bid("badgeHeroAtNightAndDay"), "Hero at night, hero at day", "Present at samfunnet later then 00:00 AND present at the Conference prior to 08:30 on day 2")
+  val badgeGottaCatchThemAll          = Achievement(Bid("badgeGottaCatchThemAll"), "Gotta catch them all", "Be near all the beacons")
+
+
+  val trackSeeApettiteForConstruction = progresstracker.value(seeEntry(sessionAppetiteForC), badgeSeeAppetiteForC)
+  val trackSeeEntre                   = progresstracker.value(seeEntry(sessionEntrStateOfMind), badgeSeeEntre)
+  val trackSeeBlodSwotAndT            = progresstracker.value(seeEntry(sessionBloodSwotTears), badgeSeeBlodSwotAndTears)
+  val trackSeeAllSessions             = progresstracker.value(see(x => true).repeat.accumN(6).filter(list => list.length > 5), badgeSeeAllSessions)
+  val trackEarlyBird                  = progresstracker.value(on[EnteredArea].filter(time(_.isBefore(day1.getStart.minus(minutes(20))))) or on[EnteredArea].filter(within(day2.getStart.minus(minutes(120)) until day2.getStart.minus(minutes(20)))), badgeEarlyBird)
+  val trackStarStruck                 = progresstracker.value(on[LeftOnEnd].last fby stayForFive(at(stage)).last, badgeStarStruck)
+  val trackComfyChairs                = progresstracker.value(on[LeftOnEnd].last fby stayForTen(at(auditorium)).last,badgeComfyChairs)
+  val trackOnTimeIsLate               = progresstracker.value((on[EnteredArea].last and on[JoinedOnStart].end).repeat.filter(pair => pair._1.instant.isBefore(pair._2.instant.minus(minutes(2)))), badgeOnTimeLate)
+  val visitAllStandsMatcher           = stayForTen(at(areas.mrtTuring)).last and stayForTen(at(areas.mrtAda)).last
+  val trackVisitAllStands             = progresstracker.value((visitAllStandsMatcher before ended(sessionCrowdFund)) or (startOfDayTwo fby visitAllStandsMatcher), badgeVisitAllStands)
+  val trackVisitAllStandsBoth         = progresstracker.value((visitAllStandsMatcher before ended(sessionCrowdFund)) and (startOfDayTwo fby visitAllStandsMatcher), badgeVisitAllStands)
+  //val trackHaveACupper                = progresstracker.value()
   //Quests
-  val seeAllTalks       = Quest(Qid("seealltalks"), "See all the Talks", "Maximize your smart, see them all", Public, List(seetalksiron, seetalksbronze, seetalkssilver, seetalksgold))
-  val attendAllSessions = Quest(Qid("visitallsessions"), "Attend all the Talks", "Maximize your smart, see them all", Public, List(firstsession, kreatorsession, fundingsession))
-  val visitAllStands    = Quest(Qid("visitthestands"), "Visit the stands", "Visit as many stands you can", Public, List())
-  val eagerNess         = Quest(Qid("beEager"), "The early bird", "Be on time", Public, List(earlybird, ontime))
-  val antihero          = Quest(Qid("antihero"), "The Antihero", "No, you dont want to be good here", Secret, List(keepsringing, placestogo, tinyjavabladder, smalljavabladder))
+  val questInSearchForInspiration     = Quest(Qid("inSearchForInsp"), "In search for inspiration", "", Public, List(seetalksiron, seetalksbronze, seetalkssilver, seetalksgold))
+  val questIWantUsToSeeOtherPeople    = Quest(Qid("iwantustoseeother"), "I want us to see other people", "", Public, List(firstsession, kreatorsession, fundingsession))
+  val questStayer                     = Quest(Qid("stayer"), "Be the stayer", "", Public, List())
+  val questTechHead                   = Quest(Qid("techhead"), "You are the tech-head", "", Public, List(earlybird, ontime))
+  val questForScience                 = Quest(Qid("forscience"), "Explore for science!", "", Secret, List(keepsringing, placestogo, tinyjavabladder, smalljavabladder))
+  val questForiNnovationAndBeyond     = Quest(Qid("forinnovationAndBeyond"), "For innovation and beyond!", "", Public, List())
 
 
   val ontimePred =

@@ -27,11 +27,15 @@ object playerSignup {
   case class NickTaken(nick: Nick) extends Signupresult
 
   val toFact: PartialFunction[InputMessage , State[Storage, List[Fact]]] = {
-    case CreatePlayer(data,instant) => State{ctx =>
+    case CreatePlayer(data,instant,id) => State{ctx =>
       val playerData =
-        ctx.players.find(entry => entry.player.nick === data.nick)
+        ctx.playerData.get(id)
 
-      (ctx,List(PlayerCreated(playerData.get,instant)))}
+      playerData.fold((ctx,nil[PlayerCreated])){data =>
+        (ctx,List(PlayerCreated(data,instant)))
+      }
+
+      }
   }
 
   val getNick: String => Task[Nick] =
@@ -55,16 +59,19 @@ object playerSignup {
       Player(PlayerId.randomId(), nick, playerPreference, personalQuests)
     }
 
-  def selectPersonalQuests(nick: Nick): List[Quest] = {
-    /*val rand = Random
-    rand.setSeed(nick.value.hashCode)
-    val index =
-      rand.nextInt(quests.questPermutations.length - 1)
-    val perm =
-      quests.questPermutations(index)
-
-    List(perm._1, perm._2)*/
-    quests.quests //TODO:All quests for now
+  def selectPersonalQuests(venue:String,nick: Nick): List[Quest] = {
+    venue match{
+      case "kantega" => quests.kantegaQuests
+      case _ => {
+        val rand = Random
+        rand.setSeed(nick.value.hashCode)
+        val index =
+          rand.nextInt(quests.questPermutations.length - 1)
+        val perm =
+          quests.questPermutations(index)
+        List(perm._1, perm._2)
+      }
+    }
   }
 
   val updateContext: PlayerData => State[Storage, PlayerData] =
@@ -73,11 +80,11 @@ object playerSignup {
         (ctx.putPlayerData(playerData.player.id, playerData), playerData))
 
 
-  val createPlayerIfNickAvailable: CreatePlayerData => State[Storage, Signupresult] =
+  def createPlayerIfNickAvailable(venue:String): CreatePlayerData => State[Storage, Signupresult] =
      createData =>
       for {
         taken <- checkNickTaken(createData.nick)
-        randomPersonQuests <- State.state(selectPersonalQuests(createData.nick))
+        randomPersonQuests <- State.state(selectPersonalQuests(venue,createData.nick))
         player <- State.state(createPlayer(createData.nick, createData.preferences.getOrElse(PlayerPreference.default), randomPersonQuests))
         rsult <- State.state(
           if (taken) NickTaken(createData.nick)
@@ -85,7 +92,6 @@ object playerSignup {
             player,
             Set(),
             LocationUpdate(player.id,areas.somewhere,Instant.now()),
-            Vector(),
             player.privateQuests
               .map(q => quests.trackerForQuest.get(q.id))
               .collect { case Some(x) => x}
@@ -100,9 +106,9 @@ object playerSignup {
     case NickTaken(nick)  => Conflict(s"The nick ${nick.value} is taken, submit different nick")
   }
 
-  def restApi(topic: Topic[InputMessage]): WebHandler = {
+  def restApi(venue:String,topic: Topic[InputMessage]): WebHandler = {
     case req@POST -> Root / "players"  =>
-      req.decode[String]{body => {
+      req.decode[String](body => {
         val maybeCreatePlayerData =
           toJsonQuotes(body).decodeValidation[CreatePlayerData]
 
@@ -111,11 +117,11 @@ object playerSignup {
           createPlayerData => {
 
             for {
-              result <- Storage.run(createPlayerIfNickAvailable(createPlayerData))
+              result <- Storage.run(createPlayerIfNickAvailable(venue)(createPlayerData))
               _ <- result match {
                 case ok@SignupOk(playerData) =>
                   Storage.run(updateContext(playerData)) *>
-                    topic.publishOne(CreatePlayer(createPlayerData,Instant.now()))
+                    topic.publishOne(CreatePlayer(createPlayerData,Instant.now(),playerData.player.id))
 
                 case _                       => Task {}
               }
@@ -124,7 +130,7 @@ object playerSignup {
           }
         )
 
-      }}
+      })
   }
 
   case class PlatformData(plattformType: String, deviceToken: Option[String]) {

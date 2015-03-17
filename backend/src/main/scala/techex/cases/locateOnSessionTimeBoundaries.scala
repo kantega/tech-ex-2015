@@ -26,7 +26,7 @@ object locateOnSessionTimeBoundaries {
             event <- ctx.entriesList.filter(s => s.started && (s.area contains arrival.area))
           } yield JoinedActivityLate(arrival.player, event,arrival.instant)
 
-        (ctx.addFacts(joinActivities), joinActivities)
+        (ctx, joinActivities)
       }
     }
 
@@ -38,7 +38,7 @@ object locateOnSessionTimeBoundaries {
             event <- ctx.entriesList.filter(s => s.time.abouts(Instant.now()) && (s.area contains leaving.area))
           } yield LeftActivityEarly(leaving.player, event,leaving.instant)
 
-        (ctx.addFacts(leaveActivities), leaveActivities)
+        (ctx, leaveActivities)
       }
     }
 
@@ -50,7 +50,7 @@ object locateOnSessionTimeBoundaries {
           .filter(_.lastLocation.area === started.entry.area)
           .map(player => JoinedOnStart(player, started.entry,started.instant))
 
-      (ctx.addFacts(joinedFacts), joinedFacts)
+      (ctx, joinedFacts)
     }
 
 
@@ -61,7 +61,7 @@ object locateOnSessionTimeBoundaries {
           .filter(_.lastLocation.area === ended.entry.area)
           .map(player => LeftOnEnd(player, ended.entry,ended.instant))
 
-      (ctx.addFacts(endedfacts), endedfacts)
+      (ctx, endedfacts)
     }
 
 }

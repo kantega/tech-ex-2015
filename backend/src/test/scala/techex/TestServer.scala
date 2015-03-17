@@ -25,7 +25,7 @@ object TestServer {
 
 
   val server = for {
-    servlets <- bootOps.servlets(Map("db_type"->"mem"))
+    servlets <- bootOps.servlets(Map("db_type"->"mem","venue"->"kantega"))
     serv <- mountServlets(servlets)(JettyBuilder.bindHttp(8080)).start
   } yield serv
 

@@ -126,7 +126,7 @@
                 .each(stash);
 
 
-        var websocket = new WebSocket("wss://techex.kantega.no/ws/observations")
+        var websocket = new WebSocket("wss://techex.kantega.no/ws/observations");
         websocket.onopen = function (evt) {
             console.log("Opened websocket")
         };

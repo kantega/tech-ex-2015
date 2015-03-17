@@ -29,7 +29,7 @@ case class EnterObservation(beacon: BeaconId, playerId: PlayerId, instant: Insta
 case class ExitObservation(playerId:PlayerId,instant:Instant) extends InputMessage{
   val msgType = "ExitObservation"
 }
-case class CreatePlayer(data:CreatePlayerData,instant:Instant) extends Command{
+case class CreatePlayer(data:CreatePlayerData,instant:Instant,id:PlayerId) extends Command{
   val msgType = "CreatePlayer"
 }
 
