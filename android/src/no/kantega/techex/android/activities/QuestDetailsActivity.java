@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.ListView;
+import android.widget.TextView;
 import no.kantega.techex.android.R;
 import no.kantega.techex.android.data.Quest;
 import no.kantega.techex.android.display.AchievementArrayAdapter;
@@ -24,6 +25,9 @@ public class QuestDetailsActivity extends Activity {
 
     private Quest quest;
 
+    /**
+     * Adapter for generating list view of achievements
+     */
     private AchievementArrayAdapter adapter;
 
     @Override
@@ -36,6 +40,9 @@ public class QuestDetailsActivity extends Activity {
         if (quest == null) {
             Log.e(TAG,"Failed to pass quest data between activities");
         } else {
+            TextView tv = (TextView) findViewById(R.id.qdTitle);
+            tv.setText(quest.getTitle());
+
             //Showing achievements in list
             ListView lv = (ListView) findViewById(R.id.lvAchievements);
             adapter = new AchievementArrayAdapter(this,quest.getAchievements());
@@ -46,8 +53,16 @@ public class QuestDetailsActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (quest != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+        }
+    }
+
     /**
-     * Receiver for quest achievement received broadcast
+     * Receiver for badge notification broadcast -> might need to refresh view
      */
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -56,8 +71,8 @@ public class QuestDetailsActivity extends Activity {
 
             if(action.equals(GcmIntentService.BROADCAST_ACTION)) {
                 Log.d(TAG,"GCM Broadcast received");
-                //Check & update if achievement is for this quest
                 String newAchievement = intent.getStringExtra(GcmIntentService.BROADCAST_EXTRA_BADGE_ID);
+                //Check & update if achievement is for this quest
                 if (quest.updateAchievement(newAchievement)) {
                     //The new achievement as for this quest, update the UI
                     adapter.notifyDataSetChanged();

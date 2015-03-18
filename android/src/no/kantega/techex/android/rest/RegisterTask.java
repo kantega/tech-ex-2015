@@ -1,53 +1,59 @@
 package no.kantega.techex.android.rest;
 
+import android.content.Context;
 import android.util.Log;
 import no.kantega.techex.android.rest.wrapper.RegistrationResult;
 import no.kantega.techex.android.rest.wrapper.RegistrationResultStatus;
-import org.apache.http.HttpResponse;
+import no.kantega.techex.android.tools.Configuration;
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Task running in background to handle user registration.
- *
- * Execute params:
- * 0 - nickname
- * 1 - url (including nickname)
+ * Asynch task for login/registration on server
  */
 public class RegisterTask extends AbstractRESTTask<RegistrationResult> {
 
     private final String TAG = RegisterTask.class.getSimpleName();
 
+    /**
+     * Desired username
+     */
     private String nickName;
 
+    /**
+     * Google cloud messaging registration id
+     */
     private String gcmId;
 
     public RegisterTask(OnTaskComplete<RegistrationResult> callback) {
         super(callback);
     }
 
+    /**
+     * Creates the http request (post)
+     * @param params 0 - desired user name,
+     *               1 - google cloud messaging id
+     * @return the request
+     */
     @Override
     protected HttpRequestBase createHttpRequest(String... params) {
         try {
             nickName = params[0];
-            String url = params[1];
-            gcmId = params[2];
+            gcmId = params[1];
+
+            String url = Configuration.getInstance().getRegistrationREST();
+
             HttpRequestBase request = new HttpPost(url);
 
             String jsonData = getJsonData();
@@ -79,20 +85,24 @@ public class RegisterTask extends AbstractRESTTask<RegistrationResult> {
                     result.setNickname(jo.getString("nick"));
                     result.setId(jo.getString("id"));
 
-                    //Setting preferences
-                    JSONObject preferences = jo.getJSONObject("preferences"); //throws exception if doesnt exist
-                    Map<String,String> preferenceMap = new HashMap<String,String>();
-                    preferenceMap.put("drink",preferences.getString("drink"));
-                    preferenceMap.put("eat",preferences.getString("eat"));
-                    result.setPreferences(preferenceMap);
-
-                    //Setting quests
-                    JSONArray quests = jo.getJSONArray("quests");
-                    List<String> questList = new ArrayList<String>();
-                    for (int i=0; i<quests.length(); i++ ){
-                        questList.add(quests.getString(i));
+                    //Setting preferences - not used
+                    if (jo.has("preferences")) {
+                        JSONObject preferences = jo.getJSONObject("preferences");
+                        Map<String, String> preferenceMap = new HashMap<String, String>();
+                        preferenceMap.put("drink", preferences.getString("drink"));
+                        preferenceMap.put("eat", preferences.getString("eat"));
+                        result.setPreferences(preferenceMap);
                     }
-                    result.setQuests(questList);
+
+                    //Setting quests - not used
+                    if (jo.has("quests")) {
+                        JSONArray quests = jo.getJSONArray("quests");
+                        List<String> questList = new ArrayList<String>();
+                        for (int i = 0; i < quests.length(); i++) {
+                            questList.add(quests.getString(i));
+                        }
+                        result.setQuests(questList);
+                    }
                 } catch (JSONException e) {
                     Log.e(TAG,"Server response is not valid JSON: '"+data+"'",e);
                     result.setResultStatus(RegistrationResultStatus.INTERNAL_ERROR);

@@ -1,18 +1,16 @@
 package no.kantega.techex.android.tools;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
-import android.widget.Toast;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 /**
- * Created by zsuhor on 27.02.2015.
+ * This class needs to be registered fo receive the Google Cloud Messaging updates.
+ * It's a wakeful receiver, which means that the message is received/parsed
+ * even if the phone is asleep.
  */
 public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
 

@@ -1,7 +1,7 @@
 package no.kantega.techex.android.rest.wrapper;
 
 /**
- * Created by zsuhor on 20.02.2015.
+ * The different results of registration attempt
  */
 public enum RegistrationResultStatus {
     SUCCESS,

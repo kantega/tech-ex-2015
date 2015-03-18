@@ -9,18 +9,22 @@
     <string name="config_rest_locationupdate">/location/%1$s</string>
     <string name="config_rest_regioninfo">/beaconregions</string>
 
-    <!-- Other config -->
+    <!-- Shared pref config -->
     <string name="config_sharedpref_id">no.kantega.techex.android</string>
     <string name="config_sharedpref_useridkey">id</string>
     <string name="config_sharedpref_usernamekey">nickname</string>
     <string name="config_sharedpref_gcmauthkey">gcm_id</string>
 
-    <!-- Beacon config TODO delete when we fetch regions from server -->
-    <string name="config_beacon_region_uuid">f7826da6-4fa2-4e98-8024-bc5b71e0893e</string>
-    <string name="config_beacon_monitoring_active">5</string> <!-- in seconds, min. 5 -->
-    <string name="config_beacon_monitoring_passive">25</string>
-    <string name="config_sharedpref_region_number">regions</string>
+    <!-- Design related config -->
+    <string name="config_welcome_redirect_time">3</string> <!-- in seconds -->
 
+    <!-- Beacon config -->
+    <string name="config_beacon_region_uuid">f7826da6-4fa2-4e98-8024-bc5b71e0893e</string>
+    <string name="config_beacon_monitoring_foreground_active">1500</string> <!-- in milliseconds, min. 1100 -->
+    <string name="config_beacon_monitoring_foreground_passive">5000</string> <!-- in milliseconds -->
+    <string name="config_beacon_monitoring_background_active">5000</string> <!-- in milliseconds -->
+    <string name="config_beacon_monitoring_background_passive">30000</string> <!-- in milliseconds -->
+    <string name="config_sharedpref_region_number">regions</string>
 
     <!-- GCM -->
     <string name="config_gcm_project_id">902599159415</string>

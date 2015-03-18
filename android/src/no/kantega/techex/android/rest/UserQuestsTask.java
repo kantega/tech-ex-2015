@@ -3,6 +3,7 @@ package no.kantega.techex.android.rest;
 import android.util.Log;
 import no.kantega.techex.android.data.Achievement;
 import no.kantega.techex.android.data.Quest;
+import no.kantega.techex.android.tools.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -10,7 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,13 +22,14 @@ public class UserQuestsTask extends AbstractRESTTask<List<Quest>> {
     private final String TAG = UserQuestsTask.class.getSimpleName();
 
     /**
-     *
-     * @param params 0 - URL
-     * @return
+     * Http get request for fetching user quests
+     * @param params 0 - user id
+     * @return the request
      */
     @Override
     protected HttpRequestBase createHttpRequest(String... params) {
-        String url = params[0];
+        String id = params[0];
+        String url = Configuration.getInstance().getAllQuestsREST(id);
         HttpRequestBase request = new HttpGet(url);
 
         //Receiving JSON
@@ -66,6 +67,11 @@ public class UserQuestsTask extends AbstractRESTTask<List<Quest>> {
         return questList;
     }
 
+    /**
+     * Parses the Json object into the interal Quest representation
+     * @param data Json object received in rest request
+     * @return quest data
+     */
     private Quest getQuestFromJSON(JSONObject data) {
         Quest q = new Quest();
         try {

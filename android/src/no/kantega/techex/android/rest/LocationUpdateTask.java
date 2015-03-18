@@ -1,13 +1,11 @@
 package no.kantega.techex.android.rest;
 
-import android.os.AsyncTask;
 import android.util.Log;
 import no.kantega.techex.android.tools.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,9 +19,13 @@ public class LocationUpdateTask extends AbstractRESTTask<Boolean> {
     private final String TAG = LocationUpdateTask.class.getSimpleName();
 
     /**
-     *
-     * @param params 0 - URL, 1 - Beacon ID (major:minor), 2 - proximity
-     * @return
+     * Creates the Http Post request for sending location data
+     * @param params 0 - userId,
+     *               1 - beacon id (major),
+     *               2 - beacon id (minor),
+     *               3 - proximity ("near"|"far"|"immediate"),
+     *               4 - change ("enter"|"exit")
+     * @return the request
      */
     @Override
     protected HttpRequestBase createHttpRequest(String... params) {
@@ -57,6 +59,12 @@ public class LocationUpdateTask extends AbstractRESTTask<Boolean> {
         }
     }
 
+    /**
+     * Creates boolean response
+     * @param responseCode Http response code
+     * @param data Http response body
+     * @return true if location update was successful
+     */
     @Override
     protected Boolean parseResponse(int responseCode, String data) {
         boolean returnVal;
@@ -70,9 +78,17 @@ public class LocationUpdateTask extends AbstractRESTTask<Boolean> {
                 returnVal = false;
                 break;
         }
-        return null;
+        return returnVal;
     }
 
+    /**
+     * Creates the json object that's passed on the post call, as defined by the API.
+     * @param major beacon major id
+     * @param minor beacon minor id
+     * @param proximity beacon current proximity
+     * @param change beacon proximity change
+     * @return JSON string
+     */
     private String createJSONData(String major, String minor, String proximity, String change) {
         JSONObject data = new JSONObject();
         try {

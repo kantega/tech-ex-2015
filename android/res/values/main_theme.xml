@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Style for devices before SDKv19 -->
+    <style name="MainTheme" parent="@android:style/Theme.NoTitleBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@drawable/background</item>
+        <item name="android:fitsSystemWindows">true</item>
+
+        <item name="android:alertDialogStyle">@style/AlertDialogCustom</item>
+    </style>
+</resources>

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -13,7 +13,7 @@ import no.kantega.techex.android.R;
 import no.kantega.techex.android.tools.Configuration;
 
 /**
- * Created by zsuhor on 24.02.2015.
+ * Welcome screen when app is started when user is already registered
  */
 public class WelcomeActivity extends Activity {
     private final String TAG = WelcomeActivity.class.getSimpleName();
@@ -37,26 +37,19 @@ public class WelcomeActivity extends Activity {
             {
                 Intent i = new Intent(WelcomeActivity.this, QuestListActivity.class);
                 WelcomeActivity.this.startActivity(i);
-                Log.i(TAG, "Loading quests.");
             }
         });
-    }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG,"Paused");
-    }
+        // Redirect automatically after a time as well
+        new Handler().postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                Intent mainIntent = new Intent(WelcomeActivity.this,QuestListActivity.class);
+                startActivity(mainIntent);
+                //Quits this activity completely, not needed again
+                finish();
+            }
+        }, configuration.getWelcomeRedirectTime()*1000);
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG,"Resumed");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG,"Destroyed");
     }
 }

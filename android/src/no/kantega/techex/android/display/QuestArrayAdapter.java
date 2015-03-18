@@ -1,19 +1,16 @@
 package no.kantega.techex.android.display;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import no.kantega.techex.android.R;
 import no.kantega.techex.android.data.Achievement;
 import no.kantega.techex.android.data.Quest;
-import no.kantega.techex.android.R;
-import org.w3c.dom.Text;
 
 import java.util.List;
 

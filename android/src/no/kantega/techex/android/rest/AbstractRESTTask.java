@@ -1,12 +1,11 @@
 package no.kantega.techex.android.rest;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -16,7 +15,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /**
- * Abstract class for handling common functionalities needed for the REST queries
+ * Abstract class for handling common functions needed for the REST queries
  *
  * T - result wrapper class
  */
@@ -24,6 +23,9 @@ public abstract class AbstractRESTTask<T> extends AsyncTask<String,Void,T> {
 
     private final String TAG = AbstractRESTTask.class.getSimpleName();
 
+    /**
+     * Listener that needs to be called with the results when the task is completed.
+     */
     private OnTaskComplete<T> listener;
 
     public AbstractRESTTask() {
@@ -38,11 +40,18 @@ public abstract class AbstractRESTTask<T> extends AsyncTask<String,Void,T> {
         listener = l;
     }
 
+    /**
+     * This method is run in a background thread. Creates the http request based on the parameters
+     * ({@link #createHttpRequest(String...)}, executes it, then parses the result ({@link #parseResponse(int, String)}.
+     * The class can be customized for specific REST queries by overriding the aforementioned methods.
+     * The returned result is sent to the completion listener in {@link #onPostExecute(Object)}
+     * @param params String parameters for creating the Http request
+     * @return Specific response of the Rest request
+     */
     @Override
     protected T doInBackground(String... params) {
-        //TODO check connection
         try {
-            HttpClient client = new DefaultHttpClient();
+            DefaultHttpClient client = new DefaultHttpClient();
 
             //Get Request from specific implementation
             HttpRequestBase request = createHttpRequest(params);
@@ -76,10 +85,26 @@ public abstract class AbstractRESTTask<T> extends AsyncTask<String,Void,T> {
         }
     }
 
+    /**
+     * Create the http request that needs to be executed. Should include URL, http method
+     * and every other necessary detail.
+     * @param params The parameters received by the AsynchTask on the execute call
+     * @return configured http request ready for running
+     */
     protected abstract HttpRequestBase createHttpRequest(String... params);
 
+    /**
+     * Creates the custom response of the asynchronous task.
+     * @param responseCode Http response code
+     * @param data Http response body
+     * @return custom response
+     */
     protected abstract T parseResponse(int responseCode, String data);
 
+    /**
+     * Calls the task completion listener and passes the results to it.
+     * @param t response created by {@link #parseResponse(int, String)}
+     */
     @Override
     protected void onPostExecute(T t) {
         super.onPostExecute(t);
@@ -88,6 +113,11 @@ public abstract class AbstractRESTTask<T> extends AsyncTask<String,Void,T> {
         }
     }
 
+    /**
+     * Reads the http response body into a string
+     * @param entity http response entity
+     * @return string of the body contents (usually json)
+     */
     protected String getResponseBody(HttpEntity entity) {
         try {
             StringBuilder outputBuilder = new StringBuilder();
