@@ -10,7 +10,7 @@ angular.module('techex')
                     $scope.scores[i] = newScores[i];
                 }
             });
-        }, 100000);
+        }, 10000);
 
 
         $scope.$on("$destroy", function(){
