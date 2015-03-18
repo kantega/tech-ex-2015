@@ -2,9 +2,9 @@
 
 angular.module('techex', ['ngRoute', 'ngResource', 'ui.bootstrap'])
 
-    .constant('baseUrl', 'https://kantegex.kantega.no')
+    .constant('baseUrl', 'https://techex.kantega.no')
 
-    .config(['$routeProvider', '$locationProvider', function ($routeProvider, $locationProvider) {
+    .config(['$routeProvider', '$locationProvider', '$httpProvider', function ($routeProvider, $locationProvider, $httpProvider) {
         $routeProvider
             .when('/', {
                 templateUrl: 'infoscreen/infoscreen.html'
@@ -21,6 +21,11 @@ angular.module('techex', ['ngRoute', 'ngResource', 'ui.bootstrap'])
                 redirectTo: '/'
             });
 
-        // use the HTML5 History API
-        $locationProvider.html5Mode(true);
+        // Don't the HTML5 History API, as the server it runs on will f..ck it up.
+        $locationProvider.html5Mode(false);
+
+        // Prevent CORS on post.
+        $httpProvider.defaults.headers.post = {
+            'Content-Type': 'text/plain'
+        };
     }]);

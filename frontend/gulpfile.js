@@ -54,9 +54,9 @@ gulp.task('source', ['html','js', 'partials', 'styles']);
 gulp.task('usemin', ['source'], function () {
     return gulp.src('./.tmp/**/*.html')
         .pipe(plugin.usemin({
-            css: [plugin.minifyCss(), 'concat'],
-            html: [plugin.minifyHtml({empty: true})],
-            js: [plugin.sourcemaps.init(), plugin.uglify(), plugin.rev(), plugin.sourcemaps.write('.')]
+            //css: [plugin.minifyCss(), 'concat'],
+            //html: [plugin.minifyHtml({empty: true})],
+            //js: [plugin.sourcemaps.init(), plugin.uglify(), plugin.rev(), plugin.sourcemaps.write('.')]
         }))
         .pipe(gulp.dest('./dist'))
         .pipe(reload({stream:true}));
@@ -104,5 +104,9 @@ gulp.task('serve:dist', ['default'], function() {
 
 gulp.task('default', ['clean'], function(){
     gulp.start(['usemin', 'assets']);
+});
+
+gulp.task('build', ['clean'], function() {
+    gulp.start(['source', 'assets'])
 });
 
