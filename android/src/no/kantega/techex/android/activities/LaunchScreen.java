@@ -1,40 +1,35 @@
 package no.kantega.techex.android.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
+import no.kantega.techex.android.R;
 import no.kantega.techex.android.tools.Configuration;
-
-import java.io.IOException;
 
 /**
  * Main activity
  *
- * This is opened first when application is started. It has no UI, but does some setup functions:
- * * Registers for GCM
+ * This is opened first when application is started. Has no UI but does some initialization:
+ * * Initialize Configuration class
  *
  * It automatically redirects to
- * * RegisterActivity if user is not registered yet
- * * QuestListActivity if user is already registered
+ * * {@link RegisterActivity} if user is not registered yet
+ * * {@link WelcomeActivity} if user is already registered
  */
 public class LaunchScreen extends Activity {
 
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    private static String PROPERTY_REG_ID;
 
     private final String TAG = LaunchScreen.class.getSimpleName();
-
-    private GoogleCloudMessaging gcm;
-    private Context context;
-    private SharedPreferences prefs;
-    private String gcmProjectId;
 
     /**
      * Called when the activity is first created.
@@ -47,38 +42,25 @@ public class LaunchScreen extends Activity {
         Configuration configuration = Configuration.getInstance();
         configuration.init(this); //Very first time initialization
 
-        prefs = getSharedPreferences(configuration.getSharedPreferencesId(),Context.MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(configuration.getSharedPreferencesId(),Context.MODE_PRIVATE);
         String id = prefs.getString(configuration.getSpUserIdKey(),null); //If registered, we received an ID from the server
-        String registrationId = getRegistrationId();
 
-        PROPERTY_REG_ID = configuration.getSpGcmAuthKey();
-
-
-       // Check device for Play Services APK.
-        if (checkPlayServices()) {
-            // GCM is available
-            gcm = GoogleCloudMessaging.getInstance(this);
-            context = getApplicationContext();
-            gcmProjectId = configuration.getGcmProjectId();
-            if (registrationId.isEmpty()) {
-                //The device hasn't registered for the GCM yet or it needs to be updated
-                registerInBackground();
+        // Check if device is capable of required services
+        if (checkPlayServices() && checkDeviceCompatibilityForBLE()) {
+            if (id == null) {
+                //Not registered yet
+                Intent i = new Intent(LaunchScreen.this, RegisterActivity.class);
+                LaunchScreen.this.startActivity(i);
+                Log.d(TAG, "Redirecting to registration activity.");
+                finish();
+            } else {
+                Intent i = new Intent(LaunchScreen.this, WelcomeActivity.class);
+                LaunchScreen.this.startActivity(i);
+                Log.d(TAG, "Redirecting to welcome activity.");
+                finish();
             }
         } else {
-            Log.i(TAG, "No valid Google Play Services APK found.");
-        }
 
-        if (id == null) {
-            //Not registered yet
-            Intent i = new Intent(LaunchScreen.this, RegisterActivity.class);
-            LaunchScreen.this.startActivity(i);
-            Log.d(TAG, "Redirecting to registration activity.");
-            finish();
-        } else {
-            Intent i = new Intent(LaunchScreen.this, WelcomeActivity.class);
-            LaunchScreen.this.startActivity(i);
-            Log.d(TAG, "Redirecting to welcome activity.");
-            finish();
         }
     }
 
@@ -101,7 +83,17 @@ public class LaunchScreen extends Activity {
                         PLAY_SERVICES_RESOLUTION_REQUEST).show();
             } else {
                 Log.i(TAG, "This device is not supported.");
-                finish();
+                AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom));
+                builder.setMessage(R.string.play_unsupported_msg)
+                        .setTitle(R.string.play_unsupported_title);
+                builder.setPositiveButton(getString(R.string.play_unsupported_btn),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                                finish();
+                            }
+                        });
+                builder.create().show();
             }
             return false;
         }
@@ -109,62 +101,39 @@ public class LaunchScreen extends Activity {
     }
 
     /**
-     * Gets the current registration ID for application on GCM service.
-     * <p>
-     * If result is empty, the app needs to register.
-     *
-     * @return registration ID, or empty string if there is no existing
-     *         registration ID.
+     * Checks if this device is capable of running Bluetooth Low Energy scanning.
+     * If unsupported, a dialog is displayed that on click closes the app.
+     * @return false if not compatible
      */
-    private String getRegistrationId() {
-        String registrationId = prefs.getString(PROPERTY_REG_ID, "");
-        if (registrationId.isEmpty()) {
-            Log.i(TAG, "Registration not found.");
-            return "";
+    private boolean checkDeviceCompatibilityForBLE() {
+        String message = null;
+        if (android.os.Build.VERSION.SDK_INT < 18) {
+            message ="This device doesn't have the required minimum SDK (18, Jelly Bean MR3)";
         }
-        // Check if app was updated; if so, it must clear the registration ID
-        // since the existing registration ID is not guaranteed to work with
-        // the new app version.
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            message="This device doesn't support Bluetooth LE";
+        }
 
-        return registrationId;
+        if (message != null) {
+            Log.i(TAG, "This device is not supported: "+message);
+            AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom));
+            builder.setMessage(message)
+                    .setTitle(R.string.play_unsupported_title);
+            builder.setPositiveButton(getString(R.string.play_unsupported_btn),
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                            finish();
+                        }
+                    });
+            builder.create().show();
+            return false;
+        } else {
+            return true;
+        }
     }
 
-    /**
-     * Registers the application with GCM servers asynchronously.
-     * <p>
-     * Stores the registration ID and app versionCode in the application's
-     * shared preferences.
-     */
-    private void registerInBackground() {
-        new AsyncTask<Void,Void,String>() {
-            @Override
-            protected String doInBackground(Void... params) {
-                String msg = "";
-                try {
-                    if (gcm == null) {
-                        gcm = GoogleCloudMessaging.getInstance(context);
-                    }
-                    Log.d(TAG,"gcmprojectid "+gcmProjectId);
-                    String regid = gcm.register(gcmProjectId);
-                    msg = "Device registered, registration ID=" + regid;
 
-                    //Store
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(PROPERTY_REG_ID,regid);
-                    editor.commit();
-                } catch (IOException ex) {
-                    msg = "Error :" + ex.getMessage();
-                    // If there is an error, don't just keep trying to register.
-                    // Require the user to click a button again, or perform
-                    // exponential back-off.
-                }
-                return msg;
-            }
 
-            @Override
-            protected void onPostExecute(String msg) {
-                Log.i(TAG, msg);
-            }
-        }.execute(null, null, null);
-    }
+
 }

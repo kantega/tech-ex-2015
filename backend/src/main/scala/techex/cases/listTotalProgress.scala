@@ -52,7 +52,12 @@ object listTotalProgress {
   State.gets(storage =>{
    val rankList =
      storage.players
-       .map(playerData=>RankEntry(playerData.player.nick.value,playerData.achievements.size))
+       .map(playerData=>{
+       val userBadges =
+         playerData.player.privateQuests
+           .flatMap(_.badges)
+
+       RankEntry(playerData.player.nick.value,playerData.achievements.count(ach => userBadges.contains(ach)))})
        .sortBy(entry=>entry.noOfBadges)
 
     Ok(rankList.asJson)

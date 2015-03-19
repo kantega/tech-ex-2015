@@ -28,9 +28,9 @@ object printFactsToLog {
 
 
   def printFact: Fact => Task[Unit] = {
-    fact => Task {
-      println(fact.toString)
-    }
+    case at: AtArea  => Task {}
+    case tick: Ticks => Task {}
+    case fact: Fact  => Task {println(fact.toString)}
   }
 
 }

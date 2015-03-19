@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Technoport Experience</string>
-    <string name="welcome_text">Welcome,\n%1$s!</string>
+    <string name="app_name">Technoport Experiment</string>
 
+    <!-- Google Play Services -->
+    <string name="play_unsupported_title">Unsupported device</string>
+    <string name="play_unsupported_msg">Your device does not have Google Play Services and thus cannot run this application.</string>
+    <string name="play_unsupported_btn">OK</string>
+
+    <!-- Welcome screen -->
+    <string name="welcome_text">Welcome,\n%1$s!</string>
+    <string name="questlist_leaving_dialog_title">Leaving the application</string>
+    <string name="questlist_leaving_dialog_msg">If you leave this way, it\'ll stop the location monitoring. If you want the app the continue running in the background, use the Home button.</string>
+    <string name="questlist_leaving_dialog_btn_quit">Leave</string>
+    <string name="questlist_leaving_dialog_btn_stay">Stay</string>
 
     <!-- Registration -->
     <string name="nick_hint">Nickname...</string>
@@ -20,19 +30,34 @@
         The data collected will not be used for commercial purposes, but an anonymized data set will be made available for future research and development.\n
         By accepting this disclaimer I grant Technoport permission to gather and utilize data in this way.</string>
 
+    <!-- GCM registration -->
+    <string name="register_gcm_fail_title">Failed to login</string>
+    <string name="register_gcm_fail_msg">Failed to register for Google Cloud Messaging.</string>
+    <string name="register_gcm_fail_btn">OK</string>
+
     <!-- Quest list -->
     <string name="questlist_title">Quests</string>
     <string name="questlist_progress_title">Downloading quests</string>
+    <string name="questlist_noquest_toast">Couldn\'t load any quests.</string>
+    <string name="questlist_error">Internal error</string>
 
-    <string name="beacon_destroy_warning">Location monitoring stopped.</string> <!-- ??? -->
-
-    <!-- beacon monitoring -->
+    <!-- Bluetooth requests etc -->
     <string name="bluetooth_unavailable_msg">The application requires Bluetooth connection to determine the location. Unfortunately your device is not capable of running the application.</string>
-    <string name="bluetooth_didntturnon_msg">The application requires Bluetooth connection to determine the location.</string>
-    <string name="bluetooth_didntturnon_title">Bluetooth required</string>
     <string name="bluetooth_unavailable_btn">OK</string>
+    <string name="bluetooth_alert_msg">The application requires Bluetooth connection to determine the location. Do you allow the application to turn on Bluetooth?</string>
+    <string name="bluetooth_alert_title">Bluetooth required</string>
+    <string name="bluetooth_alert_allow">Allow</string>
+    <string name="bluetooth_alert_deny">Deny</string>
     <string name="bluetooth_enablerequest_denied_msg">While bluetooth is disabled, the application is unable to determine your location.</string>
     <string name="bluetooth_enablerequest_denied_btn">OK</string>
+
+    <!-- Beacon monitoring -->
     <string name="beacon_started">Location monitoring started.</string>
+    <string name="beacon_destroy_warning">Location monitoring stopped.</string> <!-- ??? -->
+
+    <!-- Internet connection -->
+    <string name="network_alert_title">Network connection required</string>
+    <string name="network_alert_msg">No active network was detected, cannot complete %1$s.</string>
+    <string name="network_alert_btn">OK</string>
 
 </resources>

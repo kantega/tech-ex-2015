@@ -122,7 +122,7 @@ object codecJson {
     CodecJson((instant: Instant) => JsonLong(instant.getMillis).asJsonOrNull, c => c.as[Long].map(l => new Instant(l)))
 
   implicit val codecCrateUser: CodecJson[CreatePlayer] =
-    casecodec3(CreatePlayer.apply, CreatePlayer.unapply)("data", "instant","id")
+    casecodec3(CreatePlayer.apply, CreatePlayer.unapply)("data", "instant", "id")
 
   implicit val codecObservation: CodecJson[EnterObservation] =
     casecodec4(EnterObservation.apply, EnterObservation.unapply)("beacon", "playerId", "instant", "proximity")
@@ -160,6 +160,7 @@ object codecJson {
       case Removed(entry, instant)                       => ("activity" := "eventRemoved") ->: ("event" := entry.id.value) ->: ("area" := entry.area.name) ->: ("instant" := instant) ->: jEmptyObject
       case StartOfDay(instant)                           => ("activity" := "startOfDay") ->: ("instant" := instant) ->: jEmptyObject
       case EndOfDay(instant)                             => ("activity" := "endOfDay") ->: ("instant" := instant) ->: jEmptyObject
+      case StartOfTenSecs(instant)                       => ("activity" := "tick") ->: ("instant" := instant) ->: jEmptyObject
       case _                                             => jEmptyObject
     }
 

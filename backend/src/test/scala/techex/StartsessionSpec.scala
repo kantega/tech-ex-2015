@@ -9,8 +9,8 @@ class StartsessionSpec  extends Specification {
 
 
   try {
-    val runningserver =
-      server.run
+    //val runningserver =
+    //  server.run
 
     "The webserwer" should {
       "consume a list of locationupdates" in {
@@ -24,7 +24,7 @@ class StartsessionSpec  extends Specification {
       }
 
     }
-    runningserver.shutdown
+    //runningserver.shutdown
   } catch {
     case t: Throwable => t.printStackTrace()
   }

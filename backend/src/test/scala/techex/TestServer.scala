@@ -25,7 +25,7 @@ object TestServer {
 
 
   val server = for {
-    servlets <- bootOps.servlets(Map("db_type"->"mem","venue"->"kantega"))
+    servlets <- bootOps.servlets(Map("db_type"->"mem","venue"->"techex"))
     serv <- mountServlets(servlets)(JettyBuilder.bindHttp(8080)).start
   } yield serv
 
@@ -33,7 +33,7 @@ object TestServer {
   val test     = host("localhost", 8090)
   val local     = host("localhost", 8080)
   val prod     = host("techex.kantega.no").secure
-  val h        = local
+  val h        = prod
 
   val decodeId =
     jdecode1L((value: String) => value)("id")
@@ -77,4 +77,9 @@ object TestServer {
       builder.mountServlet(pair._2, pair._1, None)
     }
   }
+
+  def callStart(id:ScId) =
+    Http((h / "sessions" / "start" / id.value).POST)
+  def callStop(id:ScId) =
+    Http((h / "sessions" / "end" / id.value).POST)
 }

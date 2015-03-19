@@ -109,7 +109,7 @@
 
     var players = [];
 
-    d3.json("https://techex.kantega.no/areas/kantega", function (error, root) {
+    d3.json("https://techex.kantega.no/areas/techex", function (error, root) {
         var selection = svg.selectAll("path");
 
         var update =
@@ -135,7 +135,7 @@
         };
         websocket.onmessage = function (evt) {
             var data = JSON.parse(evt.data);
-            onMessage(selection, root, data)
+            onMessage(root, data)
         };
         websocket.onerror = function (evt) {
             console.error(evt)
@@ -182,7 +182,7 @@
         d.dx0 = d.dx;
     }
 
-    function onMessage(selection, root, data) {
+    function onMessage(root, data) {
         console.log(data);
 
         if (data.activity == "arrivedAtArea")

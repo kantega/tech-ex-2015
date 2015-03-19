@@ -21,9 +21,8 @@ object trackPlayer {
       for {
         maybeLocationUpdate <- nextLocation(observation)
         b <- maybeLocationUpdate.map(location2VisitActivities).getOrElse(State.state[Storage, List[Fact]](nil))
-        c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeUp)).getOrElse(State.state[Storage, List[Fact]](nil))
-        d <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeDn)).getOrElse(State.state[Storage, List[Fact]](nil))
-      } yield b ::: c ::: d
+        c <- maybeLocationUpdate.map(meetingPoints2Activity(areas.kantegaCoffeeUp, areas.kantegaCoffeeUp, areas.meetingRoom)).getOrElse(State.state[Storage, List[Fact]](nil))
+      } yield b ::: c
 
     case exitObservation: ExitObservation => movedToUnknown(exitObservation)
     case endOfTenSecs: EndOfTenSecs       => stayAtArea(endOfTenSecs)
@@ -32,7 +31,7 @@ object trackPlayer {
   def stayAtArea: EndOfTenSecs => State[Storage, List[Fact]] =
     tick => State.gets {
       ctx => {
-        ctx.players.map(player => {
+        tick :: ctx.players.map(player => {
           val arrived = player.lastLocation.instant
           AtArea(player, player.lastLocation.area, tick.instant, durationBetween(arrived, tick.instant))
         })
@@ -116,7 +115,7 @@ object trackPlayer {
             locationUpdate
 
           val at =
-            AtArea(player,lastLocation.area,locationUpdate.instant,durationBetween(lastLocation.instant,locationUpdate.instant))
+            AtArea(player, lastLocation.area, locationUpdate.instant, durationBetween(lastLocation.instant, locationUpdate.instant))
 
           val left =
             LeftArea(player, lastLocation.area, locationUpdate.instant)
@@ -134,7 +133,7 @@ object trackPlayer {
     }
 
 
-  def meetingPoints2Activity(meetingArea: Area): LocationUpdate => State[Storage, List[Fact]] =
+  def meetingPoints2Activity(meetingAreas: Area*): LocationUpdate => State[Storage, List[Fact]] =
     location => State {
       ctx =>
         val maybePlayerData =
@@ -142,8 +141,8 @@ object trackPlayer {
 
         maybePlayerData.fold((ctx, nil[Fact])) { playerData =>
           val facts =
-            if (location.area === meetingArea)
-              ctx.playersPresentAt(meetingArea).filterNot(other => other === playerData)
+            if (meetingAreas.exists(area => area === location.area))
+              ctx.playersPresentAt(location.area).filterNot(other => other === playerData)
                 .flatMap(other =>
                 List(
                   MetPlayer(playerData, other, location.instant),

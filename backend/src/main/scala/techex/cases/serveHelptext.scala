@@ -12,12 +12,32 @@ object serveHelptext {
 
   val iosTxt =
    """
-     |<dv><em>Help</em> text for iOS is <i>cool</i></div>
+     |<p>The Technoport Experiment 2015 attempts to investigate if gamification can influence people’s behavior.</p>
+     |<p>You have been assigned two quests, each consisting of five badges. Badges are awarded based on your presence and movements during the conference. Attempt to collect as many badges as possible and check your standing at the highscore board on the big screen above the Kantega stand.</p>
+     |<p>Your location is tracked using iBeacon technology. Location data from your device will only be tracked within the event venue. The data collected will not be used for commercial purposes, but an anonymized data set will be made available for future research and development.</p>
+     |<p><strong>Troubleshooting</strong></p>
+     |<p>Not receiving badges as you should?</p>
+     |<ul>
+     |    <li>Make sure Bluetooth is turned on.</li>
+     |   <li>Open the application at the point of interest.</li>
+     |</ul>
+     |<p>The application will attempt to track your location while running in the background. Tracking in the background is not as accurate as when the app is running and can fail to position you precisely in certain circumstances.</p>
+     |<p>Problems or questions? Don't hesitate to contact the Kantega stand.</p>
    """.stripMargin
 
   val androidTxt =
     """
-      |<dv><em>Help</em> text for Android is <i>cool</i></div>
+      |<p>The Technoport Experiment 2015 attempts to investigate if gamification can influence people’s behavior.</p>
+      |<p>You have been assigned two quests, each consisting of five badges. Badges are awarded based on your presence and movements during the conference. Attempt to collect as many badges as possible and check your standing at the highscore board on the big screen above the Kantega stand.</p>
+      |<p>Your location is tracked using iBeacon technology. Location data from your device will only be tracked within the event venue. The data collected will not be used for commercial purposes, but an anonymized data set will be made available for future research and development.</p>
+      |<p><strong>Troubleshooting</strong></p>
+      |<p>Not receiving badges as you should?</p>
+      |<ul>
+      |    <li>Make sure Bluetooth is turned on.</li>
+      |   <li>Open the application at the point of interest.</li>
+      |</ul>
+      |<p>The application will attempt to track your location while running in the background. Tracking in the background is not as accurate as when the app is running and can fail to position you precisely in certain circumstances.</p>
+      |<p>Problems or questions? Don't hesitate to contact the Kantega stand.</p>
     """.stripMargin
 
   def restApi: WebHandler = {

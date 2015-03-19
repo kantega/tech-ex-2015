@@ -13,24 +13,35 @@ import no.kantega.techex.android.R;
 import no.kantega.techex.android.activities.QuestListActivity;
 
 /**
- * Created by zsuhor on 27.02.2015.
+ * Background service for handling the GCM broadcast received when the user
+ * gets a badge. The service creates a notification in the status bar and sends
+ * local broadcast to the activities to trigger UI update.
  */
 public class GcmIntentService extends IntentService {
 
     private static final String TAG = GcmIntentService.class.getSimpleName();
 
-    // Defines a custom Intent action used for broadcasting that user information has changed
-    public static final String BROADCAST_ACTION = "no.kantega.techex.android.BROADCAST";
+    /**
+     * Local broadcast intent id which is sent out by the service
+     */
+    public static final String BROADCAST_ACTION = "no.kantega.techex.android.BROADCAST_GCM";
 
+    /**
+     * When broadcasting to activities, the broadcast intent includes the id of the newly received
+     * badge - it can be accessed with this key
+     */
     public static final String BROADCAST_EXTRA_BADGE_ID = "badge";
 
-   private int notificationId;
+   private static int notificationId = 1;
 
     public GcmIntentService() {
         super("GcmIntentService");
-        notificationId = 1;
     }
 
+    /**
+     * This method is called when a new GCM is received.
+     * @param intent
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
         Bundle extras = intent.getExtras();
@@ -61,7 +72,11 @@ public class GcmIntentService extends IntentService {
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
 
-    // Put the message into a notification and post it.
+    /**
+     * Creates and sends a status bar notification.
+     * Clicking the notification attempts to open the already running version of {@link QuestListActivity}
+     * @param msg Text body of the notification (received from server)
+     */
     private void sendNotification(String msg) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
@@ -74,7 +89,9 @@ public class GcmIntentService extends IntentService {
                         .setContentText(msg);
         // Creates an explicit intent for an Activity in your app
         Intent resultIntent = new Intent(this, QuestListActivity.class);
-        resultIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //loads the already running instance of the QuestList
+        //Clear the stack above activity and go to the already running version
+        resultIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        resultIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         // Adds the back stack
@@ -91,7 +108,6 @@ public class GcmIntentService extends IntentService {
 
         // mId allows you to update the notification later on.
         Log.d(TAG,"Sending notification #"+notificationId);
-        notificationId +=2;
-        mNotificationManager.notify(notificationId, mBuilder.build());
+        mNotificationManager.notify(notificationId++, mBuilder.build());
     }
 }

@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="MainTheme" parent="@android:style/Theme.Holo.NoActionBar.TranslucentDecor">
-        <item name="android:windowBackground">@drawable/background</item>
-        <item name="android:fitsSystemWindows">true</item>
-
-        <!-- These are only available from platform version 19 (KitKat) -->
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-
-
     <!-- REGISTER PAGE -->
     <style name="RegisterButton"  parent="@android:style/Widget.Button">
         <item name="android:layout_width" >190dp</item>
@@ -71,32 +61,20 @@
         <item name="android:layout_width" >210dp</item>
         <item name="android:layout_height" >wrap_content</item>
         <item name="android:textColor" >@color/light_green</item>
-        <item name="android:textSize">22sp</item>
-        <item name="android:gravity" >center</item>
-        <item name="android:layout_gravity" >center</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:gravity" >center_horizontal</item>
+        <item name="android:layout_gravity" >center_horizontal</item>
         <item name="android:padding">10dp</item>
     </style>
 
-    <!-- Quest and Achievement -->
+    <!-- Quest list -->
     <style name="QuestTitle" parent="@android:style/Widget.TextView">
         <item name="android:layout_width" >wrap_content</item>
         <item name="android:layout_height" >wrap_content</item>
         <item name="android:textColor" >@color/white</item>
-        <item name="android:textSize">18dp</item>
-    </style>
-
-    <style name="AchievementTitle" parent="@android:style/Widget.TextView">
-        <item name="android:layout_width" >wrap_content</item>
-        <item name="android:layout_height" >wrap_content</item>
-        <item name="android:textColor" >@color/white</item>
-        <item name="android:textSize">18dp</item>
-    </style>
-
-    <style name="AchievementDescription" parent="@android:style/Widget.TextView">
-        <item name="android:layout_width" >wrap_content</item>
-        <item name="android:layout_height" >wrap_content</item>
-        <item name="android:textColor" >@color/white</item>
-        <item name="android:textSize">12dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
     <style name="QAListView" parent="@android:style/Widget.ListView">
@@ -113,5 +91,39 @@
         <item name="android:paddingBottom">10dp</item>
     </style>
 
+    <!-- QUEST DETAILS -->
+    <style name="AchievementTitle" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">18sp</item>
+
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="AchievementDescription" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="qdQuestTitle" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_marginBottom">20dp</item>
+        <item name="android:textColor" >@color/white</item>
+        <item name="android:textSize">21sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <!-- ALERT DIALOGS -->
+    <style name="AlertDialogCustom" parent="@android:style/Theme.DeviceDefault.Dialog">
+        <item name="android:layout_width" >wrap_content</item>
+        <item name="android:layout_height" >wrap_content</item>
+        <item name="android:layout_margin">1dp</item>
+    </style>
 
 </resources>

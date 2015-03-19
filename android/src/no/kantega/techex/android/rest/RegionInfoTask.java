@@ -1,14 +1,11 @@
 package no.kantega.techex.android.rest;
 
-import android.graphics.Bitmap;
 import android.util.Log;
 import no.kantega.techex.android.tools.Configuration;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.List;
 
 /**
  * Fetches the regions to monitor through REST query
